@@ -295,6 +295,11 @@ void MainComponent::resized()
             card.getX() + 14, card.getY() + 8, card.getWidth() - 100, 26);
         toggles[group]->setBounds(card.getRight() - 72, card.getY() + 8, 62, 24);
 
+        // setSize() can trigger resized() before the controls are created.
+        // Do not index a group's vector until its parameters have been added.
+        if (group == 0 && groups[0].size() < 3)
+            continue;
+
         const int contentY = card.getY() + 39;
         const int labelX = card.getX() + 14;
         const int sliderX = card.getX() + 116;
