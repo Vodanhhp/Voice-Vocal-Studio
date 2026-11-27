@@ -20,6 +20,12 @@ MainComponent::MainComponent()
 
     infoLabel.setText("Giao dien thu nghiem - cac thong so hien tai la dieu khien giao dien, chua xu ly am thanh",
                       juce::dontSendNotification);
+
+    // TEST 04: visible build marker. Keep this marker in future revisions.
+    test04Label.setText("TEST 04 - BUILD MARKER: sliders + layout", juce::dontSendNotification);
+    test04Label.setFont(juce::FontOptions(13.0f, juce::Font::bold));
+    test04Label.setColour(juce::Label::textColourId, juce::Colour(255, 220, 70));
+    addAndMakeVisible(test04Label);
     infoLabel.setFont(juce::FontOptions(11.0f));
     infoLabel.setColour(juce::Label::textColourId, mutedColour);
     addAndMakeVisible(infoLabel);
@@ -128,6 +134,7 @@ void MainComponent::resized()
 
     titleLabel.setBounds(area.removeFromTop(32));
     infoLabel.setBounds(area.removeFromTop(24));
+    test04Label.setBounds(area.removeFromTop(24));
     area.removeFromTop(8);
 
     const int gap = 18;
