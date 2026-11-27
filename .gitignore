@@ -1,0 +1,24 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
+ipch/
+
+# Build output
+Builds/
+build/
+out/
+x64/
+Win32/
+Debug/
+Release/
+
+# JUCE generated / temporary
+JuceLibraryCode/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
