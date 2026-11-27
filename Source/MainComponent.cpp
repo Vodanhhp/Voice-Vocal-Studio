@@ -64,6 +64,9 @@ void KnobControl::resized()
 //==============================================================================
 MainComponent::MainComponent()
 {
+    // Use a Windows UI font with full Vietnamese glyph coverage.
+    juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName("Segoe UI");
+
     setSize(1180, 820);
 
     titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
@@ -71,19 +74,19 @@ MainComponent::MainComponent()
     titleLabel.setColour(juce::Label::textColourId, accentColour);
     addAndMakeVisible(titleLabel);
 
-    subtitleLabel.setText("BÀN ĐIỀU KHIỂN GIỌNG HÁT THỜI GIAN THỰC",
+    subtitleLabel.setText(juce::String::fromUTF8("\102\303\200\116\040\304\220\111\341\273\200\125\040\113\110\111\341\273\202\116\040\107\111\341\273\214\116\107\040\110\303\201\124\040\124\110\341\273\234\111\040\107\111\101\116\040\124\110\341\273\260\103"),
                          juce::dontSendNotification);
     subtitleLabel.setFont(juce::FontOptions(12.0f));
     subtitleLabel.setColour(juce::Label::textColourId, mutedColour);
     addAndMakeVisible(subtitleLabel);
 
-    deviceLabel.setText("THIẾT BỊ ÂM THANH", juce::dontSendNotification);
+    deviceLabel.setText(juce::String::fromUTF8("\124\110\111\341\272\276\124\040\102\341\273\212\040\303\202\115\040\124\110\101\116\110"), juce::dontSendNotification);
     deviceLabel.setFont(juce::FontOptions(13.0f, juce::Font::bold));
     deviceLabel.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(deviceLabel);
 
-    inputLabel.setText("ĐẦU VÀO", juce::dontSendNotification);
-    outputLabel.setText("ĐẦU RA", juce::dontSendNotification);
+    inputLabel.setText(juce::String::fromUTF8("\304\220\341\272\246\125\040\126\303\200\117"), juce::dontSendNotification);
+    outputLabel.setText(juce::String::fromUTF8("\304\220\341\272\246\125\040\122\101"), juce::dontSendNotification);
     for (auto* label : { &inputLabel, &outputLabel })
     {
         label->setFont(juce::FontOptions(10.5f, juce::Font::bold));
@@ -91,9 +94,9 @@ MainComponent::MainComponent()
         addAndMakeVisible(*label);
     }
 
-    inputDeviceBox.addItem("Chưa kết nối thiết bị", 1);
+    inputDeviceBox.addItem(juce::String::fromUTF8("\103\150\306\260\141\040\153\341\272\277\164\040\156\341\273\221\151\040\164\150\151\341\272\277\164\040\142\341\273\213"), 1);
     inputDeviceBox.setSelectedId(1);
-    outputDeviceBox.addItem("Chưa kết nối thiết bị", 1);
+    outputDeviceBox.addItem(juce::String::fromUTF8("\103\150\306\260\141\040\153\341\272\277\164\040\156\341\273\221\151\040\164\150\151\341\272\277\164\040\142\341\273\213"), 1);
     outputDeviceBox.setSelectedId(1);
     for (auto* box : { &inputDeviceBox, &outputDeviceBox })
     {
@@ -103,16 +106,16 @@ MainComponent::MainComponent()
         addAndMakeVisible(*box);
     }
 
-    engineLabel.setText("AUDIO ENGINE: CHƯA KẾT NỐI", juce::dontSendNotification);
+    engineLabel.setText(juce::String::fromUTF8("\101\125\104\111\117\040\105\116\107\111\116\105\072\040\103\110\306\257\101\040\113\341\272\276\124\040\116\341\273\220\111"), juce::dontSendNotification);
     engineLabel.setFont(juce::FontOptions(10.5f, juce::Font::bold));
     engineLabel.setColour(juce::Label::textColourId, juce::Colour(242, 183, 91));
     addAndMakeVisible(engineLabel);
 
     const std::array<juce::String, 4> names {
-        "MIXER & MỨC ÂM", "EQUALIZER 3 DẢI", "COMPRESSOR", "LÀM SẠCH & MÀU GIỌNG"
+        juce::String::fromUTF8("\115\111\130\105\122\040\046\040\115\341\273\250\103\040\303\202\115"), juce::String::fromUTF8("\105\121\125\101\114\111\132\105\122\040\063\040\104\341\272\242\111"), "COMPRESSOR", juce::String::fromUTF8("\114\303\200\115\040\123\341\272\240\103\110\040\046\040\115\303\200\125\040\107\111\341\273\214\116\107")
     };
     const std::array<juce::String, 4> switches {
-        "Bật Mixer", "Bật EQ", "Bật Compressor", "Bật xử lý"
+        juce::String::fromUTF8("\102\341\272\255\164\040\115\151\170\145\162"), juce::String::fromUTF8("\102\341\272\255\164\040\105\121"), juce::String::fromUTF8("\102\341\272\255\164\040\103\157\155\160\162\145\163\163\157\162"), juce::String::fromUTF8("\102\341\272\255\164\040\170\341\273\255\040\154\303\275")
     };
 
     for (int i = 0; i < 4; ++i)
@@ -146,8 +149,8 @@ MainComponent::MainComponent()
     addKnob("Noise Reduce", 0.0, 100.0, 15.0, " %", 3);
     addKnob("Limiter", -12.0, 0.0, -1.0, " dB", 3);
 
-    presetBox.addItem("Karaoke - Giọng hát", 1);
-    presetBox.addItem("MC / Trò chuyện", 2);
+    presetBox.addItem(juce::String::fromUTF8("\113\141\162\141\157\153\145\040\055\040\107\151\341\273\215\156\147\040\150\303\241\164"), 1);
+    presetBox.addItem(juce::String::fromUTF8("\115\103\040\057\040\124\162\303\262\040\143\150\165\171\341\273\207\156"), 2);
     presetBox.addItem("Podcast", 3);
     presetBox.addItem("Livestream", 4);
     presetBox.setSelectedId(1);
@@ -158,8 +161,8 @@ MainComponent::MainComponent()
 
     inputMeterLabel.setText("INPUT", juce::dontSendNotification);
     outputMeterLabel.setText("OUTPUT", juce::dontSendNotification);
-    inputMeterState.setText("Chưa có tín hiệu", juce::dontSendNotification);
-    outputMeterState.setText("Chưa có tín hiệu", juce::dontSendNotification);
+    inputMeterState.setText(juce::String::fromUTF8("\103\150\306\260\141\040\143\303\263\040\164\303\255\156\040\150\151\341\273\207\165"), juce::dontSendNotification);
+    outputMeterState.setText(juce::String::fromUTF8("\103\150\306\260\141\040\143\303\263\040\164\303\255\156\040\150\151\341\273\207\165"), juce::dontSendNotification);
     for (auto* label : { &inputMeterLabel, &outputMeterLabel })
     {
         label->setFont(juce::FontOptions(10.5f, juce::Font::bold));
@@ -181,8 +184,8 @@ MainComponent::MainComponent()
     {
         processingRequested = processButton.getToggleState();
         updateStatus(processingRequested
-            ? "Đã chọn bật xử lý - chưa có audio engine/DSP"
-            : "Đã tắt yêu cầu xử lý - chưa có audio engine/DSP");
+            ? juce::String::fromUTF8("\304\220\303\243\040\143\150\341\273\215\156\040\142\341\272\255\164\040\170\341\273\255\040\154\303\275\040\055\040\143\150\306\260\141\040\143\303\263\040\141\165\144\151\157\040\145\156\147\151\156\145\057\104\123\120")
+            : juce::String::fromUTF8("\304\220\303\243\040\164\341\272\257\164\040\171\303\252\165\040\143\341\272\247\165\040\170\341\273\255\040\154\303\275\040\055\040\143\150\306\260\141\040\143\303\263\040\141\165\144\151\157\040\145\156\147\151\156\145\057\104\123\120"));
     };
     addAndMakeVisible(processButton);
 
@@ -194,18 +197,18 @@ MainComponent::MainComponent()
     {
         bypassRequested = bypassButton.getToggleState();
         updateStatus(bypassRequested
-            ? "Bypass được chọn trên giao diện - chưa tác động âm thanh"
-            : "Đã bỏ chọn Bypass");
+            ? juce::String::fromUTF8("\102\171\160\141\163\163\040\304\221\306\260\341\273\243\143\040\143\150\341\273\215\156\040\164\162\303\252\156\040\147\151\141\157\040\144\151\341\273\207\156\040\055\040\143\150\306\260\141\040\164\303\241\143\040\304\221\341\273\231\156\147\040\303\242\155\040\164\150\141\156\150")
+            : juce::String::fromUTF8("\304\220\303\243\040\142\341\273\217\040\143\150\341\273\215\156\040\102\171\160\141\163\163"));
     };
     addAndMakeVisible(bypassButton);
 
-    statusLabel.setText("BẢN GIAO DIỆN: CÁC ĐIỀU KHIỂN CHƯA KẾT NỐI DSP",
+    statusLabel.setText(juce::String::fromUTF8("\102\341\272\242\116\040\107\111\101\117\040\104\111\341\273\206\116\072\040\103\303\201\103\040\304\220\111\341\273\200\125\040\113\110\111\341\273\202\116\040\103\110\306\257\101\040\113\341\272\276\124\040\116\341\273\220\111\040\104\123\120"),
                        juce::dontSendNotification);
     statusLabel.setFont(juce::FontOptions(11.5f, juce::Font::bold));
     statusLabel.setColour(juce::Label::textColourId, juce::Colour(242, 183, 91));
     addAndMakeVisible(statusLabel);
 
-    footerLabel.setText("VOICE VOCAL STUDIO  |  UI PROTOTYPE  |  CHƯA XỬ LÝ ÂM THANH",
+    footerLabel.setText(juce::String::fromUTF8("\126\117\111\103\105\040\126\117\103\101\114\040\123\124\125\104\111\117\040\040\174\040\040\125\111\040\120\122\117\124\117\124\131\120\105\040\040\174\040\040\103\110\306\257\101\040\130\341\273\254\040\114\303\235\040\303\202\115\040\124\110\101\116\110"),
                        juce::dontSendNotification);
     footerLabel.setFont(juce::FontOptions(10.5f));
     footerLabel.setColour(juce::Label::textColourId, mutedColour);
