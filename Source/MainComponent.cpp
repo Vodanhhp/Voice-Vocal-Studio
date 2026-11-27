@@ -142,10 +142,10 @@ void MainComponent::resized()
         const int y = area.getY() + row * (groupHeight + 10);
         auto groupArea = juce::Rectangle<int>(x, y, columnWidth, groupHeight);
 
-        groupLabels[(size_t)group].setBounds(groupArea.removeFromTop(24));
+        groupLabels[(size_t)group].setBounds(groupArea.getX(), groupArea.getY(), groupArea.getWidth() - 112, 24);
         juce::ToggleButton* toggles[] = { &mixerEnabled, &eqEnabled, &compressorEnabled, &cleanupEnabled };
-        toggles[group]->setBounds(groupArea.getRight() - 105, y, 105, 22);
-        groupArea.removeFromTop(8);
+        toggles[group]->setBounds(groupArea.getRight() - 108, groupArea.getY(), 108, 22);
+        groupArea.removeFromTop(32);
 
         const int rowHeight = 48;
         for (size_t i = 0; i < groups[(size_t)group].size(); ++i)
