@@ -78,7 +78,7 @@ MainComponent::MainComponent()
 
     setSize(820, 620);
 
-    titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
+    titleLabel.setText("VOICE VOCAL STUDIO - KIEM TRA BAN MOI 02", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(27.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, accentColour);
     addAndMakeVisible(titleLabel);
