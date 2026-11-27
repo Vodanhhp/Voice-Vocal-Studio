@@ -275,8 +275,21 @@ void MainComponent::paint(juce::Graphics& g)
         g.drawRoundedRectangle(area.toFloat(), 12.0f, 1.0f);
     };
 
-    for (const auto& area : panelBounds)
-        drawPanel(area);
+    for (int i = 0; i < (int) panelBounds.size(); ++i)
+    {
+        if (i == 2)
+        {
+            g.setColour(juce::Colour(180, 45, 65));
+            g.fillRoundedRectangle(panelBounds[(size_t)i].toFloat(), 12.0f);
+            g.setColour(juce::Colours::white);
+            g.setFont(juce::FontOptions(24.0f, juce::Font::bold));
+            g.drawText("TEST COMPRESSOR PANEL",
+                       panelBounds[(size_t)i].reduced(12),
+                       juce::Justification::centred);
+        }
+        else
+            drawPanel(panelBounds[(size_t)i]);
+    }
 
     auto headerAccent = juce::Rectangle<float>(25.0f, 24.0f, 5.0f, 54.0f);
     g.setColour(accentColour);
