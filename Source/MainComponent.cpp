@@ -58,8 +58,22 @@ KnobControl::~KnobControl() = default;
 void KnobControl::paint(juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat().reduced(1.0f);
-    g.setColour(panelEdgeColour);
-    g.drawRoundedRectangle(area, 5.0f, 1.0f);
+
+    // Diagnostic: highlight only the compressor control's actual component bounds.
+    if (titleLabel.getText().contains("Threshold"))
+    {
+        g.setColour(juce::Colour(80, 210, 110));
+        g.fillRoundedRectangle(area, 7.0f);
+        g.setColour(juce::Colours::black);
+        g.setFont(juce::FontOptions(16.0f, juce::Font::bold));
+        g.drawText("CONTROL AREA", getLocalBounds().reduced(4),
+                   juce::Justification::centred);
+    }
+    else
+    {
+        g.setColour(panelEdgeColour);
+        g.drawRoundedRectangle(area, 5.0f, 1.0f);
+    }
 }
 
 void KnobControl::resized()
