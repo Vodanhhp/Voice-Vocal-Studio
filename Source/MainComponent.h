@@ -5,6 +5,12 @@
 #include <vector>
 #include <array>
 
+class InputVUMeter : public juce::Component
+{
+public:
+    void paint(juce::Graphics& g) override;
+};
+
 class MainComponent : public juce::Component
 {
 public:
@@ -34,8 +40,7 @@ private:
     juce::Label test05Label; // Persistent build marker; retain in future tests.
     juce::Label test06Label; // Persistent build marker; retain in future tests.
     juce::Label inputMeterLabel;
-    double inputLevel = 0.0;
-    juce::ProgressBar inputMeter;
+    InputVUMeter inputMeter;
     std::array<juce::Label, 4> groupLabels;
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 4> groups;
 
