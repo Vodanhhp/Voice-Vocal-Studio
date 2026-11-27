@@ -30,12 +30,12 @@ KnobControl::KnobControl(const juce::String& title,
     slider.setColour(juce::Slider::trackColourId, accentColour);
     slider.setColour(juce::Slider::backgroundColourId, juce::Colour(15, 20, 29));
     slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
-    slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 62, 24);
     slider.setRange(minimum, maximum, 0.1);
     slider.setValue(initial, juce::dontSendNotification);
-    slider.setColour(juce::Slider::rotarySliderFillColourId, accentColour);
-    slider.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colour(67, 79, 98));
-    slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+    slider.setColour(juce::Slider::textBoxTextColourId, textColour);
+    slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(15, 20, 29));
+    slider.setColour(juce::Slider::textBoxOutlineColourId, panelEdgeColour);
     slider.setMouseDragSensitivity(180);
     addAndMakeVisible(slider);
 
@@ -58,22 +58,10 @@ KnobControl::~KnobControl() = default;
 void KnobControl::paint(juce::Graphics& g)
 {
     auto area = getLocalBounds().toFloat().reduced(1.0f);
-
-    // Diagnostic: highlight only the compressor control's actual component bounds.
-    if (titleLabel.getText().contains("Threshold"))
-    {
-        g.setColour(juce::Colour(80, 210, 110));
-        g.fillRoundedRectangle(area, 7.0f);
-        g.setColour(juce::Colours::black);
-        g.setFont(juce::FontOptions(16.0f, juce::Font::bold));
-        g.drawText("CONTROL AREA", getLocalBounds().reduced(4),
-                   juce::Justification::centred);
-    }
-    else
-    {
-        g.setColour(panelEdgeColour);
-        g.drawRoundedRectangle(area, 5.0f, 1.0f);
-    }
+    g.setColour(juce::Colour(24, 31, 43));
+    g.fillRoundedRectangle(area, 6.0f);
+    g.setColour(panelEdgeColour);
+    g.drawRoundedRectangle(area, 6.0f, 1.0f);
 }
 
 void KnobControl::resized()
@@ -92,7 +80,7 @@ MainComponent::MainComponent()
 
     setSize(820, 620);
 
-    titleLabel.setText("VOICE VOCAL STUDIO - KIEM TRA VUNG DIEU KHIEN 04", juce::dontSendNotification);
+    titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(27.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, accentColour);
     addAndMakeVisible(titleLabel);
@@ -292,18 +280,6 @@ void MainComponent::paint(juce::Graphics& g)
     for (const auto& panel : panelBounds)
         drawPanel(panel);
 
-    // Diagnostic: draw the allocated Threshold component bounds from the parent.
-    if (!groupKnobs[2].empty())
-    {
-        const auto controlBounds = groupKnobs[2][0]->getBounds();
-        g.setColour(juce::Colour(80, 220, 110));
-        g.drawRect(controlBounds, 4);
-        g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
-        g.drawText("THRESHOLD BOUNDS",
-                   controlBounds,
-                   juce::Justification::centred);
-    }
-
     auto headerAccent = juce::Rectangle<float>(25.0f, 24.0f, 5.0f, 54.0f);
     g.setColour(accentColour);
     g.fillRoundedRectangle(headerAccent, 2.0f);
@@ -385,8 +361,7 @@ void MainComponent::resized()
             {
                 const int x = panel.getX() + 8 + k * cellWidth;
                 controls[(size_t)k]->setBounds(x, top, cellWidth, availableHeight);
-                // Hide only Threshold temporarily; its parent-drawn bounds marker remains visible.
-                controls[(size_t)k]->setVisible(!(i == 2 && k == 0));
+                controls[(size_t)k]->setVisible(true);
                 controls[(size_t)k]->toFront(false);
             }
         }
