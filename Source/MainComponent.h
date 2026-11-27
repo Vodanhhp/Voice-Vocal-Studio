@@ -57,6 +57,10 @@ private:
     juce::ComboBox inputDeviceBox;
     juce::ComboBox outputDeviceBox;
     juce::ComboBox presetBox;
+    juce::Slider micVolumeSlider;
+    juce::Slider outputVolumeSlider;
+    juce::Label micVolumeLabel;
+    juce::Label outputVolumeLabel;
 
     juce::Label inputMeterLabel;
     juce::Label outputMeterLabel;
