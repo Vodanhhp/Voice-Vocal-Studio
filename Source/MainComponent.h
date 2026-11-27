@@ -47,19 +47,15 @@ private:
                                    int group);
 
     juce::Label titleLabel;
-    juce::Label infoLabel;
-    juce::Label test04Label; // Persistent build marker; retain in future tests.
-    juce::Label test05Label; // Persistent build marker; retain in future tests.
-    juce::Label test06Label; // Persistent build marker; retain in future tests.
     juce::Label inputMeterLabel;
     InputVUMeter inputMeter;
     std::array<juce::Label, 4> groupLabels;
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 4> groups;
 
-    juce::ToggleButton mixerEnabled { "Bat Mixer" };
-    juce::ToggleButton eqEnabled { "Bat EQ" };
-    juce::ToggleButton compressorEnabled { "Bat Compressor" };
-    juce::ToggleButton cleanupEnabled { "Bat lam sach giong" };
+    juce::ToggleButton mixerEnabled { "ON" };
+    juce::ToggleButton eqEnabled { "ON" };
+    juce::ToggleButton compressorEnabled { "ON" };
+    juce::ToggleButton cleanupEnabled { "ON" };
 
     juce::TextButton processButton { "BAT XU LY" };
     juce::TextButton bypassButton { "BYPASS" };
