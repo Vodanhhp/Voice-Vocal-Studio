@@ -100,6 +100,12 @@ MainComponent::MainComponent()
     test05Label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
     test05Label.setColour(juce::Label::textColourId, juce::Colour(110, 235, 150));
     addAndMakeVisible(test05Label);
+
+    // TEST 06: high-contrast LinearBar sliders with an explicit background colour.
+    test06Label.setText("TEST 06 - HIGH CONTRAST SLIDER STYLE", juce::dontSendNotification);
+    test06Label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+    test06Label.setColour(juce::Label::textColourId, juce::Colour(100, 210, 255));
+    addAndMakeVisible(test06Label);
     resized();
 }
 
@@ -115,15 +121,16 @@ MainComponent::ParameterControl* MainComponent::addParameter(
     result->label.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(result->label);
 
-    result->slider.setSliderStyle(juce::Slider::LinearHorizontal);
+    result->slider.setSliderStyle(juce::Slider::LinearBar);
     result->slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 65, 24);
     result->slider.setRange(minimum, maximum, 0.1);
     result->slider.setValue(initial, juce::dontSendNotification);
     result->slider.setTextValueSuffix(suffix);
-    result->slider.setColour(juce::Slider::textBoxTextColourId, textColour);
-    result->slider.setColour(juce::Slider::textBoxBackgroundColourId, controlBackground);
-    result->slider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colour(80, 91, 108));
-    result->slider.setColour(juce::Slider::trackColourId, accentColour);
+    result->slider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+    result->slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(45, 55, 70));
+    result->slider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colour(120, 145, 170));
+    result->slider.setColour(juce::Slider::backgroundColourId, juce::Colour(55, 65, 80));
+    result->slider.setColour(juce::Slider::trackColourId, juce::Colour(40, 190, 245));
     result->slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
     addAndMakeVisible(result->slider);
 
@@ -144,6 +151,7 @@ void MainComponent::resized()
     infoLabel.setBounds(area.removeFromTop(24));
     test04Label.setBounds(area.removeFromTop(24));
     test05Label.setBounds(area.removeFromTop(22));
+    test06Label.setBounds(area.removeFromTop(22));
     area.removeFromTop(4);
 
     const int gap = 18;
