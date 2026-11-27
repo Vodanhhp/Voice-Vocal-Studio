@@ -4,11 +4,15 @@
 #include <memory>
 #include <vector>
 #include <array>
+#include <atomic>
 
 class InputVUMeter : public juce::Component
 {
 public:
     void paint(juce::Graphics& g) override;
+    void setLevel(float newLevel) noexcept { level.store(newLevel); }
+private:
+    std::atomic<float> level { 0.0f };
 };
 
 class MicVolumeLookAndFeel : public juce::LookAndFeel_V4
@@ -22,14 +26,18 @@ public:
                           juce::Slider& slider) override;
 };
 
-class MainComponent : public juce::Component
+class MainComponent : public juce::AudioAppComponent, private juce::Timer
 {
 public:
     MainComponent();
-    ~MainComponent() override = default;
+    ~MainComponent() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
+    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
+    void releaseResources() override;
+    void timerCallback() override;
 
 private:
     struct ParameterControl
@@ -60,6 +68,13 @@ private:
     juce::TextButton processButton { "BAT XU LY" };
     juce::TextButton bypassButton { "BYPASS" };
     juce::Label statusLabel;
+
+    std::atomic<float> inputGainLinear { 1.0f };
+    std::atomic<float> micGainLinear { 0.75f };
+    std::atomic<float> outputGainLinear { 0.80f };
+    std::atomic<float> inputPeak { 0.0f };
+    std::atomic<bool> processingEnabled { false };
+    std::atomic<bool> bypassEnabled { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
