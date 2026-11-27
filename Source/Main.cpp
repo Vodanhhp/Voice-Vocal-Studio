@@ -69,7 +69,7 @@ public:
             setTitleBarHeight (28);
             setResizable (false, false);
             setContentOwned (new MainComponent(), true);
-            centreWithSize (getWidth(), getHeight());
+            centreWithSize (760, 588);
             setVisible (true);
         }
 
