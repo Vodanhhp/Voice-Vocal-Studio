@@ -8,6 +8,56 @@ namespace
     const juce::Colour controlBackground { 35, 43, 56 };
 }
 
+void MicVolumeLookAndFeel::drawRotarySlider(
+    juce::Graphics& g, int x, int y, int width, int height,
+    float sliderPosProportional, float rotaryStartAngle,
+    float rotaryEndAngle, juce::Slider& slider)
+{
+    juce::ignoreUnused(slider);
+    const float diameter = (float)juce::jmin(width, height) - 8.0f;
+    const float radius = diameter * 0.5f;
+    const float centreX = (float)x + (float)width * 0.5f;
+    const float centreY = (float)y + radius + 3.0f;
+    const float angle = rotaryStartAngle
+        + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
+
+    // Dark dial body with a clear outer rim.
+    g.setColour(juce::Colour(18, 25, 36));
+    g.fillEllipse(centreX - radius, centreY - radius, diameter, diameter);
+    g.setColour(juce::Colour(105, 126, 148));
+    g.drawEllipse(centreX - radius, centreY - radius, diameter, diameter, 2.0f);
+
+    // Coloured value arc.
+    juce::Path valueArc;
+    valueArc.addCentredArc(centreX, centreY, radius - 4.0f, radius - 4.0f,
+                           0.0f, rotaryStartAngle, angle, true);
+    g.setColour(juce::Colour(40, 190, 245));
+    g.strokePath(valueArc, juce::PathStrokeType(3.5f,
+        juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    // Fixed end markers and a bright pointer.
+    for (int i = 0; i <= 10; ++i)
+    {
+        const float tickAngle = rotaryStartAngle
+            + (rotaryEndAngle - rotaryStartAngle) * (float)i / 10.0f;
+        const float outer = radius - 1.0f;
+        const float inner = radius - (i % 5 == 0 ? 7.0f : 4.0f);
+        g.setColour(juce::Colour(175, 190, 207));
+        g.drawLine(centreX + std::cos(tickAngle) * inner,
+                   centreY + std::sin(tickAngle) * inner,
+                   centreX + std::cos(tickAngle) * outer,
+                   centreY + std::sin(tickAngle) * outer,
+                   i % 5 == 0 ? 1.6f : 1.0f);
+    }
+
+    g.setColour(juce::Colour(245, 250, 255));
+    g.drawLine(centreX, centreY,
+               centreX + std::cos(angle) * (radius - 10.0f),
+               centreY + std::sin(angle) * (radius - 10.0f), 2.8f);
+    g.setColour(juce::Colour(40, 190, 245));
+    g.fillEllipse(centreX - 3.5f, centreY - 3.5f, 7.0f, 7.0f);
+}
+
 void InputVUMeter::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat();
@@ -189,9 +239,10 @@ MainComponent::ParameterControl* MainComponent::addParameter(
     result->slider.setTextBoxStyle(isMicVolume
         ? juce::Slider::TextBoxBelow
         : juce::Slider::TextBoxRight,
-        false, isMicVolume ? 58 : 65, isMicVolume ? 18 : 24);
+        false, isMicVolume ? 64 : 65, isMicVolume ? 18 : 24);
     if (isMicVolume)
     {
+        result->slider.setLookAndFeel(&result->rotaryLookAndFeel);
         result->slider.setRotaryParameters(
             juce::MathConstants<float>::pi * 1.2f,
             juce::MathConstants<float>::pi * 2.8f,
@@ -259,7 +310,7 @@ void MainComponent::resized()
             const int rowY = groupArea.getY() + (int)i * rowHeight;
             control.label.setBounds(groupArea.getX(), rowY, 105, 26);
             if (group == 0 && i == 1) // TEST 08: only Mic Volume becomes a rotary knob.
-                control.slider.setBounds(groupArea.getX() + 108, rowY - 8, 78, 48);
+                control.slider.setBounds(groupArea.getX() + 108, rowY - 8, 88, 64);
             else
                 control.slider.setBounds(groupArea.getX() + 108, rowY, groupArea.getWidth() - 108, 28);
         }
