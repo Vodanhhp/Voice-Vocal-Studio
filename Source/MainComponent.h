@@ -33,6 +33,9 @@ private:
     juce::Label test04Label; // Persistent build marker; retain in future tests.
     juce::Label test05Label; // Persistent build marker; retain in future tests.
     juce::Label test06Label; // Persistent build marker; retain in future tests.
+    juce::Label inputMeterLabel;
+    double inputLevel = 0.0;
+    juce::ProgressBar inputMeter;
     std::array<juce::Label, 4> groupLabels;
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 4> groups;
 
