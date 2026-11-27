@@ -93,6 +93,14 @@ MainComponent::MainComponent()
     statusLabel.setFont(juce::FontOptions(11.5f, juce::Font::bold));
     statusLabel.setColour(juce::Label::textColourId, juce::Colour(242, 183, 91));
     addAndMakeVisible(statusLabel);
+
+    // TEST 05: force a final layout after every child control has been created.
+    resized();
+    test05Label.setText("TEST 05 - FINAL LAYOUT CALLED", juce::dontSendNotification);
+    test05Label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+    test05Label.setColour(juce::Label::textColourId, juce::Colour(110, 235, 150));
+    addAndMakeVisible(test05Label);
+    resized();
 }
 
 MainComponent::ParameterControl* MainComponent::addParameter(
@@ -135,7 +143,8 @@ void MainComponent::resized()
     titleLabel.setBounds(area.removeFromTop(32));
     infoLabel.setBounds(area.removeFromTop(24));
     test04Label.setBounds(area.removeFromTop(24));
-    area.removeFromTop(8);
+    test05Label.setBounds(area.removeFromTop(22));
+    area.removeFromTop(4);
 
     const int gap = 18;
     const int columnWidth = (area.getWidth() - gap) / 2;
