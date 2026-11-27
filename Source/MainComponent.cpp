@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include <cmath>
 
 namespace
 {
@@ -163,7 +164,13 @@ MainComponent::MainComponent()
     processButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(18, 112, 83));
     processButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
     processButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    processButton.onClick = [this]\n    {\n        processingEnabled.store(processButton.getToggleState());\n        statusLabel.setText(processButton.getToggleState()\n            ? "Monitor dang chay - tin hieu microphone"\n            : "Monitor da tat", juce::dontSendNotification);\n    };
+    processButton.onClick = [this]
+    {
+        processingEnabled.store(processButton.getToggleState());
+        statusLabel.setText(processButton.getToggleState()
+            ? "Monitor dang chay - tin hieu microphone"
+            : "Monitor da tat", juce::dontSendNotification);
+    };
     addAndMakeVisible(processButton);
 
     bypassButton.setClickingTogglesState(true);
@@ -171,7 +178,13 @@ MainComponent::MainComponent()
     bypassButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(87, 101, 120));
     bypassButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
     bypassButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    bypassButton.onClick = [this]\n    {\n        bypassEnabled.store(bypassButton.getToggleState());\n        statusLabel.setText(bypassButton.getToggleState()\n            ? "BYPASS - tin hieu truc tiep"\n            : "Bypass da tat", juce::dontSendNotification);\n    };
+    bypassButton.onClick = [this]
+    {
+        bypassEnabled.store(bypassButton.getToggleState());
+        statusLabel.setText(bypassButton.getToggleState()
+            ? "BYPASS - tin hieu truc tiep"
+            : "Bypass da tat", juce::dontSendNotification);
+    };
     addAndMakeVisible(bypassButton);
 
     statusLabel.setText("San sang", juce::dontSendNotification);
@@ -281,7 +294,17 @@ MainComponent::ParameterControl* MainComponent::addParameter(
         juce::MathConstants<float>::pi * 2.8f, true);
 
     result->slider.setRange(minimum, maximum, 0.1);
-    result->slider.setValue(initial, juce::dontSendNotification);\n    result->slider.onValueChange = [this, name, slider = &result->slider]\n    {\n        const float value = (float)slider->getValue();\n        if (name == "Input Gain")\n            inputGainLinear.store(juce::Decibels::decibelsToGain(value));\n        else if (name == "Mic Volume")\n            micGainLinear.store(value / 100.0f);\n        else if (name == "Output Volume")\n            outputGainLinear.store(value / 100.0f);\n    };
+    result->slider.setValue(initial, juce::dontSendNotification);
+    result->slider.onValueChange = [this, name, slider = &result->slider]
+    {
+        const float value = (float)slider->getValue();
+        if (name == "Input Gain")
+            inputGainLinear.store(juce::Decibels::decibelsToGain(value));
+        else if (name == "Mic Volume")
+            micGainLinear.store(value / 100.0f);
+        else if (name == "Output Volume")
+            outputGainLinear.store(value / 100.0f);
+    };
     result->slider.setTextValueSuffix(suffix);
     result->slider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
     result->slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(18, 27, 39));
