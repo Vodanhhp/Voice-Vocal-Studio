@@ -5,15 +5,6 @@
 #include <vector>
 #include <array>
 
-// Custom mixer-style rotary dial.
-class StudioKnobLookAndFeel final : public juce::LookAndFeel_V4
-{
-public:
-    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
-                          float sliderPosProportional, float rotaryStartAngle,
-                          float rotaryEndAngle, juce::Slider& slider) override;
-};
-
 // A rotary control for the first UI prototype.
 // Values are editable in the interface but are not connected to DSP yet.
 class KnobControl final : public juce::Component
@@ -30,7 +21,6 @@ public:
     void paint(juce::Graphics& g) override;
 
 private:
-    StudioKnobLookAndFeel knobLookAndFeel;
     juce::Label titleLabel;
     juce::Slider slider;
     juce::Label valueLabel;
