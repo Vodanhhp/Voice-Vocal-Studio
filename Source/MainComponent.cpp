@@ -12,73 +12,6 @@ namespace
 }
 
 //==============================================================================
-// Draw a clear, metallic-style rotary dial instead of JUCE's default knob.
-void StudioKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y,
-                                              int width, int height,
-                                              float sliderPosProportional,
-                                              float rotaryStartAngle,
-                                              float rotaryEndAngle,
-                                              juce::Slider& slider)
-{
-    juce::ignoreUnused(slider);
-
-    const float diameter = juce::jmin((float)width, (float)height) - 12.0f;
-    const float radius = diameter * 0.5f;
-    const float centreX = (float)x + (float)width * 0.5f;
-    const float centreY = (float)y + (float)height * 0.5f;
-    const float angle = rotaryStartAngle + sliderPosProportional
-                      * (rotaryEndAngle - rotaryStartAngle);
-    const juce::Rectangle<float> dial(centreX - radius, centreY - radius,
-                                      diameter, diameter);
-
-    g.setColour(juce::Colour(5, 8, 13).withAlpha(0.75f));
-    g.fillEllipse(dial.translated(0.0f, 3.0f));
-
-    juce::ColourGradient bodyGradient(juce::Colour(75, 88, 108),
-                                      centreX - radius * 0.55f, centreY - radius,
-                                      juce::Colour(23, 30, 42),
-                                      centreX + radius * 0.55f, centreY + radius,
-                                      false);
-    g.setGradientFill(bodyGradient);
-    g.fillEllipse(dial);
-    g.setColour(juce::Colour(112, 129, 151));
-    g.drawEllipse(dial, 1.4f);
-
-    const float arcRadius = radius - 5.0f;
-    juce::Path trackArc;
-    trackArc.addCentredArc(centreX, centreY, arcRadius, arcRadius, 0.0f,
-                           rotaryStartAngle, rotaryEndAngle, true);
-    g.setColour(juce::Colour(65, 78, 96));
-    g.strokePath(trackArc, juce::PathStrokeType(4.0f,
-        juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    juce::Path valueArc;
-    valueArc.addCentredArc(centreX, centreY, arcRadius, arcRadius, 0.0f,
-                           rotaryStartAngle, angle, true);
-    g.setColour(juce::Colour(54, 190, 244));
-    g.strokePath(valueArc, juce::PathStrokeType(4.0f,
-        juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-
-    const float innerRadius = radius * 0.66f;
-    const juce::Rectangle<float> inner(centreX - innerRadius, centreY - innerRadius,
-                                       innerRadius * 2.0f, innerRadius * 2.0f);
-    g.setColour(juce::Colour(18, 24, 34));
-    g.fillEllipse(inner);
-    g.setColour(juce::Colour(91, 108, 130));
-    g.drawEllipse(inner, 1.0f);
-
-    const float markerInner = radius * 0.30f;
-    const float markerOuter = radius * 0.73f;
-    const juce::Point<float> markerStart(centreX + std::sin(angle) * markerInner,
-                                         centreY - std::cos(angle) * markerInner);
-    const juce::Point<float> markerEnd(centreX + std::sin(angle) * markerOuter,
-                                       centreY - std::cos(angle) * markerOuter);
-    g.setColour(juce::Colours::white);
-    g.drawLine(markerStart.x, markerStart.y, markerEnd.x, markerEnd.y, 3.2f);
-    g.setColour(juce::Colour(54, 190, 244));
-    g.fillEllipse(centreX - 2.5f, centreY - 2.5f, 5.0f, 5.0f);
-}
-
 KnobControl::KnobControl(const juce::String& title,
                          double minimum,
                          double maximum,
@@ -92,8 +25,11 @@ KnobControl::KnobControl(const juce::String& title,
     titleLabel.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(titleLabel);
 
-    slider.setLookAndFeel(&knobLookAndFeel);
-    slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    // Use a standard horizontal fader: reliable JUCE rendering, no custom rotary LookAndFeel.
+    slider.setSliderStyle(juce::Slider::LinearHorizontal);
+    slider.setColour(juce::Slider::trackColourId, accentColour);
+    slider.setColour(juce::Slider::backgroundColourId, juce::Colour(15, 20, 29));
+    slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
     slider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     slider.setRange(minimum, maximum, 0.1);
     slider.setValue(initial, juce::dontSendNotification);
@@ -117,20 +53,13 @@ KnobControl::KnobControl(const juce::String& title,
                        juce::dontSendNotification);
 }
 
-KnobControl::~KnobControl()
-{
-    slider.setLookAndFeel(nullptr);
-}
+KnobControl::~KnobControl() = default;
 
 void KnobControl::paint(juce::Graphics& g)
 {
-    // TEMPORARY DIAGNOSTIC: confirms whether each KnobControl is being painted.
     auto area = getLocalBounds().toFloat().reduced(1.0f);
-    g.setColour(juce::Colours::magenta);
-    g.drawRoundedRectangle(area, 5.0f, 2.0f);
-    g.setColour(juce::Colours::yellow);
-    g.setFont(juce::FontOptions(10.0f, juce::Font::bold));
-    g.drawText("KNOB AREA", getLocalBounds(), juce::Justification::centred);
+    g.setColour(panelEdgeColour);
+    g.drawRoundedRectangle(area, 5.0f, 1.0f);
 }
 
 void KnobControl::resized()
