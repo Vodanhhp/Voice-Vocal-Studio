@@ -124,7 +124,13 @@ KnobControl::~KnobControl()
 
 void KnobControl::paint(juce::Graphics& g)
 {
-    juce::ignoreUnused(g);
+    // TEMPORARY DIAGNOSTIC: confirms whether each KnobControl is being painted.
+    auto area = getLocalBounds().toFloat().reduced(1.0f);
+    g.setColour(juce::Colours::magenta);
+    g.drawRoundedRectangle(area, 5.0f, 2.0f);
+    g.setColour(juce::Colours::yellow);
+    g.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    g.drawText("KNOB AREA", getLocalBounds(), juce::Justification::centred);
 }
 
 void KnobControl::resized()
