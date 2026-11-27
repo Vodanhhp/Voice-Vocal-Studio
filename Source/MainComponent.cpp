@@ -92,7 +92,7 @@ MainComponent::MainComponent()
 
     setSize(820, 620);
 
-    titleLabel.setText("VOICE VOCAL STUDIO - KIEM TRA BAN MOI 02", juce::dontSendNotification);
+    titleLabel.setText("VOICE VOCAL STUDIO - KIEM TRA VUNG DIEU KHIEN 04", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(27.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, accentColour);
     addAndMakeVisible(titleLabel);
@@ -289,20 +289,19 @@ void MainComponent::paint(juce::Graphics& g)
         g.drawRoundedRectangle(area.toFloat(), 12.0f, 1.0f);
     };
 
-    for (int i = 0; i < (int) panelBounds.size(); ++i)
+    for (const auto& panel : panelBounds)
+        drawPanel(panel);
+
+    // Diagnostic: draw the allocated Threshold component bounds from the parent.
+    if (!groupKnobs[2].empty())
     {
-        if (i == 2)
-        {
-            g.setColour(juce::Colour(180, 45, 65));
-            g.fillRoundedRectangle(panelBounds[(size_t)i].toFloat(), 12.0f);
-            g.setColour(juce::Colours::white);
-            g.setFont(juce::FontOptions(24.0f, juce::Font::bold));
-            g.drawText("TEST COMPRESSOR PANEL",
-                       panelBounds[(size_t)i].reduced(12),
-                       juce::Justification::centred);
-        }
-        else
-            drawPanel(panelBounds[(size_t)i]);
+        const auto controlBounds = groupKnobs[2][0]->getBounds();
+        g.setColour(juce::Colour(80, 220, 110));
+        g.drawRect(controlBounds, 4);
+        g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
+        g.drawText("THRESHOLD BOUNDS",
+                   controlBounds,
+                   juce::Justification::centred);
     }
 
     auto headerAccent = juce::Rectangle<float>(25.0f, 24.0f, 5.0f, 54.0f);
@@ -386,7 +385,8 @@ void MainComponent::resized()
             {
                 const int x = panel.getX() + 8 + k * cellWidth;
                 controls[(size_t)k]->setBounds(x, top, cellWidth, availableHeight);
-                controls[(size_t)k]->setVisible(true);
+                // Hide only Threshold temporarily; its parent-drawn bounds marker remains visible.
+                controls[(size_t)k]->setVisible(!(i == 2 && k == 0));
                 controls[(size_t)k]->toFront(false);
             }
         }
