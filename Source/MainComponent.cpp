@@ -67,7 +67,7 @@ MainComponent::MainComponent()
     // Use a Windows UI font with full Vietnamese glyph coverage.
     juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName("Segoe UI");
 
-    setSize(1180, 820);
+    setSize(820, 620);
 
     titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(27.0f, juce::Font::bold));
@@ -132,8 +132,28 @@ MainComponent::MainComponent()
     }
 
     addKnob("Input Gain", -12.0, 24.0, 0.0, " dB", 0);
-    addKnob("Mic Volume", 0.0, 100.0, 75.0, " %", 0);
-    addKnob("Output", 0.0, 100.0, 80.0, " %", 0);
+
+    auto configureVolumeSlider = [this](juce::Slider& slider, juce::Label& label,
+                                        const juce::String& caption, double initial)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(11.5f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, textColour);
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 42, 22);
+        slider.setRange(0.0, 100.0, 1.0);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setColour(juce::Slider::trackColourId, accentColour);
+        slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        slider.setColour(juce::Slider::textBoxTextColourId, textColour);
+        slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(39, 48, 63));
+        slider.setColour(juce::Slider::textBoxOutlineColourId, panelEdgeColour);
+        addAndMakeVisible(slider);
+    };
+    configureVolumeSlider(micVolumeSlider, micVolumeLabel, "MIC VOLUME", 75.0);
+    configureVolumeSlider(outputVolumeSlider, outputVolumeLabel, "OUTPUT VOLUME", 80.0);
 
     addKnob("Bass", -12.0, 12.0, 2.0, " dB", 1);
     addKnob("Mid", -12.0, 12.0, 0.0, " dB", 1);
@@ -261,34 +281,35 @@ void MainComponent::paint(juce::Graphics& g)
 //==============================================================================
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(24);
+    auto area = getLocalBounds().reduced(16);
 
-    auto header = area.removeFromTop(78);
-    titleLabel.setBounds(header.getX() + 16, header.getY(), header.getWidth() - 16, 42);
-    subtitleLabel.setBounds(getLocalBounds().getX() + 40, 62, 600, 22);
+    auto header = area.removeFromTop(54);
+    titleLabel.setBounds(header.getX() + 10, header.getY(), 420, 32);
+    subtitleLabel.setBounds(header.getX() + 12, header.getY() + 31, 500, 18);
 
-    area.removeFromTop(10);
-    auto deviceArea = area.removeFromTop(112);
-    deviceLabel.setBounds(deviceArea.getX() + 16, deviceArea.getY() + 8, 220, 22);
+    area.removeFromTop(6);
+    auto deviceArea = area.removeFromTop(70);
+    deviceLabel.setBounds(deviceArea.getX() + 10, deviceArea.getY(), 180, 20);
+    engineLabel.setBounds(deviceArea.getRight() - 245, deviceArea.getY(), 235, 20);
 
-    const int half = (deviceArea.getWidth() - 48) / 2;
-    inputLabel.setBounds(deviceArea.getX() + 16, deviceArea.getY() + 34, 100, 18);
-    inputDeviceBox.setBounds(deviceArea.getX() + 16, deviceArea.getY() + 55, half - 12, 30);
-    outputLabel.setBounds(deviceArea.getX() + half + 32, deviceArea.getY() + 34, 100, 18);
-    outputDeviceBox.setBounds(deviceArea.getX() + half + 32, deviceArea.getY() + 55, half - 12, 30);
-    engineLabel.setBounds(deviceArea.getRight() - 300, deviceArea.getY() + 8, 280, 22);
+    const int half = (deviceArea.getWidth() - 36) / 2;
+    inputLabel.setBounds(deviceArea.getX() + 10, deviceArea.getY() + 22, 90, 16);
+    inputDeviceBox.setBounds(deviceArea.getX() + 10, deviceArea.getY() + 40, half - 10, 27);
+    outputLabel.setBounds(deviceArea.getX() + half + 26, deviceArea.getY() + 22, 90, 16);
+    outputDeviceBox.setBounds(deviceArea.getX() + half + 26, deviceArea.getY() + 40, half - 10, 27);
 
-    area.removeFromTop(12);
-    auto meterArea = area.removeFromTop(48);
-    inputMeterLabel.setBounds(meterArea.getX() + 16, meterArea.getY(), 70, 18);
-    inputMeterState.setBounds(meterArea.getX() + 90, meterArea.getY(), 240, 18);
-    outputMeterLabel.setBounds(meterArea.getX() + 410, meterArea.getY(), 70, 18);
-    outputMeterState.setBounds(meterArea.getX() + 485, meterArea.getY(), 240, 18);
+    area.removeFromTop(5);
+    auto meterArea = area.removeFromTop(28);
+    inputMeterLabel.setBounds(meterArea.getX() + 10, meterArea.getY(), 54, 18);
+    inputMeterState.setBounds(meterArea.getX() + 66, meterArea.getY(), 220, 18);
+    outputMeterLabel.setBounds(meterArea.getX() + 340, meterArea.getY(), 62, 18);
+    outputMeterState.setBounds(meterArea.getX() + 405, meterArea.getY(), 220, 18);
 
-    area.removeFromTop(12);
-    const int gap = 14;
+    area.removeFromTop(7);
+    auto bottom = area.removeFromBottom(55);
+    const int gap = 10;
     const int panelWidth = (area.getWidth() - gap) / 2;
-    const int panelHeight = (area.getHeight() - gap - 105) / 2;
+    const int panelHeight = (area.getHeight() - gap) / 2;
 
     panelBounds[0] = { area.getX(), area.getY(), panelWidth, panelHeight };
     panelBounds[1] = { area.getX() + panelWidth + gap, area.getY(), panelWidth, panelHeight };
@@ -298,26 +319,42 @@ void MainComponent::resized()
     for (int i = 0; i < 4; ++i)
     {
         auto panel = panelBounds[(size_t)i];
-        sectionTitles[(size_t)i].setBounds(panel.getX() + 16, panel.getY() + 12, panel.getWidth() - 170, 24);
-        sectionToggles[(size_t)i].setBounds(panel.getRight() - 145, panel.getY() + 10, 132, 26);
+        sectionTitles[(size_t)i].setBounds(panel.getX() + 10, panel.getY() + 7, panel.getWidth() - 140, 22);
+        sectionToggles[(size_t)i].setBounds(panel.getRight() - 132, panel.getY() + 5, 122, 24);
 
-        const auto& controls = groupKnobs[(size_t)i];
-        const int count = (int)controls.size();
-        const int innerWidth = panel.getWidth() - 28;
-        const int cellWidth = innerWidth / juce::jmax(1, count);
-        const int top = panel.getY() + 48;
-        const int availableHeight = panel.getHeight() - 58;
-        for (int k = 0; k < count; ++k)
+        if (i == 0)
         {
-            const int x = panel.getX() + 14 + k * cellWidth;
-            controls[(size_t)k]->setBounds(x, top, cellWidth, availableHeight);
+            auto controls = groupKnobs[0];
+            const int contentY = panel.getY() + 34;
+            if (!controls.empty())
+                controls[0]->setBounds(panel.getX() + 8, contentY, 100, panel.getHeight() - 40);
+
+            const int sliderX = panel.getX() + 116;
+            const int sliderWidth = panel.getWidth() - 126;
+            micVolumeLabel.setBounds(sliderX, contentY + 2, sliderWidth, 17);
+            micVolumeSlider.setBounds(sliderX, contentY + 19, sliderWidth, 30);
+            outputVolumeLabel.setBounds(sliderX, contentY + 57, sliderWidth, 17);
+            outputVolumeSlider.setBounds(sliderX, contentY + 74, sliderWidth, 30);
+        }
+        else
+        {
+            const auto& controls = groupKnobs[(size_t)i];
+            const int count = (int)controls.size();
+            const int innerWidth = panel.getWidth() - 16;
+            const int cellWidth = innerWidth / juce::jmax(1, count);
+            const int top = panel.getY() + 34;
+            const int availableHeight = panel.getHeight() - 40;
+            for (int k = 0; k < count; ++k)
+            {
+                const int x = panel.getX() + 8 + k * cellWidth;
+                controls[(size_t)k]->setBounds(x, top, cellWidth, availableHeight);
+            }
         }
     }
 
-    auto bottom = juce::Rectangle<int>(area.getX(), area.getBottom() - 91, area.getWidth(), 82);
-    presetBox.setBounds(bottom.getX() + 8, bottom.getY() + 4, 210, 30);
-    processButton.setBounds(bottom.getX() + 236, bottom.getY() + 4, 150, 34);
-    bypassButton.setBounds(bottom.getX() + 398, bottom.getY() + 4, 160, 34);
-    statusLabel.setBounds(bottom.getX() + 8, bottom.getY() + 43, bottom.getWidth() - 16, 22);
-    footerLabel.setBounds(24, getHeight() - 23, getWidth() - 48, 16);
+    presetBox.setBounds(bottom.getX() + 4, bottom.getY() + 3, 165, 27);
+    processButton.setBounds(bottom.getX() + 178, bottom.getY() + 2, 132, 30);
+    bypassButton.setBounds(bottom.getX() + 320, bottom.getY() + 2, 142, 30);
+    statusLabel.setBounds(bottom.getX() + 4, bottom.getY() + 32, bottom.getWidth() - 8, 18);
+    footerLabel.setBounds(16, getHeight() - 17, getWidth() - 32, 14);
 }
