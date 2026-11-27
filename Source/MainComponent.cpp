@@ -97,9 +97,10 @@ void InputVUMeter::paint(juce::Graphics& g)
                    22, 12, juce::Justification::centred);
     }
 
-    // Static visual reference only; not connected to microphone audio yet.
+    // Live input level, refreshed by the message-thread timer.
+    const float liveLevel = juce::jlimit(0.0f, 1.0f, level.load());
     const float needleAngle = juce::MathConstants<float>::pi
-        + juce::MathConstants<float>::pi * (10.0f / 23.0f);
+        + juce::MathConstants<float>::pi * liveLevel;
     g.setColour(juce::Colour(255, 82, 72));
     g.drawLine(cx, cy, cx + std::cos(needleAngle) * (rx - 11.0f),
                cy + std::sin(needleAngle) * (ry - 10.0f), 2.0f);
@@ -162,12 +163,7 @@ MainComponent::MainComponent()
     processButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(18, 112, 83));
     processButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
     processButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    processButton.onClick = [this]
-    {
-        statusLabel.setText(processButton.getToggleState()
-            ? "Xu ly: chua ket noi engine am thanh"
-            : "Xu ly da tat", juce::dontSendNotification);
-    };
+    processButton.onClick = [this]\n    {\n        processingEnabled.store(processButton.getToggleState());\n        statusLabel.setText(processButton.getToggleState()\n            ? "Monitor dang chay - tin hieu microphone"\n            : "Monitor da tat", juce::dontSendNotification);\n    };
     addAndMakeVisible(processButton);
 
     bypassButton.setClickingTogglesState(true);
@@ -175,12 +171,7 @@ MainComponent::MainComponent()
     bypassButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(87, 101, 120));
     bypassButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
     bypassButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-    bypassButton.onClick = [this]
-    {
-        statusLabel.setText(bypassButton.getToggleState()
-            ? "Bypass: chua ket noi engine am thanh"
-            : "Bypass da tat", juce::dontSendNotification);
-    };
+    bypassButton.onClick = [this]\n    {\n        bypassEnabled.store(bypassButton.getToggleState());\n        statusLabel.setText(bypassButton.getToggleState()\n            ? "BYPASS - tin hieu truc tiep"\n            : "Bypass da tat", juce::dontSendNotification);\n    };
     addAndMakeVisible(bypassButton);
 
     statusLabel.setText("San sang", juce::dontSendNotification);
@@ -189,6 +180,79 @@ MainComponent::MainComponent()
     addAndMakeVisible(statusLabel);
 
     resized();
+
+    // Open the default Windows audio input and stereo output.
+    const auto audioError = setAudioChannels(1, 2);
+    if (audioError.isNotEmpty())
+        statusLabel.setText("Audio: " + audioError, juce::dontSendNotification);
+    else
+        statusLabel.setText("Audio ready - press BAT XU LY", juce::dontSendNotification);
+
+    startTimerHz(30);
+}
+
+MainComponent::~MainComponent()
+{
+    stopTimer();
+    shutdownAudio();
+}
+
+void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+{
+    juce::ignoreUnused(samplesPerBlockExpected, sampleRate);
+}
+
+void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    if (bufferToFill.buffer == nullptr || bufferToFill.numSamples <= 0)
+        return;
+
+    auto& buffer = *bufferToFill.buffer;
+    const int start = bufferToFill.startSample;
+    const int samples = bufferToFill.numSamples;
+    const int channels = buffer.getNumChannels();
+
+    if (channels <= 0)
+        return;
+
+    if (!processingEnabled.load() && !bypassEnabled.load())
+    {
+        buffer.clear(start, samples);
+        inputPeak.store(0.0f);
+        return;
+    }
+
+    // AudioAppComponent provides the input in the first channel(s).
+    const float* input = buffer.getReadPointer(0, start);
+    float peak = 0.0f;
+    for (int i = 0; i < samples; ++i)
+        peak = juce::jmax(peak, std::abs(input[i]));
+    inputPeak.store(peak);
+
+    const float gain = bypassEnabled.load()
+        ? 1.0f
+        : inputGainLinear.load() * micGainLinear.load() * outputGainLinear.load();
+
+    // Preserve channel 0 and duplicate mono input to the remaining outputs.
+    auto* left = buffer.getWritePointer(0, start);
+    for (int i = 0; i < samples; ++i)
+        left[i] = input[i] * gain;
+
+    for (int channel = 1; channel < channels; ++channel)
+    {
+        auto* output = buffer.getWritePointer(channel, start);
+        for (int i = 0; i < samples; ++i)
+            output[i] = input[i] * gain;
+    }
+}
+
+void MainComponent::releaseResources()
+{
+}
+
+void MainComponent::timerCallback()
+{
+    inputMeter.setLevel(inputPeak.load());
 }
 
 MainComponent::ParameterControl* MainComponent::addParameter(
@@ -217,7 +281,7 @@ MainComponent::ParameterControl* MainComponent::addParameter(
         juce::MathConstants<float>::pi * 2.8f, true);
 
     result->slider.setRange(minimum, maximum, 0.1);
-    result->slider.setValue(initial, juce::dontSendNotification);
+    result->slider.setValue(initial, juce::dontSendNotification);\n    result->slider.onValueChange = [this, name, slider = &result->slider]\n    {\n        const float value = (float)slider->getValue();\n        if (name == "Input Gain")\n            inputGainLinear.store(juce::Decibels::decibelsToGain(value));\n        else if (name == "Mic Volume")\n            micGainLinear.store(value / 100.0f);\n        else if (name == "Output Volume")\n            outputGainLinear.store(value / 100.0f);\n    };
     result->slider.setTextValueSuffix(suffix);
     result->slider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
     result->slider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(18, 27, 39));
