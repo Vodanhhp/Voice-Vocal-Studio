@@ -65,8 +65,6 @@ void KnobControl::resized()
 MainComponent::MainComponent()
 {
     setSize(1180, 820);
-    setResizable(true, true);
-    setResizeLimits(980, 700, 1600, 1100);
 
     titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(27.0f, juce::Font::bold));
@@ -254,16 +252,7 @@ void MainComponent::paint(juce::Graphics& g)
     g.setColour(accentColour);
     g.fillRoundedRectangle(headerAccent, 2.0f);
 
-    // Meter tracks intentionally remain empty until the real audio engine is connected.
-    auto drawMeterTrack = [&g](juce::Rectangle<int> area)
-    {
-        g.setColour(juce::Colour(13, 17, 24));
-        g.fillRoundedRectangle(area.toFloat(), 4.0f);
-        g.setColour(panelEdgeColour);
-        g.drawRoundedRectangle(area.toFloat(), 4.0f, 1.0f);
-    };
-    drawMeterTrack({ 125, 119, 250, 10 });
-    drawMeterTrack({ 535, 119, 250, 10 });
+
 }
 
 //==============================================================================
@@ -272,7 +261,7 @@ void MainComponent::resized()
     auto area = getLocalBounds().reduced(24);
 
     auto header = area.removeFromTop(78);
-    titleLabel.setBounds(header.removeFromTop(42).withX(16));
+    titleLabel.setBounds(header.getX() + 16, header.getY(), header.getWidth() - 16, 42);
     subtitleLabel.setBounds(getLocalBounds().getX() + 40, 62, 600, 22);
 
     area.removeFromTop(10);
