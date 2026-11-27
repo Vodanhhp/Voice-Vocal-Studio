@@ -195,6 +195,10 @@ MainComponent::ParameterControl* MainComponent::addParameter(
     const juce::String& name, double minimum, double maximum, double initial,
     const juce::String& suffix, int group)
 {
+    // Keep the group index inside the fixed-size groups array.
+    if (group < 0 || group >= (int)groups.size())
+        return nullptr;
+
     auto control = std::make_unique<ParameterControl>();
     auto* result = control.get();
 
@@ -282,6 +286,14 @@ void MainComponent::resized()
         &mixerEnabled, &eqEnabled, &compressorEnabled, &cleanupEnabled
     };
 
+    // JUCE may call resized() while addParameter() is still creating controls.
+    // Do not access any group's vector until every group is fully populated.
+    const bool parametersReady =
+        groups[0].size() == 3 &&
+        groups[1].size() == 3 &&
+        groups[2].size() == 2 &&
+        groups[3].size() == 3;
+
     for (int group = 0; group < 4; ++group)
     {
         const int col = group % 2;
@@ -295,9 +307,8 @@ void MainComponent::resized()
             card.getX() + 14, card.getY() + 8, card.getWidth() - 100, 26);
         toggles[group]->setBounds(card.getRight() - 72, card.getY() + 8, 62, 24);
 
-        // setSize() can trigger resized() before the controls are created.
-        // Do not index a group's vector until its parameters have been added.
-        if (group == 0 && groups[0].size() < 3)
+        // Header and switches can be laid out immediately; parameter controls wait.
+        if (!parametersReady)
             continue;
 
         const int contentY = card.getY() + 39;
