@@ -168,10 +168,8 @@ MainComponent::MainComponent()
     addKnob("Mid", -12.0, 12.0, 0.0, " dB", 1);
     addKnob("Treble", -12.0, 12.0, 1.0, " dB", 1);
 
-    addKnob("Threshold", -60.0, 0.0, -18.0, " dB", 2);
-    addKnob("Ratio", 1.0, 10.0, 3.0, ":1", 2);
-    addKnob("Attack", 1.0, 100.0, 10.0, " ms", 2);
-    addKnob("Release", 10.0, 500.0, 120.0, " ms", 2);
+    // Layout test: one wide compressor control to verify the panel sizing.
+    addKnob("Threshold - NGUONG NEN", -60.0, 0.0, -18.0, " dB", 2);
 
     addKnob("De-esser", 0.0, 100.0, 25.0, " %", 3);
     addKnob("Saturation", 0.0, 100.0, 12.0, " %", 3);
