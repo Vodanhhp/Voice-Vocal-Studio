@@ -5,31 +5,6 @@
 #include <vector>
 #include <array>
 
-// A rotary control for the first UI prototype.
-// Values are editable in the interface but are not connected to DSP yet.
-class KnobControl final : public juce::Component
-{
-public:
-    KnobControl(const juce::String& title,
-                double minimum,
-                double maximum,
-                double initial,
-                const juce::String& suffix = {});
-
-    ~KnobControl() override;
-    void resized() override;
-    void paint(juce::Graphics& g) override;
-
-private:
-    juce::Label titleLabel;
-    juce::Slider slider;
-    juce::Label valueLabel;
-    juce::String unitSuffix;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(KnobControl)
-};
-
-//==============================================================================
 class MainComponent : public juce::Component
 {
 public:
@@ -40,47 +15,32 @@ public:
     void resized() override;
 
 private:
-    KnobControl* addKnob(const juce::String& title,
-                         double minimum,
-                         double maximum,
-                         double initial,
-                         const juce::String& suffix,
-                         int group);
+    struct ParameterControl
+    {
+        juce::Label label;
+        juce::Slider slider;
+    };
 
-    void updateStatus(const juce::String& message);
+    ParameterControl* addParameter(const juce::String& name,
+                                   double minimum,
+                                   double maximum,
+                                   double initial,
+                                   const juce::String& suffix,
+                                   int group);
 
     juce::Label titleLabel;
-    juce::Label subtitleLabel;
-    juce::Label deviceLabel;
-    juce::Label inputLabel;
-    juce::Label outputLabel;
-    juce::Label engineLabel;
-    juce::ComboBox inputDeviceBox;
-    juce::ComboBox outputDeviceBox;
-    juce::ComboBox presetBox;
-    juce::Slider micVolumeSlider;
-    juce::Slider outputVolumeSlider;
-    juce::Label micVolumeLabel;
-    juce::Label outputVolumeLabel;
+    juce::Label infoLabel;
+    std::array<juce::Label, 4> groupLabels;
+    std::array<std::vector<std::unique_ptr<ParameterControl>>, 4> groups;
 
-    juce::Label inputMeterLabel;
-    juce::Label outputMeterLabel;
-    juce::Label inputMeterState;
-    juce::Label outputMeterState;
-
-    std::array<juce::Label, 4> sectionTitles;
-    std::array<juce::ToggleButton, 4> sectionToggles;
-    std::array<juce::Rectangle<int>, 4> panelBounds;
-    std::vector<std::unique_ptr<KnobControl>> knobs;
-    std::array<std::vector<KnobControl*>, 4> groupKnobs;
+    juce::ToggleButton mixerEnabled { "Bat Mixer" };
+    juce::ToggleButton eqEnabled { "Bat EQ" };
+    juce::ToggleButton compressorEnabled { "Bat Compressor" };
+    juce::ToggleButton cleanupEnabled { "Bat lam sach giong" };
 
     juce::TextButton processButton { "BAT XU LY" };
-    juce::TextButton bypassButton { "BYPASS TOAN BO" };
+    juce::TextButton bypassButton { "BYPASS" };
     juce::Label statusLabel;
-    juce::Label footerLabel;
-
-    bool processingRequested = false;
-    bool bypassRequested = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
