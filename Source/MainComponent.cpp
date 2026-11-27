@@ -162,7 +162,7 @@ MainComponent::MainComponent()
     test05Label.setColour(juce::Label::textColourId, juce::Colour(110, 235, 150));
     addAndMakeVisible(test05Label);
 
-    // TEST 06: high-contrast LinearBar sliders with an explicit background colour.
+    // TEST 08: Mic Volume is the first rotary-knob trial; all other controls stay unchanged.\n    // TEST 06: high-contrast LinearBar sliders with an explicit background colour.
     test06Label.setText("TEST 06 - HIGH CONTRAST SLIDER STYLE", juce::dontSendNotification);
     test06Label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
     test06Label.setColour(juce::Label::textColourId, juce::Colour(100, 210, 255));
@@ -182,8 +182,25 @@ MainComponent::ParameterControl* MainComponent::addParameter(
     result->label.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(result->label);
 
-    result->slider.setSliderStyle(juce::Slider::LinearBar);
-    result->slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 65, 24);
+    const bool isMicVolume = (name == "Mic Volume");
+    result->slider.setSliderStyle(isMicVolume
+        ? juce::Slider::RotaryHorizontalVerticalDrag
+        : juce::Slider::LinearBar);
+    result->slider.setTextBoxStyle(isMicVolume
+        ? juce::Slider::TextBoxBelow
+        : juce::Slider::TextBoxRight,
+        false, isMicVolume ? 58 : 65, isMicVolume ? 18 : 24);
+    if (isMicVolume)
+    {
+        result->slider.setRotaryParameters(
+            juce::MathConstants<float>::pi * 1.2f,
+            juce::MathConstants<float>::pi * 2.8f,
+            true);
+        result->slider.setColour(juce::Slider::rotarySliderFillColourId,
+                                 juce::Colour(40, 190, 245));
+        result->slider.setColour(juce::Slider::rotarySliderOutlineColourId,
+                                 juce::Colour(75, 90, 110));
+    }
     result->slider.setRange(minimum, maximum, 0.1);
     result->slider.setValue(initial, juce::dontSendNotification);
     result->slider.setTextValueSuffix(suffix);
@@ -241,7 +258,10 @@ void MainComponent::resized()
             auto& control = *groups[(size_t)group][i];
             const int rowY = groupArea.getY() + (int)i * rowHeight;
             control.label.setBounds(groupArea.getX(), rowY, 105, 26);
-            control.slider.setBounds(groupArea.getX() + 108, rowY, groupArea.getWidth() - 108, 28);
+            if (group == 0 && i == 1) // TEST 08: only Mic Volume becomes a rotary knob.
+                control.slider.setBounds(groupArea.getX() + 108, rowY - 8, 78, 48);
+            else
+                control.slider.setBounds(groupArea.getX() + 108, rowY, groupArea.getWidth() - 108, 28);
         }
     }
 
