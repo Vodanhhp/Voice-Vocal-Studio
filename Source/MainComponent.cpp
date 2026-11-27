@@ -9,6 +9,7 @@ namespace
 }
 
 MainComponent::MainComponent()
+    : inputMeter(inputLevel)
 {
     juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName("Segoe UI");
     setSize(820, 620);
@@ -17,6 +18,15 @@ MainComponent::MainComponent()
     titleLabel.setFont(juce::FontOptions(23.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, accentColour);
     addAndMakeVisible(titleLabel);
+
+    // TEST 07: visual input meter only; it is not connected to live audio yet.
+    inputMeterLabel.setText("TEST 07 - VU INPUT | CHUA CO TIN HIEU AUDIO", juce::dontSendNotification);
+    inputMeterLabel.setFont(juce::FontOptions(10.5f, juce::Font::bold));
+    inputMeterLabel.setColour(juce::Label::textColourId, juce::Colour(110, 210, 255));
+    addAndMakeVisible(inputMeterLabel);
+    inputMeter.setColour(juce::ProgressBar::backgroundColourId, juce::Colour(45, 55, 70));
+    inputMeter.setColour(juce::ProgressBar::foregroundColourId, juce::Colour(40, 190, 125));
+    addAndMakeVisible(inputMeter);
 
     infoLabel.setText("Giao dien thu nghiem - cac thong so hien tai la dieu khien giao dien, chua xu ly am thanh",
                       juce::dontSendNotification);
@@ -147,7 +157,10 @@ void MainComponent::resized()
 {
     auto area = getLocalBounds().reduced(18);
 
-    titleLabel.setBounds(area.removeFromTop(32));
+    titleLabel.setBounds(area.getX(), area.getY(), 505, 32);
+    inputMeterLabel.setBounds(area.getRight() - 260, area.getY(), 260, 15);
+    inputMeter.setBounds(area.getRight() - 260, area.getY() + 16, 260, 14);
+    area.removeFromTop(32);
     infoLabel.setBounds(area.removeFromTop(24));
     test04Label.setBounds(area.removeFromTop(24));
     test05Label.setBounds(area.removeFromTop(22));
