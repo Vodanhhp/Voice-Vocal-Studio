@@ -11,6 +11,17 @@ public:
     void paint(juce::Graphics& g) override;
 };
 
+class MicVolumeLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    void drawRotarySlider(juce::Graphics& g,
+                          int x, int y, int width, int height,
+                          float sliderPosProportional,
+                          float rotaryStartAngle,
+                          float rotaryEndAngle,
+                          juce::Slider& slider) override;
+};
+
 class MainComponent : public juce::Component
 {
 public:
@@ -24,6 +35,7 @@ private:
     struct ParameterControl
     {
         juce::Label label;
+        MicVolumeLookAndFeel rotaryLookAndFeel;
         juce::Slider slider;
     };
 
