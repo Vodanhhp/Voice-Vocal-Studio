@@ -8,8 +8,61 @@ namespace
     const juce::Colour controlBackground { 35, 43, 56 };
 }
 
+void InputVUMeter::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds().toFloat();
+    g.setColour(juce::Colour(30, 38, 49));
+    g.fillRoundedRectangle(bounds, 6.0f);
+
+    const float cx = bounds.getCentreX();
+    const float cy = bounds.getBottom() - 7.0f;
+    const float rx = bounds.getWidth() * 0.5f - 15.0f;
+    const float ry = bounds.getHeight() - 15.0f;
+
+    juce::Path arc;
+    arc.addCentredArc(cx, cy, rx, ry, 0.0f, juce::MathConstants<float>::pi,
+                      juce::MathConstants<float>::twoPi, true);
+    g.setColour(juce::Colour(125, 145, 165));
+    g.strokePath(arc, juce::PathStrokeType(1.4f));
+
+    const juce::String labels[] { "-20", "-10", "-7", "-5", "-3", "0", "+3" };
+    for (int i = 0; i <= 20; ++i)
+    {
+        const float angle = juce::MathConstants<float>::pi
+            + juce::MathConstants<float>::pi * (float)i / 20.0f;
+        const float cs = std::cos(angle);
+        const float sn = std::sin(angle);
+        const bool major = (i % 3 == 0) || i == 20;
+        const float outerX = cx + cs * rx;
+        const float outerY = cy + sn * ry;
+        const float innerX = cx + cs * (rx - (major ? 8.0f : 4.0f));
+        const float innerY = cy + sn * (ry - (major ? 8.0f : 4.0f));
+        g.setColour(juce::Colour(190, 202, 215));
+        g.drawLine(innerX, innerY, outerX, outerY, major ? 1.4f : 0.8f);
+    }
+
+    for (int i = 0; i < 7; ++i)
+    {
+        const float angle = juce::MathConstants<float>::pi
+            + juce::MathConstants<float>::pi * (float)(i * 20 / 6) / 20.0f;
+        const float tx = cx + std::cos(angle) * (rx - 17.0f) - 12.0f;
+        const float ty = cy + std::sin(angle) * (ry - 17.0f) - 7.0f;
+        g.setFont(juce::FontOptions(8.5f));
+        g.setColour(juce::Colour(210, 218, 228));
+        g.drawText(labels[i], (int)tx, (int)ty, 24, 12, juce::Justification::centred);
+    }
+
+    // Static demonstration needle at -10 dB; live audio will drive it later.
+    const float needleAngle = juce::MathConstants<float>::pi
+        + juce::MathConstants<float>::pi * (10.0f / 23.0f);
+    const float nx = cx + std::cos(needleAngle) * (rx - 12.0f);
+    const float ny = cy + std::sin(needleAngle) * (ry - 12.0f);
+    g.setColour(juce::Colour(255, 85, 75));
+    g.drawLine(cx, cy, nx, ny, 2.0f);
+    g.fillEllipse(cx - 3.0f, cy - 3.0f, 6.0f, 6.0f);
+}
+
 MainComponent::MainComponent()
-    : inputMeter(inputLevel)
 {
     juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName("Segoe UI");
     setSize(820, 620);
@@ -20,12 +73,10 @@ MainComponent::MainComponent()
     addAndMakeVisible(titleLabel);
 
     // TEST 07: visual input meter only; it is not connected to live audio yet.
-    inputMeterLabel.setText("TEST 07 - VU INPUT | CHUA CO TIN HIEU AUDIO", juce::dontSendNotification);
+    inputMeterLabel.setText("TEST 07 - VU INPUT | KIM + THANG dB (MO PHONG)", juce::dontSendNotification);
     inputMeterLabel.setFont(juce::FontOptions(10.5f, juce::Font::bold));
     inputMeterLabel.setColour(juce::Label::textColourId, juce::Colour(110, 210, 255));
     addAndMakeVisible(inputMeterLabel);
-    inputMeter.setColour(juce::ProgressBar::backgroundColourId, juce::Colour(45, 55, 70));
-    inputMeter.setColour(juce::ProgressBar::foregroundColourId, juce::Colour(40, 190, 125));
     addAndMakeVisible(inputMeter);
 
     infoLabel.setText("Giao dien thu nghiem - cac thong so hien tai la dieu khien giao dien, chua xu ly am thanh",
@@ -159,7 +210,7 @@ void MainComponent::resized()
 
     titleLabel.setBounds(area.getX(), area.getY(), 505, 32);
     inputMeterLabel.setBounds(area.getRight() - 260, area.getY(), 260, 15);
-    inputMeter.setBounds(area.getRight() - 260, area.getY() + 16, 260, 14);
+    inputMeter.setBounds(area.getRight() - 260, area.getY() + 16, 260, 58);
     area.removeFromTop(32);
     infoLabel.setBounds(area.removeFromTop(24));
     test04Label.setBounds(area.removeFromTop(24));
