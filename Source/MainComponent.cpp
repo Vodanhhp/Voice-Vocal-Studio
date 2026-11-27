@@ -327,7 +327,11 @@ void MainComponent::resized()
             auto controls = groupKnobs[0];
             const int contentY = panel.getY() + 34;
             if (!controls.empty())
+            {
                 controls[0]->setBounds(panel.getX() + 8, contentY, 100, panel.getHeight() - 40);
+                controls[0]->setVisible(true);
+                controls[0]->toFront(false);
+            }
 
             const int sliderX = panel.getX() + 116;
             const int sliderWidth = panel.getWidth() - 126;
@@ -348,6 +352,8 @@ void MainComponent::resized()
             {
                 const int x = panel.getX() + 8 + k * cellWidth;
                 controls[(size_t)k]->setBounds(x, top, cellWidth, availableHeight);
+                controls[(size_t)k]->setVisible(true);
+                controls[(size_t)k]->toFront(false);
             }
         }
     }
