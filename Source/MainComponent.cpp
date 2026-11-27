@@ -109,7 +109,7 @@ void InputVUMeter::paint(juce::Graphics& g)
 MainComponent::MainComponent()
 {
     juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName("Segoe UI");
-    setSize(760, 560);
+    setSize(700, 500);
 
     titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(22.0f, juce::Font::bold));
@@ -207,22 +207,14 @@ MainComponent::ParameterControl* MainComponent::addParameter(
     result->label.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(result->label);
 
-    const bool isMicVolume = (name == "Mic Volume");
-    result->slider.setSliderStyle(isMicVolume
-        ? juce::Slider::RotaryHorizontalVerticalDrag
-        : juce::Slider::LinearBar);
-    result->slider.setTextBoxStyle(isMicVolume
-        ? juce::Slider::TextBoxBelow
-        : juce::Slider::TextBoxRight,
-        false, isMicVolume ? 70 : 62, isMicVolume ? 18 : 21);
-
-    if (isMicVolume)
-    {
-        result->slider.setLookAndFeel(&result->rotaryLookAndFeel);
-        result->slider.setRotaryParameters(
-            juce::MathConstants<float>::pi * 1.2f,
-            juce::MathConstants<float>::pi * 2.8f, true);
-    }
+    // Every parameter uses the same compact rotary-knob control.
+    result->slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    result->slider.setTextBoxStyle(juce::Slider::TextBoxBelow,
+        false, 68, 18);
+    result->slider.setLookAndFeel(&result->rotaryLookAndFeel);
+    result->slider.setRotaryParameters(
+        juce::MathConstants<float>::pi * 1.2f,
+        juce::MathConstants<float>::pi * 2.8f, true);
 
     result->slider.setRange(minimum, maximum, 0.1);
     result->slider.setValue(initial, juce::dontSendNotification);
@@ -270,24 +262,24 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(14);
+    auto area = getLocalBounds().reduced(12);
 
-    titleLabel.setBounds(area.getX(), area.getY() + 4, 390, 34);
-    inputMeterLabel.setBounds(area.getRight() - 218, area.getY(), 218, 14);
-    inputMeter.setBounds(area.getRight() - 218, area.getY() + 15, 218, 47);
+    // Compact header: title on the left, input meter on the right.
+    titleLabel.setBounds(area.getX(), area.getY() + 5, 340, 30);
+    inputMeterLabel.setBounds(area.getRight() - 164, area.getY() + 1, 164, 13);
+    inputMeter.setBounds(area.getRight() - 164, area.getY() + 15, 164, 43);
 
-    area.removeFromTop(66);
-    area.removeFromBottom(48);
+    area.removeFromTop(64);
+    area.removeFromBottom(43);
 
-    const int gap = 12;
+    const int gap = 9;
     const int columnWidth = (area.getWidth() - gap) / 2;
     const int groupHeight = (area.getHeight() - gap) / 2;
     juce::ToggleButton* toggles[] = {
         &mixerEnabled, &eqEnabled, &compressorEnabled, &cleanupEnabled
     };
 
-    // JUCE may call resized() while addParameter() is still creating controls.
-    // Do not access any group's vector until every group is fully populated.
+    // Avoid indexing parameter vectors until construction is complete.
     const bool parametersReady =
         groups[0].size() == 3 &&
         groups[1].size() == 3 &&
@@ -304,47 +296,40 @@ void MainComponent::resized()
             columnWidth, groupHeight);
 
         groupLabels[(size_t)group].setBounds(
-            card.getX() + 14, card.getY() + 8, card.getWidth() - 100, 26);
-        toggles[group]->setBounds(card.getRight() - 72, card.getY() + 8, 62, 24);
+            card.getX() + 11, card.getY() + 6, card.getWidth() - 88, 23);
+        toggles[group]->setBounds(card.getRight() - 68, card.getY() + 6, 58, 22);
 
-        // Header and switches can be laid out immediately; parameter controls wait.
         if (!parametersReady)
             continue;
 
-        const int contentY = card.getY() + 39;
-        const int labelX = card.getX() + 14;
-        const int sliderX = card.getX() + 116;
-        const int sliderWidth = card.getWidth() - 130;
+        const auto& controls = groups[(size_t)group];
+        const int count = (int)controls.size();
+        const int innerWidth = card.getWidth() - 18;
+        const int slotWidth = innerWidth / 3;
+        const int knobWidth = juce::jmin(82, slotWidth - 3);
+        const int knobHeight = juce::jmin(94, card.getHeight() - 43);
+        const int controlTop = card.getY() + 30;
 
-        if (group == 0)
+        // Two-control groups are centered; three-control groups fill the row.
+        const int usedWidth = count * slotWidth;
+        const int firstSlotX = card.getX() + (card.getWidth() - usedWidth) / 2;
+
+        for (int i = 0; i < count; ++i)
         {
-            auto& input = *groups[0][0];
-            auto& mic = *groups[0][1];
-            auto& output = *groups[0][2];
+            auto& control = *controls[(size_t)i];
+            const int slotX = firstSlotX + i * slotWidth;
+            const int knobX = slotX + (slotWidth - knobWidth) / 2;
 
-            input.label.setBounds(labelX, contentY + 7, 96, 22);
-            input.slider.setBounds(sliderX, contentY + 3, sliderWidth, 25);
-
-            mic.label.setBounds(labelX, contentY + 49, 96, 24);
-            mic.slider.setBounds(sliderX + 8, contentY + 35, 96, 78);
-
-            output.label.setBounds(labelX, contentY + 124, 96, 22);
-            output.slider.setBounds(sliderX, contentY + 121, sliderWidth, 25);
-        }
-        else
-        {
-            for (size_t i = 0; i < groups[(size_t)group].size(); ++i)
-            {
-                auto& control = *groups[(size_t)group][i];
-                const int rowY = contentY + 12 + (int)i * 43;
-                control.label.setBounds(labelX, rowY + 2, 96, 22);
-                control.slider.setBounds(sliderX, rowY, sliderWidth, 25);
-            }
+            control.label.setJustificationType(juce::Justification::centred);
+            control.label.setFont(juce::FontOptions(9.5f, juce::Font::bold));
+            control.label.setBounds(slotX, controlTop, slotWidth, 17);
+            control.slider.setBounds(knobX, controlTop + 15,
+                                     knobWidth, knobHeight);
         }
     }
 
-    const int footerY = getHeight() - 43;
-    processButton.setBounds(14, footerY, 122, 30);
-    bypassButton.setBounds(144, footerY, 92, 30);
-    statusLabel.setBounds(250, footerY + 4, getWidth() - 264, 22);
+    const int footerY = getHeight() - 37;
+    processButton.setBounds(12, footerY, 112, 27);
+    bypassButton.setBounds(130, footerY, 82, 27);
+    statusLabel.setBounds(222, footerY + 3, getWidth() - 234, 21);
 }
