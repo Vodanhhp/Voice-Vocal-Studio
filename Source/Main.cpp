@@ -62,18 +62,14 @@ public:
             : DocumentWindow (name,
                               juce::Desktop::getInstance().getDefaultLookAndFeel()
                                                           .findColour (juce::ResizableWindow::backgroundColourId),
-                              DocumentWindow::allButtons)
+                              DocumentWindow::minimiseButton | DocumentWindow::closeButton)
         {
-            setUsingNativeTitleBar (true);
+            // Use a compact JUCE title bar: no Windows frame and no maximise button.
+            setUsingNativeTitleBar (false);
+            setTitleBarHeight (28);
+            setResizable (false, false);
             setContentOwned (new MainComponent(), true);
-
-           #if JUCE_IOS || JUCE_ANDROID
-            setFullScreen (true);
-           #else
-            setResizable (true, true);
             centreWithSize (getWidth(), getHeight());
-           #endif
-
             setVisible (true);
         }
 
