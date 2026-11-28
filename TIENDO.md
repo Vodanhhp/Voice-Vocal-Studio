@@ -170,3 +170,14 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The source has been checked for ASCII-only text and the expected code paths have been verified by fetching the updated files from main.
 - Build and listening tests have NOT yet been performed on the user's computer. Do not mark this module production-ready until the user rebuilds and tests it with a dry, single-voice microphone signal.
 - Next test: compare OFF and ON at low Correction Amount first; then test stable sustained notes, note transitions, vibrato and the selected key/scale. Listen for pitch stability, metallic/chorus artifacts, clicks and latency.
+
+
+### Cap nhat 28/11/2026 - Hang nut vocal va Vocal Leveling
+- Giu nguyen 8 nhom xu ly chinh tren giao dien; khong di chuyen cac panel Dau vao/Dau ra, EQ, Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control va Reverb.
+- Dua Pitch Correction xuong hang nut rieng o phia duoi, cung cac nut Vocal Leveling, Vocal Limiter, Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter.
+- Moi nut mo mot cua so rieng. Cac cua so cua Vocal Limiter, Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter hien la khung gioi thieu; chua co DSP va chua duoc ket noi dieu khien. Khong duoc coi la tinh nang da hoat dong.
+- Them cua so Vocal Leveling voi cong tac ON/OFF, Target Level, Maximum Boost va Maximum Reduction.
+- Them bo can bang muc am luong theo envelope, gioi han muc tang/cat, smoothing va nguong bao ve doan tin hieu nho de tranh nang tieng on khi hat ngat cau.
+- Vocal Leveling chi chay khi BAT XU LY duoc bat, Bypass tat va cong tac Vocal Leveling ON. Khi tat module, gain rider tro ve unity theo smoothing.
+- Xu ly realtime dung state co dinh, khong them cap phat bo nho hay khoa trong audio callback.
+- Chua build hoac nghe thu tren may nguoi dung. Can Rebuild Solution va thu bang micro that; can kiem tra pumping, tieng on giua cau, do tu nhien va clipping.
