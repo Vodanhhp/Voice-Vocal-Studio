@@ -1905,14 +1905,14 @@ void MainComponent::paint(juce::Graphics& g)
     g.strokePath(wave, juce::PathStrokeType(2.0f));
 
     const auto panels = calculatePanelBounds();
-    drawPanel(g, panels[0], "DAU VAO / DAU RA");
-    drawPanel(g, panels[1], "BO LOC EQ THAM SO");
-    drawPanel(g, panels[2], "NEN AM THANH");
-    drawPanel(g, panels[3], "GIAM AM XI");
-    drawPanel(g, panels[4], "CAI THIEN GIONG HAT", juce::Colour(255, 190, 65));
-    drawPanel(g, panels[5], "CONG CHAN TIENG ON");
-    drawPanel(g, panels[6], "DIEU CHINH AM SAC");
-    drawPanel(g, panels[7], "TAO VANG", juce::Colour(90, 190, 255));
+    drawPanel(g, panels[0], "ĐẦU VÀO / ĐẦU RA");
+    drawPanel(g, panels[1], "BỘ LỌC EQ THAM SỐ");
+    drawPanel(g, panels[2], "NÉN ÂM THANH");
+    drawPanel(g, panels[3], "GIẢM ÂM XÌ");
+    drawPanel(g, panels[4], "CẢI THIỆN GIỌNG HÁT", juce::Colour(255, 190, 65));
+    drawPanel(g, panels[5], "CỔNG CHẶN TIẾNG ỒN");
+    drawPanel(g, panels[6], "ĐIỀU CHỈNH ÂM SẮC");
+    drawPanel(g, panels[7], "TẠO VANG", juce::Colour(90, 190, 255));
 
     // Input/output LED meters styled like the reference studio interface.
     auto drawLedMeter = [&g](juce::Rectangle<float> area, float level, bool gainReduction)
