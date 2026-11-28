@@ -61,12 +61,12 @@ private:
     };
 
     juce::ToggleButton monitorToggle { "THEO DÕI ÂM THANH: BẬT" };
-    juce::TextButton processButton { "BAT XU LY" };
-    juce::TextButton bypassButton { "BYPASS" };
-    juce::TextButton resetButton { "RESET" };
-    juce::TextButton settingsButton { "CAI DAT" };
-    juce::TextButton savePresetButton { "LUU PRESET" };
-    juce::TextButton managePresetButton { "QUAN LY..." };
+    juce::TextButton processButton { "BẬT XỬ LÝ" };
+    juce::TextButton bypassButton { "BỎ QUA" };
+    juce::TextButton resetButton { "ĐẶT LẠI" };
+    juce::TextButton settingsButton { "CÀI ĐẶT" };
+    juce::TextButton savePresetButton { "LƯU CÀI ĐẶT" };
+    juce::TextButton managePresetButton { "QUẢN LÝ..." };
     juce::ComboBox presetSelector;
     juce::Slider masterVolumeSlider;
     juce::Label masterVolumeLabel;
