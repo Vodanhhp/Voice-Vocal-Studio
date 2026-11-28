@@ -155,6 +155,7 @@ private:
     void showAudioSettings();
     void showPitchCorrectionModule();
     void showVocalLevelingModule();
+    void showVocalLimiterModule();
     void showWarmthBodyModule();
     void showVocalClarityModule();
     void showBreathControlModule();
@@ -260,6 +261,10 @@ private:
     std::atomic<float> pitchDeviationCents { 0.0f };
     std::atomic<bool> pitchCorrectionEnabled { false };
     std::atomic<bool> vocalLevelingEnabled { false };
+    std::atomic<bool> vocalLimiterEnabled { false };
+    std::atomic<float> vocalLimiterCeilingDb { -1.0f };
+    std::atomic<float> vocalLimiterReleaseMs { 80.0f };
+    float vocalLimiterGain { 1.0f };
     std::atomic<bool> warmthBodyEnabled { false };
     std::atomic<float> warmthAmount { 50.0f };
     std::atomic<float> bodyAmount { 50.0f };
