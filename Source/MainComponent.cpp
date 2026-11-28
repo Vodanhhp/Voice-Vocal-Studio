@@ -552,18 +552,18 @@ void MainComponent::resized()
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
     const int fy = getHeight() - 88;
-    // Compact footer controls so every button label remains visible.
-    presetSelector.setBounds(145, fy + 16, 180, 36);
-    savePresetButton.setBounds(335, fy + 16, 110, 36);
-    managePresetButton.setBounds(455, fy + 16, 110, 36);
-    processButton.setBounds(575, fy + 16, 105, 36);
-    bypassButton.setBounds(690, fy + 16, 90, 36);
-    resetButton.setBounds(790, fy + 16, 82, 36);
-    settingsButton.setBounds(882, fy + 16, 90, 36);
-    masterVolumeLabel.setBounds(1010, fy + 5, 180, 24);
-    masterVolumeSlider.setBounds(1010, fy + 32, 330, 28);
-    masterValueLabel.setBounds(1350, fy + 30, 125, 30);
-    statusLabel.setBounds(22, fy + 62, 950, 22);
+    // Compact footer controls; Vietnamese labels are intentionally unaccented.
+    presetSelector.setBounds(135, fy + 16, 165, 34);
+    savePresetButton.setBounds(310, fy + 16, 90, 34);
+    managePresetButton.setBounds(408, fy + 16, 100, 34);
+    processButton.setBounds(516, fy + 16, 96, 34);
+    bypassButton.setBounds(620, fy + 16, 76, 34);
+    resetButton.setBounds(704, fy + 16, 72, 34);
+    settingsButton.setBounds(784, fy + 16, 82, 34);
+    masterVolumeLabel.setBounds(900, fy + 5, 180, 24);
+    masterVolumeSlider.setBounds(900, fy + 32, 390, 26);
+    masterValueLabel.setBounds(1300, fy + 30, 125, 30);
+    statusLabel.setBounds(22, fy + 62, 850, 22);
 }
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
