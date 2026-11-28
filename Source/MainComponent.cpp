@@ -1952,23 +1952,25 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
     PanelBounds p;
     const int w = getWidth();
     const int h = getHeight();
-    const int margin = juce::jlimit(10, 13, w / 120);
-    const int gap = juce::jlimit(8, 11, w / 150);
-    const int headerBottom = juce::jlimit(92, 108, h / 7);
-    const int footerHeight = juce::jlimit(78, 90, h / 9);
-    const int moduleRowHeight = 44;
-    const int availablePanelsHeight = h - headerBottom - footerHeight - moduleRowHeight - margin - gap;
-    const int bottomHeight = juce::jlimit(155, 188, (int)(availablePanelsHeight * 0.35f));
+    const int margin = juce::jlimit(12, 15, w / 100);
+    const int gap = juce::jlimit(9, 11, w / 130);
+    const int headerBottom = juce::jlimit(82, 88, h / 9);
+    const int footerHeight = juce::jlimit(70, 76, h / 10);
+    const int moduleRowHeight = 42;
+    const int availablePanelsHeight = h - headerBottom - footerHeight
+                                    - moduleRowHeight - margin * 2 - gap * 2;
+    const int bottomHeight = juce::jlimit(176, 194,
+                                          (int)(availablePanelsHeight * 0.33f));
     const int bottomY = h - footerHeight - moduleRowHeight - bottomHeight - margin;
-    const int topHeight = juce::jmax(220, bottomY - headerBottom - gap);
-    const int leftWidth = juce::jlimit(220, 255, (int)(w * 0.19f));
-    const int rightWidth = juce::jlimit(295, 325, (int)(w * 0.25f));
+    const int topHeight = juce::jmax(250, bottomY - headerBottom - gap);
+    const int leftWidth = juce::jlimit(210, 238, (int)(w * 0.18f));
+    const int rightWidth = juce::jlimit(270, 300, (int)(w * 0.235f));
     const int centreWidth = w - margin * 2 - gap * 2 - leftWidth - rightWidth;
     const int rightX = margin + leftWidth + gap + centreWidth + gap;
 
     p[0] = { margin, headerBottom, leftWidth, topHeight };
     p[1] = { margin + leftWidth + gap, headerBottom, centreWidth, topHeight };
-    const int rightTopHeight = (topHeight - gap) * 58 / 100;
+    const int rightTopHeight = (topHeight - gap) * 62 / 100;
     p[2] = { rightX, headerBottom, rightWidth, rightTopHeight };
     p[3] = { rightX, headerBottom + rightTopHeight + gap, rightWidth,
              topHeight - rightTopHeight - gap };
@@ -1989,7 +1991,7 @@ void MainComponent::paint(juce::Graphics& g)
     g.fillAll();
 
     // Header fascia.
-    const float headerHeight = (float)juce::jlimit(92, 108, getHeight() / 7);
+    const float headerHeight = (float)juce::jlimit(82, 88, getHeight() / 9);
     auto header = juce::Rectangle<float>(0.0f, 0.0f, (float)getWidth(), headerHeight);
     g.setGradientFill(juce::ColourGradient(juce::Colour(34, 45, 60), 0.0f, 0.0f,
                                             juce::Colour(9, 14, 22), 0.0f, headerHeight, false));
@@ -2224,7 +2226,7 @@ void MainComponent::paint(juce::Graphics& g)
     }
 
     // Footer plate.
-    const float footerHeight = (float)juce::jlimit(78, 90, getHeight() / 9);
+    const float footerHeight = (float)juce::jlimit(70, 76, getHeight() / 10);
     auto footer = juce::Rectangle<float>(0.0f, (float)getHeight() - footerHeight,
                                           (float)getWidth(), footerHeight);
     g.setGradientFill(juce::ColourGradient(juce::Colour(22, 30, 42), 0.0f, footer.getY(),
@@ -2254,7 +2256,7 @@ void MainComponent::resized()
 {
     const int w = getWidth();
     const int h = getHeight();
-    const int headerH = juce::jlimit(92, 108, h / 7);
+    const int headerH = juce::jlimit(82, 88, h / 9);
     titleLabel.setBounds(108, 12, juce::jmin(420, (int)(w * 0.36f)), 46);
     subtitleLabel.setBounds(150, 56, juce::jmin(330, (int)(w * 0.28f)), 20);
     const int deviceX = (int)(w * 0.56f);
@@ -2295,10 +2297,10 @@ void MainComponent::resized()
     // EQ: five compact knobs in a single row under the response curve.
     {
         auto a = panels[1].reduced(12);
-        const int top = a.getY() + (int)(a.getHeight() * 0.65f);
+        const int top = a.getY() + (int)(a.getHeight() * 0.64f);
         const int slot = a.getWidth() / 5;
         const int knobW = juce::jmin(132, slot - 8);
-        const int knobH = juce::jmin(164, a.getBottom() - top - 6);
+        const int knobH = juce::jmax(86, juce::jmin(150, a.getBottom() - top - 8));
         const int eqControlCount = juce::jmin(5, (int)groups[1].size());
         for (int i = 0; i < eqControlCount; ++i)
         {
@@ -2324,7 +2326,7 @@ void MainComponent::resized()
         const int slotW = a.getWidth() / columns;
         const int slotH = (a.getHeight() - 45) / rows;
         const int knobW = juce::jmin(116, slotW - 4);
-        const int knobH = juce::jmin(126, slotH - 20);
+        const int knobH = juce::jmax(58, juce::jmin(118, slotH - 14));
         for (int i = 0; i < count; ++i)
         {
             auto& c = *groups[(size_t)group][(size_t)i];
@@ -2343,8 +2345,8 @@ void MainComponent::resized()
     for (int group = 4; group < 8; ++group)
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
-    const int footerTop = getHeight() - juce::jlimit(78, 90, getHeight() / 9);
-    const int moduleRowTop = footerTop - 43;
+    const int footerTop = getHeight() - juce::jlimit(70, 76, getHeight() / 10);
+    const int moduleRowTop = footerTop - 42;
     const int moduleMargin = 14;
     const int moduleGap = 8;
     const int moduleButtonWidth = (w - moduleMargin * 2 - moduleGap * 7) / 8;
@@ -2357,7 +2359,7 @@ void MainComponent::resized()
         moduleButtons[i]->setBounds(moduleMargin + i * (moduleButtonWidth + moduleGap),
                                     moduleRowTop + 5, moduleButtonWidth, 32);
 
-    const int footerY = footerTop + 12;
+    const int footerY = footerTop + 8;
     const int leftX = 18;
     presetSelector.setBounds(leftX, footerY, 150, 34);
     savePresetButton.setBounds(leftX + 158, footerY, 92, 34);
@@ -2373,7 +2375,7 @@ void MainComponent::resized()
     masterVolumeLabel.setBounds(masterX, footerTop + 5, 170, 20);
     masterVolumeSlider.setBounds(masterX, footerY + 3, juce::jmax(110, w - masterX - 105), 25);
     masterValueLabel.setBounds(w - 92, footerY, 82, 30);
-    statusLabel.setBounds(18, footerTop + 54, w - 36, 18);
+    statusLabel.setBounds(18, footerTop + 48, w - 36, 18);
 }
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
