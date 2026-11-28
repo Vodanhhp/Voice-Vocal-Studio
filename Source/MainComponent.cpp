@@ -1282,6 +1282,12 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 {
     juce::ignoreUnused(samplesPerBlockExpected);
     currentSampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
+    pitchAnalysisBuffer.fill(0.0f);
+    pitchAnalysisWritePosition = 0;
+    pitchAnalysisSamplesSinceUpdate = 0;
+    pitchDetectedMidi.store(-1);
+    pitchTargetMidi.store(-1);
+    pitchDeviationCents.store(0.0f);
     for (auto& filter : eqFilters)
         filter.reset();
     lastAppliedEqGainDb.fill(999.0f);
