@@ -50,9 +50,9 @@ namespace
         g.drawHorizontalLine((int)(r.getY() + 43.0f), r.getX() + 10.0f, r.getRight() - 10.0f);
 
         g.setColour(bright);
-        g.setFont(juce::FontOptions(14.0f, juce::Font::bold));
-        g.drawFittedText(title, area.getX() + 22, area.getY() + 7,
-                         area.getWidth() - 100, 30,
+        g.setFont(juce::FontOptions(16.0f, juce::Font::bold));
+        g.drawFittedText(title, area.getX() + 22, area.getY() + 6,
+                         area.getWidth() - 112, 32,
                          juce::Justification::centredLeft, 1, 0.78f);
 
         // Small illuminated state jewel and machined corner fasteners.
@@ -1189,6 +1189,60 @@ private:
 };
 }
 
+void StudioToggleLookAndFeel::drawToggleButton(
+    juce::Graphics& g, juce::ToggleButton& button,
+    bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    juce::ignoreUnused(shouldDrawButtonAsDown);
+    const auto bounds = button.getLocalBounds().toFloat();
+    const bool enabled = button.getToggleState();
+    const bool wide = bounds.getWidth() > 110.0f;
+
+    if (wide)
+    {
+        g.setColour(bright);
+        g.setFont(juce::FontOptions(11.5f, juce::Font::bold));
+        g.drawText(juce::String::fromUTF8("THEO DÕI ÂM THANH"),
+                   bounds.withTrimmedRight(52.0f), juce::Justification::centredLeft);
+    }
+
+    const float pillW = wide ? 42.0f : juce::jmin(56.0f, bounds.getWidth() - 4.0f);
+    const float pillH = 22.0f;
+    const float pillX = wide ? bounds.getRight() - pillW - 2.0f
+                             : (bounds.getWidth() - pillW) * 0.5f;
+    const float pillY = (bounds.getHeight() - pillH) * 0.5f;
+    const auto pill = juce::Rectangle<float>(pillX, pillY, pillW, pillH);
+
+    g.setColour(enabled ? juce::Colour(13, 111, 222)
+                        : juce::Colour(42, 53, 67));
+    g.fillRoundedRectangle(pill, pillH * 0.5f);
+    g.setColour(enabled ? cyan.withAlpha(0.8f)
+                        : juce::Colour(105, 121, 138));
+    g.drawRoundedRectangle(pill, pillH * 0.5f, 1.0f);
+
+    const float knobD = 16.0f;
+    const float knobX = enabled ? pill.getRight() - knobD - 3.0f
+                                : pill.getX() + 3.0f;
+    g.setColour(juce::Colours::white.withAlpha(0.96f));
+    g.fillEllipse(knobX, pill.getY() + 3.0f, knobD, knobD);
+
+    if (!wide)
+    {
+        g.setColour(juce::Colours::white);
+        g.setFont(juce::FontOptions(8.5f, juce::Font::bold));
+        g.drawText(enabled ? "ON" : "OFF",
+                   pill.withTrimmedLeft(enabled ? 2.0f : 18.0f)
+                       .withTrimmedRight(enabled ? 18.0f : 2.0f),
+                   juce::Justification::centred);
+    }
+
+    if (shouldDrawButtonAsHighlighted)
+    {
+        g.setColour(cyan.withAlpha(0.12f));
+        g.drawRoundedRectangle(bounds.reduced(1.0f), 5.0f, 1.0f);
+    }
+}
+
 void StudioKnobLookAndFeel::drawRotarySlider(
     juce::Graphics& g, int x, int y, int width, int height,
     float sliderPos, float startAngle, float endAngle, juce::Slider& slider)
@@ -1537,6 +1591,9 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     stopTimer();
+    for (auto& toggle : groupToggles)
+        toggle.setLookAndFeel(nullptr);
+    monitorToggle.setLookAndFeel(nullptr);
     shutdownAudio();
 }
 
@@ -1779,6 +1836,7 @@ bool MainComponent::loadPresetFromFile(const juce::File& file)
 
 void MainComponent::styleToggle(juce::ToggleButton& toggle)
 {
+    toggle.setLookAndFeel(&toggleLookAndFeel);
     toggle.setColour(juce::ToggleButton::textColourId, bright);
     toggle.setColour(juce::ToggleButton::tickColourId, blue);
     toggle.setColour(juce::ToggleButton::tickDisabledColourId, muted);
@@ -1894,17 +1952,17 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
     PanelBounds p;
     const int w = getWidth();
     const int h = getHeight();
-    const int margin = juce::jlimit(10, 14, w / 115);
-    const int gap = juce::jlimit(9, 12, w / 145);
-    const int headerBottom = juce::jlimit(88, 108, h / 7);
-    const int footerHeight = juce::jlimit(76, 92, h / 9);
-    const int moduleRowHeight = 50;
+    const int margin = juce::jlimit(10, 13, w / 120);
+    const int gap = juce::jlimit(8, 11, w / 150);
+    const int headerBottom = juce::jlimit(92, 108, h / 7);
+    const int footerHeight = juce::jlimit(78, 90, h / 9);
+    const int moduleRowHeight = 44;
     const int availablePanelsHeight = h - headerBottom - footerHeight - moduleRowHeight - margin - gap;
-    const int bottomHeight = juce::jlimit(150, 195, (int)(availablePanelsHeight * 0.35f));
+    const int bottomHeight = juce::jlimit(155, 188, (int)(availablePanelsHeight * 0.35f));
     const int bottomY = h - footerHeight - moduleRowHeight - bottomHeight - margin;
-    const int topHeight = juce::jmax(205, bottomY - headerBottom - gap);
-    const int leftWidth = juce::jlimit(215, 265, (int)(w * 0.205f));
-    const int rightWidth = juce::jlimit(285, 335, (int)(w * 0.255f));
+    const int topHeight = juce::jmax(220, bottomY - headerBottom - gap);
+    const int leftWidth = juce::jlimit(220, 255, (int)(w * 0.19f));
+    const int rightWidth = juce::jlimit(295, 325, (int)(w * 0.25f));
     const int centreWidth = w - margin * 2 - gap * 2 - leftWidth - rightWidth;
     const int rightX = margin + leftWidth + gap + centreWidth + gap;
 
@@ -1931,7 +1989,7 @@ void MainComponent::paint(juce::Graphics& g)
     g.fillAll();
 
     // Header fascia.
-    const float headerHeight = (float)juce::jlimit(88, 108, getHeight() / 7);
+    const float headerHeight = (float)juce::jlimit(92, 108, getHeight() / 7);
     auto header = juce::Rectangle<float>(0.0f, 0.0f, (float)getWidth(), headerHeight);
     g.setGradientFill(juce::ColourGradient(juce::Colour(34, 45, 60), 0.0f, 0.0f,
                                             juce::Colour(9, 14, 22), 0.0f, headerHeight, false));
@@ -2007,6 +2065,24 @@ void MainComponent::paint(juce::Graphics& g)
                    (float)inputPanel.getY() + inputPanel.getHeight() * 0.53f,
                    28.0f, (float)inputPanel.getHeight() * 0.34f }, livePeak * 0.82f, false);
 
+    g.setFont(juce::FontOptions(9.5f, juce::Font::bold));
+    g.setColour(muted);
+    const juce::String meterScale[] { "0", "-6", "-12", "-24", "-48" };
+    for (int meterIndex = 0; meterIndex < 5; ++meterIndex)
+    {
+        const float y1 = (float)inputPanel.getY() + 72.0f
+            + (float)inputPanel.getHeight() * 0.34f * (float)meterIndex / 5.0f;
+        const float y2 = (float)inputPanel.getY()
+            + inputPanel.getHeight() * 0.53f
+            + (float)inputPanel.getHeight() * 0.34f * (float)meterIndex / 5.0f;
+        g.drawText(meterScale[meterIndex],
+                   inputPanel.getRight() - 18, (int)y1 - 5, 18, 12,
+                   juce::Justification::centredLeft);
+        g.drawText(meterScale[meterIndex],
+                   inputPanel.getRight() - 18, (int)y2 - 5, 18, 12,
+                   juce::Justification::centredLeft);
+    }
+
     // Live compressor gain-reduction meter (0 to 18 dB displayed).
     const float gainReductionLevel = juce::jlimit(0.0f, 1.0f,
         compressorGainReductionDb.load() / 18.0f);
@@ -2018,8 +2094,8 @@ void MainComponent::paint(juce::Graphics& g)
     // EQ response graph, with five editable-band markers as a visual guide.
     auto eq = panels[1].reduced(14);
     auto graph = juce::Rectangle<float>((float)eq.getX() + 8.0f,
-        (float)eq.getY() + 54.0f, (float)eq.getWidth() - 16.0f,
-        (float)eq.getHeight() * 0.43f);
+        (float)eq.getY() + 52.0f, (float)eq.getWidth() - 16.0f,
+        (float)eq.getHeight() * 0.36f);
     g.setColour(juce::Colour(7, 13, 21));
     g.fillRoundedRectangle(graph, 7.0f);
     g.setColour(juce::Colour(53, 73, 94));
@@ -2036,6 +2112,30 @@ void MainComponent::paint(juce::Graphics& g)
     }
     g.setColour(juce::Colour(90, 125, 160));
     g.drawHorizontalLine((int)graph.getCentreY(), graph.getX(), graph.getRight());
+
+    // Subtle decorative spectrum texture behind the EQ curve.
+    // It is intentionally visual-only; the displayed response curve remains tied to EQ controls.
+    juce::Path spectrum;
+    spectrum.startNewSubPath(graph.getX(), graph.getBottom() - 2.0f);
+    constexpr int spectrumBars = 120;
+    for (int i = 0; i < spectrumBars; ++i)
+    {
+        const float t = (float)i / (float)(spectrumBars - 1);
+        const float envelope = 0.20f
+            + 0.34f * std::exp(-std::pow((t - 0.52f) / 0.23f, 2.0f))
+            + 0.16f * std::exp(-std::pow((t - 0.82f) / 0.10f, 2.0f));
+        const float ripple = 0.35f + 0.65f
+            * std::abs(std::sin((float)i * 1.73f) * std::cos((float)i * 0.37f));
+        const float barHeight = graph.getHeight() * envelope * ripple * 0.48f;
+        const float x = graph.getX() + t * graph.getWidth();
+        g.setColour(blue.withAlpha(0.10f + 0.12f * ripple));
+        g.drawLine(x, graph.getBottom() - 2.0f,
+                   x, graph.getBottom() - 2.0f - barHeight, 1.0f);
+        spectrum.lineTo(x, graph.getBottom() - 2.0f - barHeight);
+    }
+    spectrum.lineTo(graph.getRight(), graph.getBottom() - 2.0f);
+    g.setColour(blue.withAlpha(0.08f));
+    g.strokePath(spectrum, juce::PathStrokeType(1.0f));
 
     // Draw the actual combined EQ response from the five current knob values.
     // The frequency axis is logarithmic, matching a conventional parametric EQ.
@@ -2124,7 +2224,7 @@ void MainComponent::paint(juce::Graphics& g)
     }
 
     // Footer plate.
-    const float footerHeight = (float)juce::jlimit(76, 92, getHeight() / 9);
+    const float footerHeight = (float)juce::jlimit(78, 90, getHeight() / 9);
     auto footer = juce::Rectangle<float>(0.0f, (float)getHeight() - footerHeight,
                                           (float)getWidth(), footerHeight);
     g.setGradientFill(juce::ColourGradient(juce::Colour(22, 30, 42), 0.0f, footer.getY(),
@@ -2154,7 +2254,7 @@ void MainComponent::resized()
 {
     const int w = getWidth();
     const int h = getHeight();
-    const int headerH = juce::jlimit(88, 108, h / 7);
+    const int headerH = juce::jlimit(92, 108, h / 7);
     titleLabel.setBounds(108, 12, juce::jmin(420, (int)(w * 0.36f)), 46);
     subtitleLabel.setBounds(150, 56, juce::jmin(330, (int)(w * 0.28f)), 20);
     const int deviceX = (int)(w * 0.56f);
@@ -2195,7 +2295,7 @@ void MainComponent::resized()
     // EQ: five compact knobs in a single row under the response curve.
     {
         auto a = panels[1].reduced(12);
-        const int top = a.getY() + (int)(a.getHeight() * 0.54f);
+        const int top = a.getY() + (int)(a.getHeight() * 0.65f);
         const int slot = a.getWidth() / 5;
         const int knobW = juce::jmin(132, slot - 8);
         const int knobH = juce::jmin(164, a.getBottom() - top - 6);
@@ -2243,8 +2343,8 @@ void MainComponent::resized()
     for (int group = 4; group < 8; ++group)
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
-    const int footerTop = getHeight() - juce::jlimit(76, 92, getHeight() / 9);
-    const int moduleRowTop = footerTop - 48;
+    const int footerTop = getHeight() - juce::jlimit(78, 90, getHeight() / 9);
+    const int moduleRowTop = footerTop - 43;
     const int moduleMargin = 14;
     const int moduleGap = 8;
     const int moduleButtonWidth = (w - moduleMargin * 2 - moduleGap * 7) / 8;
@@ -2255,7 +2355,7 @@ void MainComponent::resized()
     };
     for (int i = 0; i < 8; ++i)
         moduleButtons[i]->setBounds(moduleMargin + i * (moduleButtonWidth + moduleGap),
-                                    moduleRowTop + 7, moduleButtonWidth, 34);
+                                    moduleRowTop + 5, moduleButtonWidth, 32);
 
     const int footerY = footerTop + 12;
     const int leftX = 18;
