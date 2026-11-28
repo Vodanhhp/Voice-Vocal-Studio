@@ -154,6 +154,8 @@ private:
     void styleToggle(juce::ToggleButton& toggle);
     void showAudioSettings();
     void showPitchCorrectionModule();
+    void showVocalLevelingModule();
+    void showPlannedVocalModule(const juce::String& moduleName);
     void applyBuiltInPreset(int presetId);
     void savePresetToFile(const juce::File& file);
     bool loadPresetFromFile(const juce::File& file);
@@ -180,6 +182,12 @@ private:
     juce::TextButton resetButton { "DAT LAI" };
     juce::TextButton settingsButton { "CAI DAT" };
     juce::TextButton pitchCorrectionButton { "PITCH CORRECTION" };
+    juce::TextButton vocalLevelingButton { "VOCAL LEVELING" };
+    juce::TextButton vocalLimiterButton { "VOCAL LIMITER" };
+    juce::TextButton warmthBodyButton { "WARMTH & BODY" };
+    juce::TextButton vocalClarityButton { "VOCAL CLARITY" };
+    juce::TextButton breathControlButton { "BREATH CONTROL" };
+    juce::TextButton vocalExciterButton { "VOCAL EXCITER" };
     juce::TextButton savePresetButton { "LUU CAI DAT" };
     juce::TextButton managePresetButton { "QUAN LY..." };
     juce::ComboBox presetSelector;
@@ -247,6 +255,12 @@ private:
     std::atomic<int> pitchTargetMidi { -1 };
     std::atomic<float> pitchDeviationCents { 0.0f };
     std::atomic<bool> pitchCorrectionEnabled { false };
+    std::atomic<bool> vocalLevelingEnabled { false };
+    std::atomic<float> vocalLevelTargetDb { -18.0f };
+    std::atomic<float> vocalLevelMaxBoostDb { 6.0f };
+    std::atomic<float> vocalLevelMaxCutDb { 4.0f };
+    float vocalLevelEnvelope { 0.0f };
+    float vocalLevelGain { 1.0f };
     PitchShifter pitchShifter;
     std::array<float, 2048> pitchAnalysisBuffer {};
     int pitchAnalysisWritePosition { 0 };
