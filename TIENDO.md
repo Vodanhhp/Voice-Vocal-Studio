@@ -402,3 +402,12 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Bổ sung vạch mức dB cạnh đồng hồ Input/Output và tăng độ rõ của tiêu đề panel.
 - Giữ nguyên các điều khiển, tên tham số, preset, module nâng cao, xử lý DSP/audio callback, routing và hành vi chức năng. Không thay đổi thuật toán âm thanh.
 - Chưa có kết quả build hoặc ảnh chụp sau khi người dùng cập nhật; cần Pull, Rebuild và đối chiếu trực tiếp trên màn hình thực tế.
+
+
+## 28/11/2026 – Đợt 2: cân đối lại tỷ lệ và kích thước điều khiển giao diện chính
+- Điều chỉnh lại vùng Header/Footer và khoảng trống dành cho hàng module để tăng diện tích làm việc thực tế cho các panel.
+- Tăng tỷ lệ chiều cao vùng panel phía trên; phân bổ lại chiều cao Compressor và De-Esser để các cụm núm không bị ép quá thấp.
+- Cân chỉnh lại chiều rộng cột Input/Output, EQ và cột xử lý bên phải; giữ bốn panel xử lý phía dưới có cùng kích thước.
+- Điều chỉnh giới hạn kích thước núm EQ và các nhóm điều khiển nhỏ để tránh núm bị co quá mức khi panel thiếu chiều cao.
+- Giữ nguyên kích thước cửa sổ 1280 × 800, các điều khiển, tham số, preset, DSP/audio callback, routing và hành vi chức năng.
+- Đây là thay đổi bố cục giao diện trên mã nguồn; chưa có kết quả build/runtime. Người dùng cần Fetch origin → Pull origin → Rebuild Solution và gửi ảnh giao diện sau khi chạy để kiểm tra căn chỉnh thực tế.
