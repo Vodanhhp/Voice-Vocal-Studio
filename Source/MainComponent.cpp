@@ -111,10 +111,10 @@ void InputVUMeter::paint(juce::Graphics& g)
 MainComponent::MainComponent()
 {
     juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypefaceName("Segoe UI");
-    setSize(700, 500);
+    setSize(1180, 780);
 
     titleLabel.setText("VOICE VOCAL STUDIO", juce::dontSendNotification);
-    titleLabel.setFont(juce::FontOptions(22.0f, juce::Font::bold));
+    titleLabel.setFont(juce::FontOptions(27.0f, juce::Font::bold));
     titleLabel.setColour(juce::Label::textColourId, accentColour);
     addAndMakeVisible(titleLabel);
 
@@ -318,12 +318,30 @@ MainComponent::ParameterControl* MainComponent::addParameter(
 
 void MainComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(backgroundColour);
+    auto bounds = getLocalBounds().toFloat();
 
-    auto area = getLocalBounds().reduced(14);
-    area.removeFromTop(66);
-    area.removeFromBottom(48);
-    const int gap = 12;
+    // Deep charcoal studio background with a subtle top-to-bottom metal gradient.
+    g.setGradientFill(juce::ColourGradient(
+        juce::Colour(24, 31, 42), 0.0f, 0.0f,
+        juce::Colour(8, 12, 19), 0.0f, bounds.getBottom(), false));
+    g.fillAll();
+
+    // Header plate.
+    auto header = bounds.removeFromTop(88.0f);
+    g.setGradientFill(juce::ColourGradient(
+        juce::Colour(35, 46, 61), 0.0f, header.getY(),
+        juce::Colour(17, 24, 35), 0.0f, header.getBottom(), false));
+    g.fillRect(header);
+    g.setColour(juce::Colour(68, 91, 113));
+    g.drawHorizontalLine((int)header.getBottom() - 1, 18.0f, getWidth() - 18.0f);
+    g.setColour(accentColour.withAlpha(0.8f));
+    g.fillRoundedRectangle(18.0f, 18.0f, 4.0f, 42.0f, 2.0f);
+
+    // Four raised control modules.
+    auto area = getLocalBounds().reduced(20);
+    area.removeFromTop(88);
+    area.removeFromBottom(62);
+    const int gap = 16;
     const int columnWidth = (area.getWidth() - gap) / 2;
     const int groupHeight = (area.getHeight() - gap) / 2;
 
@@ -335,36 +353,62 @@ void MainComponent::paint(juce::Graphics& g)
             (float)(area.getX() + col * (columnWidth + gap)),
             (float)(area.getY() + row * (groupHeight + gap)),
             (float)columnWidth, (float)groupHeight);
-        g.setColour(panelColour);
-        g.fillRoundedRectangle(card, 9.0f);
-        g.setColour(panelEdge);
-        g.drawRoundedRectangle(card, 9.0f, 1.0f);
-        g.setColour(accentColour.withAlpha(0.65f));
-        g.fillRoundedRectangle(card.getX() + 10.0f, card.getY() + 11.0f,
-                                3.0f, 18.0f, 1.5f);
-    }
-}
 
+        auto shadow = card.translated(0.0f, 4.0f);
+        g.setColour(juce::Colours::black.withAlpha(0.38f));
+        g.fillRoundedRectangle(shadow, 13.0f);
+
+        g.setGradientFill(juce::ColourGradient(
+            juce::Colour(39, 51, 67), card.getX(), card.getY(),
+            juce::Colour(20, 28, 40), card.getX(), card.getBottom(), false));
+        g.fillRoundedRectangle(card, 13.0f);
+
+        g.setColour(juce::Colour(76, 96, 119).withAlpha(0.72f));
+        g.drawRoundedRectangle(card, 13.0f, 1.2f);
+
+        // Module header rail and illuminated indicator.
+        g.setColour(juce::Colour(11, 17, 26).withAlpha(0.72f));
+        g.fillRoundedRectangle(card.getX() + 1.5f, card.getY() + 1.5f,
+                               card.getWidth() - 3.0f, 38.0f, 10.0f);
+        g.setColour(accentColour.withAlpha(0.9f));
+        g.fillRoundedRectangle(card.getX() + 13.0f, card.getY() + 10.0f,
+                               3.0f, 19.0f, 1.5f);
+        g.setColour(accentColour.withAlpha(0.18f));
+        g.fillEllipse(card.getRight() - 28.0f, card.getY() + 13.0f, 9.0f, 9.0f);
+        g.setColour(accentColour);
+        g.fillEllipse(card.getRight() - 25.5f, card.getY() + 15.5f, 4.0f, 4.0f);
+
+        // Fine inner border gives the panel a machined faceplate finish.
+        g.setColour(juce::Colours::white.withAlpha(0.035f));
+        g.drawRoundedRectangle(card.reduced(5.0f), 9.0f, 1.0f);
+    }
+
+    // Footer rail.
+    auto footer = getLocalBounds().toFloat().removeFromBottom(54.0f);
+    g.setColour(juce::Colour(9, 14, 22));
+    g.fillRect(footer);
+    g.setColour(juce::Colour(62, 81, 101));
+    g.drawHorizontalLine((int)footer.getY(), 18.0f, getWidth() - 18.0f);
+}
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(12);
+    auto area = getLocalBounds().reduced(20);
 
-    // Compact header: title on the left, input meter on the right.
-    titleLabel.setBounds(area.getX(), area.getY() + 5, 340, 30);
-    inputMeterLabel.setBounds(area.getRight() - 164, area.getY() + 1, 164, 13);
-    inputMeter.setBounds(area.getRight() - 164, area.getY() + 15, 164, 43);
+    // Studio header: product name at left and a large input meter at right.
+    titleLabel.setBounds(area.getX() + 10, area.getY() + 15, 510, 38);
+    inputMeterLabel.setBounds(area.getRight() - 224, area.getY() + 5, 210, 16);
+    inputMeter.setBounds(area.getRight() - 224, area.getY() + 21, 210, 54);
 
-    area.removeFromTop(64);
-    area.removeFromBottom(43);
+    area.removeFromTop(88);
+    area.removeFromBottom(62);
 
-    const int gap = 9;
+    const int gap = 16;
     const int columnWidth = (area.getWidth() - gap) / 2;
     const int groupHeight = (area.getHeight() - gap) / 2;
     juce::ToggleButton* toggles[] = {
         &mixerEnabled, &eqEnabled, &compressorEnabled, &cleanupEnabled
     };
 
-    // Avoid indexing parameter vectors until construction is complete.
     const bool parametersReady =
         groups[0].size() == 3 &&
         groups[1].size() == 3 &&
@@ -381,21 +425,19 @@ void MainComponent::resized()
             columnWidth, groupHeight);
 
         groupLabels[(size_t)group].setBounds(
-            card.getX() + 11, card.getY() + 6, card.getWidth() - 88, 23);
-        toggles[group]->setBounds(card.getRight() - 68, card.getY() + 6, 58, 22);
+            card.getX() + 22, card.getY() + 5, card.getWidth() - 120, 30);
+        toggles[group]->setBounds(card.getRight() - 88, card.getY() + 7, 70, 26);
 
         if (!parametersReady)
             continue;
 
         const auto& controls = groups[(size_t)group];
         const int count = (int)controls.size();
-        const int innerWidth = card.getWidth() - 18;
+        const int innerWidth = card.getWidth() - 36;
         const int slotWidth = innerWidth / 3;
-        const int knobWidth = juce::jmin(82, slotWidth - 3);
-        const int knobHeight = juce::jmin(94, card.getHeight() - 43);
-        const int controlTop = card.getY() + 30;
-
-        // Two-control groups are centered; three-control groups fill the row.
+        const int knobWidth = juce::jmin(142, slotWidth - 8);
+        const int knobHeight = juce::jmin(194, card.getHeight() - 66);
+        const int controlTop = card.getY() + 42;
         const int usedWidth = count * slotWidth;
         const int firstSlotX = card.getX() + (card.getWidth() - usedWidth) / 2;
 
@@ -406,15 +448,15 @@ void MainComponent::resized()
             const int knobX = slotX + (slotWidth - knobWidth) / 2;
 
             control.label.setJustificationType(juce::Justification::centred);
-            control.label.setFont(juce::FontOptions(9.5f, juce::Font::bold));
-            control.label.setBounds(slotX, controlTop, slotWidth, 17);
-            control.slider.setBounds(knobX, controlTop + 15,
+            control.label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+            control.label.setBounds(slotX, controlTop, slotWidth, 23);
+            control.slider.setBounds(knobX, controlTop + 22,
                                      knobWidth, knobHeight);
         }
     }
 
-    const int footerY = getHeight() - 37;
-    processButton.setBounds(12, footerY, 112, 27);
-    bypassButton.setBounds(130, footerY, 82, 27);
-    statusLabel.setBounds(222, footerY + 3, getWidth() - 234, 21);
+    const int footerY = getHeight() - 47;
+    processButton.setBounds(22, footerY, 150, 34);
+    bypassButton.setBounds(184, footerY, 112, 34);
+    statusLabel.setBounds(316, footerY + 5, getWidth() - 338, 25);
 }
