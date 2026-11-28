@@ -195,11 +195,9 @@ MainComponent::MainComponent()
     resized();
 
     // Open the default Windows audio input and stereo output.
-    const auto audioError = setAudioChannels(1, 2);
-    if (audioError.isNotEmpty())
-        statusLabel.setText("Audio: " + audioError, juce::dontSendNotification);
-    else
-        statusLabel.setText("Audio ready - press BAT XU LY", juce::dontSendNotification);
+    setAudioChannels(1, 2);
+    statusLabel.setText("Audio ready - press BAT XU LY",
+                        juce::dontSendNotification);
 
     startTimerHz(30);
 }
