@@ -1217,14 +1217,14 @@ MainComponent::MainComponent()
     subtitleLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(subtitleLabel);
 
-    deviceLabel.setText("THIET BI AM THANH", juce::dontSendNotification);
+    deviceLabel.setText("THIET BI PHAT AM THANH", juce::dontSendNotification);
     deviceLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
     deviceLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(deviceLabel);
 
-    deviceSelector.addItem("Am thanh mac dinh cua Windows", 1);
-    deviceSelector.setSelectedId(1);
-    deviceSelector.setEnabled(false); // Device selection will be connected in the audio-device stage.
+    deviceSelector.setSelectedId(0, juce::dontSendNotification);
+    deviceSelector.setEnabled(true);
+    deviceSelector.onChange = [this] { selectAudioOutputDevice(); };
     deviceSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(12, 18, 27));
     deviceSelector.setColour(juce::ComboBox::textColourId, bright);
     deviceSelector.setColour(juce::ComboBox::outlineColourId, edge);
@@ -2946,18 +2946,102 @@ namespace
         explicit AudioSettingsContent(juce::AudioDeviceManager& manager)
             : selector(manager, 1, 2, 1, 2, false, false, true, true)
         {
+            info.setText(
+                "Choose a Windows recording input such as Stereo Mix or What U Hear below, if your driver provides it. "
+                "The main window selects the playback output device.",
+                juce::dontSendNotification);
+            info.setFont(juce::FontOptions(13.0f));
+            info.setColour(juce::Label::textColourId, juce::Colour(190, 205, 220));
+            info.setJustificationType(juce::Justification::centredLeft);
+            addAndMakeVisible(info);
             addAndMakeVisible(selector);
-            setSize(760, 560);
+            setSize(760, 600);
         }
 
         void resized() override
         {
-            selector.setBounds(getLocalBounds().reduced(14));
+            auto area = getLocalBounds().reduced(14);
+            info.setBounds(area.removeFromTop(58));
+            area.removeFromTop(6);
+            selector.setBounds(area);
         }
 
     private:
+        juce::Label info;
         juce::AudioDeviceSelectorComponent selector;
     };
+}
+
+void MainComponent::refreshAudioOutputDevices()
+{
+    auto* deviceType = deviceManager.getCurrentDeviceTypeObject();
+    if (deviceType == nullptr)
+        return;
+
+    const auto outputNames = deviceType->getDeviceNames(false);
+    if (outputNames.joinIntoString("\n") != lastAudioOutputNames.joinIntoString("\n"))
+    {
+        lastAudioOutputNames = outputNames;
+        const auto setup = deviceManager.getAudioDeviceSetup();
+        const auto selectedName = setup.outputDeviceName;
+
+        deviceSelector.clear(juce::dontSendNotification);
+        for (int i = 0; i < outputNames.size(); ++i)
+            deviceSelector.addItem(outputNames[i], i + 1);
+
+        if (outputNames.isEmpty())
+        {
+            deviceSelector.addItem("No playback devices found", 1);
+            deviceSelector.setEnabled(false);
+        }
+        else
+        {
+            deviceSelector.setEnabled(true);
+            int selectedId = 0;
+            for (int i = 0; i < outputNames.size(); ++i)
+                if (outputNames[i] == selectedName)
+                    selectedId = i + 1;
+
+            if (selectedId == 0)
+                selectedId = 1;
+            deviceSelector.setSelectedId(selectedId, juce::dontSendNotification);
+        }
+    }
+
+    const auto setup = deviceManager.getAudioDeviceSetup();
+    if (!setup.outputDeviceName.isEmpty())
+    {
+        for (int i = 0; i < lastAudioOutputNames.size(); ++i)
+            if (lastAudioOutputNames[i] == setup.outputDeviceName
+                && deviceSelector.getSelectedId() != i + 1)
+                deviceSelector.setSelectedId(i + 1, juce::dontSendNotification);
+    }
+}
+
+void MainComponent::selectAudioOutputDevice()
+{
+    const int selectedIndex = deviceSelector.getSelectedId() - 1;
+    if (selectedIndex < 0 || selectedIndex >= lastAudioOutputNames.size())
+        return;
+
+    auto setup = deviceManager.getAudioDeviceSetup();
+    setup.outputDeviceName = lastAudioOutputNames[selectedIndex];
+    const auto error = deviceManager.setAudioDeviceSetup(setup, true);
+
+    if (error.isEmpty())
+    {
+        statusLabel.setText("Playback output: " + lastAudioOutputNames[selectedIndex],
+                            juce::dontSendNotification);
+        connectionLabel.setText("OUTPUT READY  |  DEVICE SELECTED",
+                                juce::dontSendNotification);
+        connectionLabel.setColour(juce::Label::textColourId, green);
+    }
+    else
+    {
+        statusLabel.setText("Cannot open output device: " + error,
+                            juce::dontSendNotification);
+        refreshAudioOutputDevices();
+    }
 }
 
 void MainComponent::showAudioSettings()
@@ -3096,20 +3180,18 @@ void MainComponent::showPlannedVocalModule(const juce::String& moduleName)
 
 void MainComponent::timerCallback()
 {
+    refreshAudioOutputDevices();
+
     auto* device = deviceManager.getCurrentAudioDevice();
     const juce::String deviceName = device != nullptr ? device->getName()
-                                                       : "Chua co thiet bi am thanh";
+                                                       : "No audio device open";
 
     if (deviceName != lastAudioDeviceName)
     {
         lastAudioDeviceName = deviceName;
-        deviceSelector.clear(juce::dontSendNotification);
-        deviceSelector.addItem(deviceName, 1);
-        deviceSelector.setSelectedId(1, juce::dontSendNotification);
-
         const bool ready = device != nullptr;
-        connectionLabel.setText(ready ? "AM THANH SAN SANG  |  DA KET NOI"
-                                      : "CHUA SAN SANG  |  KIEM TRA CAI DAT",
+        connectionLabel.setText(ready ? "AUDIO READY  |  OUTPUT ACTIVE"
+                                      : "NO DEVICE  |  CHECK AUDIO SETTINGS",
                                 juce::dontSendNotification);
         connectionLabel.setColour(juce::Label::textColourId, ready ? green
                                                                     : juce::Colour(255, 110, 90));
