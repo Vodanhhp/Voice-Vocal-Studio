@@ -14,6 +14,14 @@ public:
                           float rotaryEndAngle, juce::Slider& slider) override;
 };
 
+class StudioToggleLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    void drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
+                          bool shouldDrawButtonAsHighlighted,
+                          bool shouldDrawButtonAsDown) override;
+};
+
 class MainComponent : public juce::AudioAppComponent, private juce::Timer
 {
 public:
@@ -177,6 +185,7 @@ private:
     juce::StringArray lastAudioOutputNames;
     juce::Label statusLabel;
 
+    StudioToggleLookAndFeel toggleLookAndFeel;
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
     std::array<juce::ToggleButton, 8> groupToggles {
         juce::ToggleButton(juce::String::fromUTF8("BẬT")), juce::ToggleButton(juce::String::fromUTF8("BẬT")),
