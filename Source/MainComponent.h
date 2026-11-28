@@ -54,10 +54,10 @@ private:
 
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
     std::array<juce::ToggleButton, 8> groupToggles {
-        juce::ToggleButton("ON"), juce::ToggleButton("ON"),
-        juce::ToggleButton("ON"), juce::ToggleButton("ON"),
-        juce::ToggleButton("ON"), juce::ToggleButton("ON"),
-        juce::ToggleButton("ON"), juce::ToggleButton("ON")
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT")
     };
 
     juce::ToggleButton monitorToggle { "THEO DÕI ÂM THANH: BẬT" };
