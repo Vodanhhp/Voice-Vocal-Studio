@@ -179,17 +179,17 @@ private:
 
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
     std::array<juce::ToggleButton, 8> groupToggles {
-        juce::ToggleButton("BAT"), juce::ToggleButton("BAT"),
-        juce::ToggleButton("BAT"), juce::ToggleButton("BAT"),
-        juce::ToggleButton("BAT"), juce::ToggleButton("BAT"),
-        juce::ToggleButton("BAT"), juce::ToggleButton("BAT")
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
+        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT")
     };
 
-    juce::ToggleButton monitorToggle { "THEO DOI AM THANH: BAT" };
-    juce::TextButton processButton { "BAT XU LY" };
-    juce::TextButton bypassButton { "BO QUA" };
-    juce::TextButton resetButton { "DAT LAI" };
-    juce::TextButton settingsButton { "CAI DAT" };
+    juce::ToggleButton monitorToggle { "THEO DOI AM THANH: BẬT" };
+    juce::TextButton processButton { "BẬT XU LY" };
+    juce::TextButton bypassButton { "BỎ QUA" };
+    juce::TextButton resetButton { "ĐẶT LẠI" };
+    juce::TextButton settingsButton { "CÀI ĐẶT" };
     juce::TextButton pitchCorrectionButton { "PITCH CORRECTION" };
     juce::TextButton vocalLevelingButton { "VOCAL LEVELING" };
     juce::TextButton vocalLimiterButton { "VOCAL LIMITER" };
@@ -198,8 +198,8 @@ private:
     juce::TextButton vocalClarityButton { "VOCAL CLARITY" };
     juce::TextButton breathControlButton { "BREATH CONTROL" };
     juce::TextButton vocalExciterButton { "VOCAL EXCITER" };
-    juce::TextButton savePresetButton { "LUU CAI DAT" };
-    juce::TextButton managePresetButton { "QUAN LY..." };
+    juce::TextButton savePresetButton { "LUU CÀI ĐẶT" };
+    juce::TextButton managePresetButton { "QUẢN LÝ..." };
     juce::ComboBox presetSelector;
     std::unique_ptr<juce::FileChooser> presetFileChooser;
     juce::Slider masterVolumeSlider;
