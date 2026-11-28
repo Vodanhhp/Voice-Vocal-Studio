@@ -552,17 +552,18 @@ void MainComponent::resized()
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
     const int fy = getHeight() - 88;
-    presetSelector.setBounds(145, fy + 15, 215, 38);
-    savePresetButton.setBounds(370, fy + 15, 145, 38);
-    managePresetButton.setBounds(525, fy + 15, 135, 38);
-    processButton.setBounds(680, fy + 15, 125, 38);
-    bypassButton.setBounds(815, fy + 15, 112, 38);
-    resetButton.setBounds(937, fy + 15, 105, 38);
-    settingsButton.setBounds(1052, fy + 15, 118, 38);
-    masterVolumeLabel.setBounds(1190, fy + 5, 180, 24);
-    masterVolumeSlider.setBounds(1190, fy + 32, 205, 28);
-    masterValueLabel.setBounds(1400, fy + 30, 100, 30);
-    statusLabel.setBounds(22, fy + 62, 1100, 22);
+    // Compact footer controls so every button label remains visible.
+    presetSelector.setBounds(145, fy + 16, 180, 36);
+    savePresetButton.setBounds(335, fy + 16, 110, 36);
+    managePresetButton.setBounds(455, fy + 16, 110, 36);
+    processButton.setBounds(575, fy + 16, 105, 36);
+    bypassButton.setBounds(690, fy + 16, 90, 36);
+    resetButton.setBounds(790, fy + 16, 82, 36);
+    settingsButton.setBounds(882, fy + 16, 90, 36);
+    masterVolumeLabel.setBounds(1010, fy + 5, 180, 24);
+    masterVolumeSlider.setBounds(1010, fy + 32, 330, 28);
+    masterValueLabel.setBounds(1350, fy + 30, 125, 30);
+    statusLabel.setBounds(22, fy + 62, 950, 22);
 }
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
