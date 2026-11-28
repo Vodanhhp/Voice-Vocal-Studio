@@ -231,3 +231,14 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The module is active only when the global processing chain is enabled, Bypass is off, and Vocal Clarity is ON.
 - Filter coefficients are updated outside the per-sample loop when control values change; filter state is preallocated and no new callback allocations or blocking locks were introduced.
 - Build and listening tests on the user's computer are pending. Listen for intelligibility, harsh consonants, excessive S sounds and interaction with De-Esser, Voice Enhance and Tone Control.
+
+
+### Implementation update 28/11/2026 - Breath Control module (DSP stage 3)
+- Replaced the Breath Control placeholder window with a dedicated module window containing independent ON/OFF, Sensitivity and Breath Reduction controls.
+- Connected the controls to atomic realtime parameters consumed by the audio callback.
+- Added a fixed 5.5 kHz band-pass detector and a separate band signal path. The module estimates high-frequency breath energy and compares it with the overall vocal envelope before applying attenuation.
+- Reduction is applied primarily to the detected high-frequency band rather than turning down the entire vocal signal, helping preserve the main voice.
+- Added smoothed detector/envelope and gain behavior to reduce abrupt changes. The fixed filters are configured in prepareToPlay; no new allocations or blocking locks were added to the audio callback.
+- The module runs only when global processing is enabled, Bypass is off, and Breath Control is ON.
+- This is an initial breath-noise reduction stage, not a source-separation system. It may also affect quiet consonants, soft singing and vocal air; Sensitivity and Reduction need listening tests with the user's microphone.
+- Build and listening tests on the user's computer are pending. Start with Sensitivity around 40-50% and Breath Reduction around 20-30%, then compare ON/OFF on breaths between phrases and quiet sung words.
