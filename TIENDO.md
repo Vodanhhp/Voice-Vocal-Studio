@@ -155,3 +155,18 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Important: this is the pitch-detection and target-analysis stage only. It does not yet shift the audible signal or correct sung notes. Correction Amount and Speed are stored and ready for the next DSP stage; they are not yet audible controls.
 - User must rebuild and test note tracking with a clean, single vocal/mic input. Polyphonic music, strong reverb, noise and very breathy/unvoiced sounds can confuse a monophonic pitch detector.
 - Next: improve pitch tracking confidence/accuracy, then add a dedicated low-latency pitch-shifting engine before enabling audible correction.
+
+### Implementation update 28/11/2026 - Experimental audible pitch correction
+
+- Added a fixed-size dual-delay pitch shifter to the realtime audio path. The implementation uses two crossfaded delay taps with a moving read position to shift pitch without changing the playback rate.
+- The shifter uses a preallocated 8192-sample buffer and performs no allocation or locking in the audio callback.
+- Added an independent Pitch Correction ON/OFF toggle inside the Pitch Correction module. The main BAT XU LY control and Bypass still act as the overall processing master.
+- Correction Amount now scales the measured cents offset toward the selected scale note.
+- Correction Speed controls the smoothing time of the pitch-ratio changes.
+- The pitch shift is limited to approximately plus/minus one semitone to reduce extreme artifacts.
+- Delay taps move between approximately 3 ms and 18 ms. These are internal read delays, not a guaranteed end-to-end system latency measurement.
+- The shifter continues to keep its delay buffer warm while disabled, then fades the processed signal in/out to reduce abrupt switching.
+- This is an experimental dual-delay pitch shifter, not a formant-preserving PSOLA or phase-vocoder engine. It can produce chorus/granular artifacts, alter vocal formants, and sound unnatural on consonants, vibrato, noisy or polyphonic input.
+- The source has been checked for ASCII-only text and the expected code paths have been verified by fetching the updated files from main.
+- Build and listening tests have NOT yet been performed on the user's computer. Do not mark this module production-ready until the user rebuilds and tests it with a dry, single-voice microphone signal.
+- Next test: compare OFF and ON at low Correction Amount first; then test stable sustained notes, note transitions, vibrato and the selected key/scale. Listen for pitch stability, metallic/chorus artifacts, clicks and latency.
