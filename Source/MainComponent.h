@@ -28,6 +28,30 @@ public:
     void timerCallback() override;
 
 private:
+    struct BiquadFilter
+    {
+        float b0 { 1.0f }, b1 { 0.0f }, b2 { 0.0f };
+        float a1 { 0.0f }, a2 { 0.0f };
+        float z1 { 0.0f }, z2 { 0.0f };
+
+        void setCoefficients(float newB0, float newB1, float newB2,
+                             float newA1, float newA2) noexcept
+        {
+            b0 = newB0; b1 = newB1; b2 = newB2;
+            a1 = newA1; a2 = newA2;
+        }
+
+        float process(float input) noexcept
+        {
+            const float output = b0 * input + z1;
+            z1 = b1 * input - a1 * output + z2;
+            z2 = b2 * input - a2 * output;
+            return output;
+        }
+
+        void reset() noexcept { z1 = z2 = 0.0f; }
+    };
+
     struct ParameterControl
     {
         juce::Label label;
@@ -71,6 +95,14 @@ private:
     juce::Slider masterVolumeSlider;
     juce::Label masterVolumeLabel;
     juce::Label masterValueLabel;
+
+    std::array<std::atomic<float>, 5> eqGainDb;
+    std::array<std::atomic<bool>, 8> groupEnabled;
+    std::array<BiquadFilter, 5> eqFilters;
+    std::array<float, 5> lastAppliedEqGainDb {
+        999.0f, 999.0f, 999.0f, 999.0f, 999.0f
+    };
+    double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
     std::atomic<float> outputGainLinear { 1.0f };
