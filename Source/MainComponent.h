@@ -155,6 +155,7 @@ private:
     void showAudioSettings();
     void showPitchCorrectionModule();
     void showVocalLevelingModule();
+    void showWarmthBodyModule();
     void showPlannedVocalModule(const juce::String& moduleName);
     void applyBuiltInPreset(int presetId);
     void savePresetToFile(const juce::File& file);
@@ -256,6 +257,13 @@ private:
     std::atomic<float> pitchDeviationCents { 0.0f };
     std::atomic<bool> pitchCorrectionEnabled { false };
     std::atomic<bool> vocalLevelingEnabled { false };
+    std::atomic<bool> warmthBodyEnabled { false };
+    std::atomic<float> warmthAmount { 50.0f };
+    std::atomic<float> bodyAmount { 50.0f };
+    BiquadFilter warmthFilter;
+    BiquadFilter bodyFilter;
+    float lastWarmthGainDb { 999.0f };
+    float lastBodyGainDb { 999.0f };
     std::atomic<float> vocalLevelTargetDb { -18.0f };
     std::atomic<float> vocalLevelMaxBoostDb { 6.0f };
     std::atomic<float> vocalLevelMaxCutDb { 4.0f };
