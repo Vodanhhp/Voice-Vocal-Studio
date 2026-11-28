@@ -384,3 +384,10 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Thiết kế lại rotary knob theo hướng núm kim loại bạc gia công, có bezel phát sáng, vòng mức cyan, vạch chia và kim chỉ thị rõ hơn.
 - Giữ nguyên kích thước cửa sổ, bố cục component, giá trị tham số, DSP/audio callback, preset, Input/Output và routing.
 - Đây là thay đổi giao diện đồ họa; cần người dùng Pull, Rebuild và gửi ảnh chụp để xác nhận mức độ khác biệt trên máy thực tế. Chưa xác nhận build/runtime.
+
+
+## 28/11/2026 – Sửa lỗi biên dịch drawArc trong rotary knob
+- JUCE `juce::Graphics` không có hàm `drawArc()`; thay đoạn vẽ cung highlight bằng `juce::Path::addCentredArc()` kết hợp `Graphics::strokePath()`.
+- Giữ nguyên tâm, bán kính, góc bắt đầu/kết thúc, màu sắc và độ dày nét của cung sáng trên núm kim loại.
+- Chỉ sửa phần vẽ giao diện trong `Source/MainComponent.cpp`; không thay đổi DSP, audio callback, tham số, preset hoặc Input/Output routing.
+- Đã cập nhật mã nguồn trên nhánh `main`. Cần người dùng Fetch origin → Pull origin → Rebuild Solution để xác nhận lỗi compile đã hết; chưa xác nhận build thành công.
