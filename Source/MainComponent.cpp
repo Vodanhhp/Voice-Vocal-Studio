@@ -1212,12 +1212,12 @@ MainComponent::MainComponent()
     titleLabel.setColour(juce::Label::textColourId, bright);
     addAndMakeVisible(titleLabel);
 
-    subtitleLabel.setText("Hát hay hơn - Truyền cảm hơn", juce::dontSendNotification);
+    subtitleLabel.setText("H\303\241t hay h\306\241n - Truy\341\273\201n c\341\272\243m h\306\241n", juce::dontSendNotification);
     subtitleLabel.setFont(juce::FontOptions(14.0f, juce::Font::italic));
     subtitleLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(subtitleLabel);
 
-    deviceLabel.setText("THIẾT BỊ PHÁT ÂM THANH", juce::dontSendNotification);
+    deviceLabel.setText("THI\341\272\276T B\341\273\212 PH\303\201T \303\202M THANH", juce::dontSendNotification);
     deviceLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
     deviceLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(deviceLabel);
@@ -1230,7 +1230,7 @@ MainComponent::MainComponent()
     deviceSelector.setColour(juce::ComboBox::outlineColourId, edge);
     addAndMakeVisible(deviceSelector);
 
-    connectionLabel.setText("*  ÂM THANH SẴN SÀNG  |  MẶC ĐỊNH", juce::dontSendNotification);
+    connectionLabel.setText("*  \303\202M THANH S\341\272\264N S\303\200NG  |  M\341\272\266C \304\220\341\273\212NH", juce::dontSendNotification);
     connectionLabel.setFont(juce::FontOptions(12.0f, juce::Font::bold));
     connectionLabel.setColour(juce::Label::textColourId, green);
     addAndMakeVisible(connectionLabel);
@@ -1249,47 +1249,47 @@ MainComponent::MainComponent()
         {
             const bool enabled = groupToggles[i].getToggleState();
             groupEnabled[i].store(enabled);
-            groupToggles[i].setButtonText(enabled ? "BẬT" : "TẮT");
+            groupToggles[i].setButtonText(enabled ? "B\341\272\254T" : "T\341\272\256T");
         };
         addAndMakeVisible(toggle);
     }
 
     // Left: input and output gain.
-    addParameter("Độ lợi đầu vào", -12.0, 24.0, 0.0, " dB", 0);
-    addParameter("Độ lợi đầu ra", -24.0, 12.0, 0.0, " dB", 0);
+    addParameter("\304\220\341\273\231 l\341\273\243i \304\221\341\272\247u v\303\240o", -12.0, 24.0, 0.0, " dB", 0);
+    addParameter("\304\220\341\273\231 l\341\273\243i \304\221\341\272\247u ra", -24.0, 12.0, 0.0, " dB", 0);
 
     // Parametric EQ: five visual bands. DSP connection is a later stage.
-    addParameter("TRẦM  |  80 Hz", -12.0, 12.0, 3.0, " dB", 1);
-    addParameter("TRẦM VỪA  |  250 Hz", -12.0, 12.0, 1.5, " dB", 1);
+    addParameter("TR\341\272\246M  |  80 Hz", -12.0, 12.0, 3.0, " dB", 1);
+    addParameter("TR\341\272\246M V\341\273\252A  |  250 Hz", -12.0, 12.0, 1.5, " dB", 1);
     addParameter("TRUNG  |  1,0 kHz", -12.0, 12.0, 0.0, " dB", 1);
-    addParameter("CAO VỪA  |  4,0 kHz", -12.0, 12.0, 2.0, " dB", 1);
+    addParameter("CAO V\341\273\252A  |  4,0 kHz", -12.0, 12.0, 2.0, " dB", 1);
     addParameter("CAO  |  12 kHz", -12.0, 12.0, 1.0, " dB", 1);
 
-    addParameter("Ngưỡng", -60.0, 0.0, -18.0, " dB", 2);
-    addParameter("Tỷ lệ nén", 1.0, 12.0, 3.0, " : 1", 2);
-    addParameter("Thời gian tấn công", 1.0, 100.0, 10.0, " ms", 2);
-    addParameter("Thời gian nhả", 10.0, 500.0, 150.0, " ms", 2);
+    addParameter("Ng\306\260\341\273\241ng", -60.0, 0.0, -18.0, " dB", 2);
+    addParameter("T\341\273\267 l\341\273\207 n\303\251n", 1.0, 12.0, 3.0, " : 1", 2);
+    addParameter("Th\341\273\235i gian t\341\272\245n c\303\264ng", 1.0, 100.0, 10.0, " ms", 2);
+    addParameter("Th\341\273\235i gian nh\341\272\243", 10.0, 500.0, 150.0, " ms", 2);
 
-    addParameter("Ngưỡng", -60.0, 0.0, -30.0, " dB", 3);
-    addParameter("Tần số", 2000.0, 12000.0, 6000.0, " Hz", 3);
+    addParameter("Ng\306\260\341\273\241ng", -60.0, 0.0, -30.0, " dB", 3);
+    addParameter("T\341\272\247n s\341\273\221", 2000.0, 12000.0, 6000.0, " Hz", 3);
 
-    addParameter("Độ hiện diện", 0.0, 100.0, 60.0, " %", 4);
-    addParameter("Độ ấm", 0.0, 100.0, 58.0, " %", 4);
-    addParameter("Độ thoáng", 0.0, 100.0, 60.0, " %", 4);
+    addParameter("\304\220\341\273\231 hi\341\273\207n di\341\273\207n", 0.0, 100.0, 60.0, " %", 4);
+    addParameter("\304\220\341\273\231 \341\272\245m", 0.0, 100.0, 58.0, " %", 4);
+    addParameter("\304\220\341\273\231 tho\303\241ng", 0.0, 100.0, 60.0, " %", 4);
 
-    addParameter("Ngưỡng", -80.0, 0.0, -50.0, " dB", 5);
-    addParameter("Thời gian giữ", 0.0, 500.0, 200.0, " ms", 5);
-    addParameter("Thời gian nhả", 0.0, 1000.0, 300.0, " ms", 5);
+    addParameter("Ng\306\260\341\273\241ng", -80.0, 0.0, -50.0, " dB", 5);
+    addParameter("Th\341\273\235i gian gi\341\273\257", 0.0, 500.0, 200.0, " ms", 5);
+    addParameter("Th\341\273\235i gian nh\341\272\243", 0.0, 1000.0, 300.0, " ms", 5);
 
-    addParameter("Âm trầm", -12.0, 12.0, 2.0, " dB", 6);
-    addParameter("Âm trung", -12.0, 12.0, 0.0, " dB", 6);
-    addParameter("Âm cao", -12.0, 12.0, 2.0, " dB", 6);
+    addParameter("\303\202m tr\341\272\247m", -12.0, 12.0, 2.0, " dB", 6);
+    addParameter("\303\202m trung", -12.0, 12.0, 0.0, " dB", 6);
+    addParameter("\303\202m cao", -12.0, 12.0, 2.0, " dB", 6);
 
-    addParameter("Tỷ lệ hòa trộn", 0.0, 100.0, 20.0, " %", 7);
-    addParameter("Không gian phòng", 0.0, 100.0, 50.0, " %", 7);
-    addParameter("Thời gian", 0.1, 5.0, 1.8, " s", 7);
+    addParameter("T\341\273\267 l\341\273\207 h\303\262a tr\341\273\231n", 0.0, 100.0, 20.0, " %", 7);
+    addParameter("Kh\303\264ng gian ph\303\262ng", 0.0, 100.0, 50.0, " %", 7);
+    addParameter("Th\341\273\235i gian", 0.1, 5.0, 1.8, " s", 7);
 
-    masterVolumeLabel.setText("ÂM LƯỢNG TỔNG", juce::dontSendNotification);
+    masterVolumeLabel.setText("\303\202M L\306\257\341\273\242NG T\341\273\224NG", juce::dontSendNotification);
     masterVolumeLabel.setFont(juce::FontOptions(13.0f, juce::Font::bold));
     masterVolumeLabel.setColour(juce::Label::textColourId, bright);
     addAndMakeVisible(masterVolumeLabel);
@@ -1315,20 +1315,20 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(masterVolumeSlider);
 
-    presetSelector.addItem("Giọng nam ấm áp", 1);
-    presetSelector.addItem("Giọng nam dày", 2);
-    presetSelector.addItem("Karaoke nhạc nhẹ", 3);
-    presetSelector.addItem("Giọng mượt mà", 4);
-    presetSelector.addItem("Giọng sáng rõ", 5);
-    presetSelector.addItem("Giọng trầm ấm", 6);
-    presetSelector.addItem("Giọng sân khấu", 7);
-    presetSelector.addItem("Giọng truyền cảm", 8);
-    presetSelector.addItem("Karaoke tự nhiên", 9);
-    presetSelector.addItem("MC nam trầm", 10);
-    presetSelector.addItem("MC nữ trung âm", 11);
-    presetSelector.addItem("Nữ cao sáng", 12);
-    presetSelector.addItem("Nữ thanh thoát", 13);
-    presetSelector.addItem("Nữ trữ tình", 14);
+    presetSelector.addItem("Gi\341\273\215ng nam \341\272\245m \303\241p", 1);
+    presetSelector.addItem("Gi\341\273\215ng nam d\303\240y", 2);
+    presetSelector.addItem("Karaoke nh\341\272\241c nh\341\272\271", 3);
+    presetSelector.addItem("Gi\341\273\215ng m\306\260\341\273\243t m\303\240", 4);
+    presetSelector.addItem("Gi\341\273\215ng s\303\241ng r\303\265", 5);
+    presetSelector.addItem("Gi\341\273\215ng tr\341\272\247m \341\272\245m", 6);
+    presetSelector.addItem("Gi\341\273\215ng s\303\242n kh\341\272\245u", 7);
+    presetSelector.addItem("Gi\341\273\215ng truy\341\273\201n c\341\272\243m", 8);
+    presetSelector.addItem("Karaoke t\341\273\261 nhi\303\252n", 9);
+    presetSelector.addItem("MC nam tr\341\272\247m", 10);
+    presetSelector.addItem("MC n\341\273\257 trung \303\242m", 11);
+    presetSelector.addItem("N\341\273\257 cao s\303\241ng", 12);
+    presetSelector.addItem("N\341\273\257 thanh tho\303\241t", 13);
+    presetSelector.addItem("N\341\273\257 tr\341\273\257 t\303\254nh", 14);
     presetSelector.setSelectedId(1);
     presetSelector.onChange = [this]
     {
@@ -1384,7 +1384,7 @@ MainComponent::MainComponent()
     breathControlButton.onClick = [this] { showBreathControlModule(); };
     vocalExciterButton.onClick = [this] { showVocalExciterModule(); };
 
-    statusLabel.setText("Sẵn sàng - các bộ xử lý đang ở chế độ giao diện", juce::dontSendNotification);
+    statusLabel.setText("S\341\272\265n s\303\240ng - c\303\241c b\341\273\231 x\341\273\255 l\303\275 \304\221ang \341\273\237 ch\341\272\277 \304\221\341\273\231 giao di\341\273\207n", juce::dontSendNotification);
     statusLabel.setFont(juce::FontOptions(10.5f));
     statusLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(statusLabel);
@@ -1393,25 +1393,25 @@ MainComponent::MainComponent()
     {
         const bool enabled = monitorToggle.getToggleState();
         monitorEnabled.store(enabled);
-        monitorToggle.setButtonText(enabled ? "THEO DÕI ÂM THANH: BẬT" : "THEO DÕI ÂM THANH: TẮT");
-        statusLabel.setText(enabled ? "Đã bật theo dõi âm thanh trực tiếp"
-                                    : "Đã tắt theo dõi - không phát âm thanh ra loa",
+        monitorToggle.setButtonText(enabled ? "THEO D\303\225I \303\202M THANH: B\341\272\254T" : "THEO D\303\225I \303\202M THANH: T\341\272\256T");
+        statusLabel.setText(enabled ? "\304\220\303\243 b\341\272\255t theo d\303\265i \303\242m thanh tr\341\273\261c ti\341\272\277p"
+                                    : "\304\220\303\243 t\341\272\257t theo d\303\265i - kh\303\264ng ph\303\241t \303\242m thanh ra loa",
                             juce::dontSendNotification);
     };
 
     processButton.onClick = [this]
     {
         processingEnabled.store(!processingEnabled.load());
-        processButton.setButtonText(processingEnabled.load() ? "DỪNG XỬ LÝ" : "BẬT XỬ LÝ");
+        processButton.setButtonText(processingEnabled.load() ? "D\341\273\252NG X\341\273\254 L\303\235" : "B\341\272\254T X\341\273\254 L\303\235");
         statusLabel.setText(processingEnabled.load()
-            ? "Đã bật chuỗi xử lý tín hiệu"
-            : "Đã tắt xử lý tín hiệu", juce::dontSendNotification);
+            ? "\304\220\303\243 b\341\272\255t chu\341\273\227i x\341\273\255 l\303\275 t\303\255n hi\341\273\207u"
+            : "\304\220\303\243 t\341\272\257t x\341\273\255 l\303\275 t\303\255n hi\341\273\207u", juce::dontSendNotification);
     };
     bypassButton.onClick = [this]
     {
         bypassEnabled.store(!bypassEnabled.load());
-        statusLabel.setText(bypassEnabled.load() ? "BỎ QUA - tín hiệu trực tiếp"
-                                                 : "Đã tắt chế độ bỏ qua", juce::dontSendNotification);
+        statusLabel.setText(bypassEnabled.load() ? "B\341\273\216 QUA - t\303\255n hi\341\273\207u tr\341\273\261c ti\341\272\277p"
+                                                 : "\304\220\303\243 t\341\272\257t ch\341\272\277 \304\221\341\273\231 b\341\273\217 qua", juce::dontSendNotification);
     };
     resetButton.onClick = [this]
     {
@@ -1420,7 +1420,7 @@ MainComponent::MainComponent()
                 control->slider.setValue(control->slider.getDoubleClickReturnValue(),
                                          juce::sendNotification);
         masterVolumeSlider.setValue(0.0, juce::sendNotification);
-        statusLabel.setText("Đã đưa các giá trị về mặc định", juce::dontSendNotification);
+        statusLabel.setText("\304\220\303\243 \304\221\306\260a c\303\241c gi\303\241 tr\341\273\213 v\341\273\201 m\341\272\267c \304\221\341\273\213nh", juce::dontSendNotification);
     };
     savePresetButton.onClick = [this]
     {
@@ -1429,7 +1429,7 @@ MainComponent::MainComponent()
             .getChildFile("VoiceVocalStudio").getChildFile("Presets");
         directory.createDirectory();
         presetFileChooser = std::make_unique<juce::FileChooser>(
-            "Lưu cấu hình giọng hát", directory.getChildFile("CauHinhMoi.vvpreset"),
+            "L\306\260u c\341\272\245u h\303\254nh gi\341\273\215ng h\303\241t", directory.getChildFile("CauHinhMoi.vvpreset"),
             "*.vvpreset");
         juce::Component::SafePointer<MainComponent> safeThis(this);
         presetFileChooser->launchAsync(juce::FileBrowserComponent::saveMode
@@ -1453,7 +1453,7 @@ MainComponent::MainComponent()
             .getChildFile("VoiceVocalStudio").getChildFile("Presets");
         directory.createDirectory();
         presetFileChooser = std::make_unique<juce::FileChooser>(
-            "Mở cấu hình đã lưu", directory, "*.vvpreset");
+            "M\341\273\237 c\341\272\245u h\303\254nh \304\221\303\243 l\306\260u", directory, "*.vvpreset");
         juce::Component::SafePointer<MainComponent> safeThis(this);
         presetFileChooser->launchAsync(juce::FileBrowserComponent::openMode
                                        | juce::FileBrowserComponent::canSelectFiles,
@@ -1631,11 +1631,11 @@ void MainComponent::applyBuiltInPreset(int presetId)
     static const int parameterCounts[8] = { 2, 5, 4, 2, 3, 3, 3, 3 };
     static const char* const presetNames[14] =
     {
-        "Giọng nam ấm áp", "Giọng nam dày", "Karaoke nhạc nhẹ",
-        "Giọng mượt mà", "Giọng sáng rõ", "Giọng trầm ấm",
-        "Giọng sân khấu", "Giọng truyền cảm", "Karaoke tự nhiên",
-        "MC nam trầm", "MC nữ trung âm", "Nữ cao sáng",
-        "Nữ thanh thoát", "Nữ trữ tình"
+        "Gi\341\273\215ng nam \341\272\245m \303\241p", "Gi\341\273\215ng nam d\303\240y", "Karaoke nh\341\272\241c nh\341\272\271",
+        "Gi\341\273\215ng m\306\260\341\273\243t m\303\240", "Gi\341\273\215ng s\303\241ng r\303\265", "Gi\341\273\215ng tr\341\272\247m \341\272\245m",
+        "Gi\341\273\215ng s\303\242n kh\341\272\245u", "Gi\341\273\215ng truy\341\273\201n c\341\272\243m", "Karaoke t\341\273\261 nhi\303\252n",
+        "MC nam tr\341\272\247m", "MC n\341\273\257 trung \303\242m", "N\341\273\257 cao s\303\241ng",
+        "N\341\273\257 thanh tho\303\241t", "N\341\273\257 tr\341\273\257 t\303\254nh"
     };
 
     if (presetId < 1 || presetId > 14)
@@ -1653,11 +1653,11 @@ void MainComponent::applyBuiltInPreset(int presetId)
 
         groupToggles[(size_t)group].setToggleState(true, juce::dontSendNotification);
         groupEnabled[(size_t)group].store(true);
-        groupToggles[(size_t)group].setButtonText("BẬT");
+        groupToggles[(size_t)group].setButtonText("B\341\272\254T");
     }
 
     masterVolumeSlider.setValue(0.0, juce::sendNotification);
-    statusLabel.setText("Đã nạp cấu hình: " + juce::String(presetNames[presetIndex]),
+    statusLabel.setText("\304\220\303\243 n\341\272\241p c\341\272\245u h\303\254nh: " + juce::String(presetNames[presetIndex]),
                         juce::dontSendNotification);
 }
 
@@ -1680,10 +1680,10 @@ void MainComponent::savePresetToFile(const juce::File& file)
     }
 
     if (preset->writeTo(file))
-        statusLabel.setText("Đã lưu cấu hình: " + file.getFileNameWithoutExtension(),
+        statusLabel.setText("\304\220\303\243 l\306\260u c\341\272\245u h\303\254nh: " + file.getFileNameWithoutExtension(),
                             juce::dontSendNotification);
     else
-        statusLabel.setText("Không thể lưu tệp cấu hình", juce::dontSendNotification);
+        statusLabel.setText("Kh\303\264ng th\341\273\203 l\306\260u t\341\273\207p c\341\272\245u h\303\254nh", juce::dontSendNotification);
 }
 
 bool MainComponent::loadPresetFromFile(const juce::File& file)
@@ -1691,7 +1691,7 @@ bool MainComponent::loadPresetFromFile(const juce::File& file)
     auto xml = juce::XmlDocument::parse(file);
     if (xml == nullptr || !xml->hasTagName("VOICE_VOCAL_PRESET"))
     {
-        statusLabel.setText("Tệp cấu hình không hợp lệ", juce::dontSendNotification);
+        statusLabel.setText("T\341\273\207p c\341\272\245u h\303\254nh kh\303\264ng h\341\273\243p l\341\273\207", juce::dontSendNotification);
         return false;
     }
 
@@ -1701,7 +1701,7 @@ bool MainComponent::loadPresetFromFile(const juce::File& file)
         const bool enabled = xml->getBoolAttribute(enabledKey, true);
         groupToggles[group].setToggleState(enabled, juce::dontSendNotification);
         groupEnabled[group].store(enabled);
-        groupToggles[group].setButtonText(enabled ? "BẬT" : "TẮT");
+        groupToggles[group].setButtonText(enabled ? "B\341\272\254T" : "T\341\272\256T");
 
         for (size_t parameter = 0; parameter < groups[group].size(); ++parameter)
         {
@@ -1715,7 +1715,7 @@ bool MainComponent::loadPresetFromFile(const juce::File& file)
 
     masterVolumeSlider.setValue(xml->getDoubleAttribute("masterVolumeDb", 0.0),
                                 juce::sendNotification);
-    statusLabel.setText("Đã nạp cấu hình: " + file.getFileNameWithoutExtension(),
+    statusLabel.setText("\304\220\303\243 n\341\272\241p c\341\272\245u h\303\254nh: " + file.getFileNameWithoutExtension(),
                         juce::dontSendNotification);
     return true;
 }
@@ -1765,9 +1765,9 @@ MainComponent::ParameterControl* MainComponent::addParameter(
                                     slider = &result->slider]
     {
         const float value = (float)slider->getValue();
-        if (name == "Độ lợi đầu vào")
+        if (name == "\304\220\341\273\231 l\341\273\243i \304\221\341\272\247u v\303\240o")
             inputGainLinear.store(juce::Decibels::decibelsToGain(value));
-        else if (name == "Độ lợi đầu ra")
+        else if (name == "\304\220\341\273\231 l\341\273\243i \304\221\341\272\247u ra")
             outputGainLinear.store(juce::Decibels::decibelsToGain(value));
         else if (group == 1 && parameterIndex >= 0
                  && parameterIndex < (int)eqGainDb.size())
@@ -1905,14 +1905,14 @@ void MainComponent::paint(juce::Graphics& g)
     g.strokePath(wave, juce::PathStrokeType(2.0f));
 
     const auto panels = calculatePanelBounds();
-    drawPanel(g, panels[0], "ĐẦU VÀO / ĐẦU RA");
-    drawPanel(g, panels[1], "BỘ LỌC EQ THAM SỐ");
-    drawPanel(g, panels[2], "NÉN ÂM THANH");
-    drawPanel(g, panels[3], "GIẢM ÂM XÌ");
-    drawPanel(g, panels[4], "CẢI THIỆN GIỌNG HÁT", juce::Colour(255, 190, 65));
-    drawPanel(g, panels[5], "CỔNG CHẶN TIẾNG ỒN");
-    drawPanel(g, panels[6], "ĐIỀU CHỈNH ÂM SẮC");
-    drawPanel(g, panels[7], "TẠO VANG", juce::Colour(90, 190, 255));
+    drawPanel(g, panels[0], "\304\220\341\272\246U V\303\200O / \304\220\341\272\246U RA");
+    drawPanel(g, panels[1], "B\341\273\230 L\341\273\214C EQ THAM S\341\273\220");
+    drawPanel(g, panels[2], "N\303\211N \303\202M THANH");
+    drawPanel(g, panels[3], "GI\341\272\242M \303\202M X\303\214");
+    drawPanel(g, panels[4], "C\341\272\242I THI\341\273\206N GI\341\273\214NG H\303\201T", juce::Colour(255, 190, 65));
+    drawPanel(g, panels[5], "C\341\273\224NG CH\341\272\266N TI\341\272\276NG \341\273\222N");
+    drawPanel(g, panels[6], "\304\220I\341\273\200U CH\341\273\210NH \303\202M S\341\272\256C");
+    drawPanel(g, panels[7], "T\341\272\240O VANG", juce::Colour(90, 190, 255));
 
     // Input/output LED meters styled like the reference studio interface.
     auto drawLedMeter = [&g](juce::Rectangle<float> area, float level, bool gainReduction)
@@ -3032,13 +3032,13 @@ void MainComponent::selectAudioOutputDevice()
     {
         statusLabel.setText("Playback output: " + lastAudioOutputNames[selectedIndex],
                             juce::dontSendNotification);
-        connectionLabel.setText("ĐẦU RA SẴN SÀNG  |  ĐÃ CHỌN THIẾT BỊ",
+        connectionLabel.setText("\304\220\341\272\246U RA S\341\272\264N S\303\200NG  |  \304\220\303\203 CH\341\273\214N THI\341\272\276T B\341\273\212",
                                 juce::dontSendNotification);
         connectionLabel.setColour(juce::Label::textColourId, green);
     }
     else
     {
-        statusLabel.setText("Không thể mở thiết bị đầu ra: " + error,
+        statusLabel.setText("Kh\303\264ng th\341\273\203 m\341\273\237 thi\341\272\277t b\341\273\213 \304\221\341\272\247u ra: " + error,
                             juce::dontSendNotification);
         refreshAudioOutputDevices();
     }
@@ -3048,7 +3048,7 @@ void MainComponent::showAudioSettings()
 {
     juce::DialogWindow::LaunchOptions options;
     options.content.setOwned(new AudioSettingsContent(deviceManager));
-    options.dialogTitle = "Cài đặt thiết bị âm thanh";
+    options.dialogTitle = "C\303\240i \304\221\341\272\267t thi\341\272\277t b\341\273\213 \303\242m thanh";
     options.dialogBackgroundColour = juce::Colour(18, 25, 35);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
@@ -3184,13 +3184,13 @@ void MainComponent::timerCallback()
 
     auto* device = deviceManager.getCurrentAudioDevice();
     const juce::String deviceName = device != nullptr ? device->getName()
-                                                       : "Chưa mở thiết bị âm thanh";
+                                                       : "Ch\306\260a m\341\273\237 thi\341\272\277t b\341\273\213 \303\242m thanh";
 
     if (deviceName != lastAudioDeviceName)
     {
         lastAudioDeviceName = deviceName;
         const bool ready = device != nullptr;
-        connectionLabel.setText(ready ? "ÂM THANH SẴN SÀNG  |  ĐẦU RA ĐANG HOẠT ĐỘNG"
+        connectionLabel.setText(ready ? "\303\202M THANH S\341\272\264N S\303\200NG  |  \304\220\341\272\246U RA \304\220ANG HO\341\272\240T \304\220\341\273\230NG"
                                       : "NO DEVICE  |  CHECK AUDIO SETTINGS",
                                 juce::dontSendNotification);
         connectionLabel.setColour(juce::Label::textColourId, ready ? green
