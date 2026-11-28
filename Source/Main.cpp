@@ -69,7 +69,7 @@ public:
             setTitleBarHeight (28);
             setResizable (false, false);
             setContentOwned (new MainComponent(), true);
-            centreWithSize (760, 588);
+            centreWithSize (1536, 1052); // Match the 1536 x 1024 studio content area.
             setVisible (true);
         }
 
