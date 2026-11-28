@@ -892,6 +892,119 @@ private:
 
 
 
+
+class VocalSmoothModuleContent final : public juce::Component
+{
+public:
+    VocalSmoothModuleContent(std::atomic<bool>& enabled,
+                             std::atomic<float>& sensitivity,
+                             std::atomic<float>& intensity)
+        : enabledParameter(enabled), sensitivityParameter(sensitivity),
+          intensityParameter(intensity)
+    {
+        title.setText("VOCAL SMOOTH", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("Gently control harsh upper-mid vocal resonances while keeping detail.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        configureSlider(sensitivityLabel, sensitivitySlider, "SENSITIVITY",
+                         sensitivityParameter.load(),
+                         [this](double value) { sensitivityParameter.store((float)value); });
+        configureSlider(intensityLabel, intensitySlider, "SMOOTHING INTENSITY",
+                         intensityParameter.load(),
+                         [this](double value) { intensityParameter.store((float)value); });
+
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        updateToggleText();
+        enableToggle.setColour(juce::ToggleButton::textColourId,
+                               juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            enabledParameter.store(enableToggle.getToggleState());
+            updateToggleText();
+        };
+        addAndMakeVisible(enableToggle);
+
+        note.setText("Start with low intensity. Excessive reduction can make vocals sound dull.",
+                     juce::dontSendNotification);
+        note.setFont(juce::FontOptions(12.0f));
+        note.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(note);
+        setSize(620, 390);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(105, 155, 210).withAlpha(0.16f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(42));
+        area.removeFromTop(14);
+        sensitivityLabel.setBounds(area.removeFromTop(22));
+        sensitivitySlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(12);
+        intensityLabel.setBounds(area.removeFromTop(22));
+        intensitySlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(14);
+        enableToggle.setBounds(area.removeFromTop(34));
+        note.setBounds(area.removeFromTop(42));
+    }
+
+private:
+    void configureSlider(juce::Label& label, juce::Slider& slider,
+                         const juce::String& caption, double initial,
+                         std::function<void(double)> onChange)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 72, 26);
+        slider.setRange(0.0, 100.0, 1.0);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setTextValueSuffix(" %");
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(105, 155, 210));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
+        auto* sliderPointer = &slider;
+        slider.onValueChange = [sliderPointer, onChange]
+        {
+            onChange(sliderPointer->getValue());
+        };
+        addAndMakeVisible(slider);
+    }
+
+    void updateToggleText()
+    {
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "VOCAL SMOOTH: ON" : "VOCAL SMOOTH: OFF");
+    }
+
+    std::atomic<bool>& enabledParameter;
+    std::atomic<float>& sensitivityParameter;
+    std::atomic<float>& intensityParameter;
+    juce::Label title, description, sensitivityLabel, intensityLabel, note;
+    juce::Slider sensitivitySlider, intensitySlider;
+    juce::ToggleButton enableToggle { "VOCAL SMOOTH: OFF" };
+};
+
+
 class VocalLimiterModuleContent final : public juce::Component
 {
 public:
@@ -1238,6 +1351,7 @@ MainComponent::MainComponent()
     styleTextButton(pitchCorrectionButton, juce::Colour(18, 91, 145));
     styleTextButton(vocalLevelingButton, juce::Colour(18, 105, 145));
     styleTextButton(vocalLimiterButton, juce::Colour(39, 75, 112));
+    styleTextButton(vocalSmoothButton, juce::Colour(70, 83, 120));
     styleTextButton(warmthBodyButton, juce::Colour(105, 67, 39));
     styleTextButton(vocalClarityButton, juce::Colour(39, 92, 91));
     styleTextButton(breathControlButton, juce::Colour(64, 76, 112));
@@ -1251,6 +1365,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(pitchCorrectionButton);
     addAndMakeVisible(vocalLevelingButton);
     addAndMakeVisible(vocalLimiterButton);
+    addAndMakeVisible(vocalSmoothButton);
     addAndMakeVisible(warmthBodyButton);
     addAndMakeVisible(vocalClarityButton);
     addAndMakeVisible(breathControlButton);
@@ -1258,6 +1373,7 @@ MainComponent::MainComponent()
     pitchCorrectionButton.onClick = [this] { showPitchCorrectionModule(); };
     vocalLevelingButton.onClick = [this] { showVocalLevelingModule(); };
     vocalLimiterButton.onClick = [this] { showVocalLimiterModule(); };
+    vocalSmoothButton.onClick = [this] { showVocalSmoothModule(); };
     warmthBodyButton.onClick = [this] { showWarmthBodyModule(); };
     vocalClarityButton.onClick = [this] { showVocalClarityModule(); };
     breathControlButton.onClick = [this] { showBreathControlModule(); };
@@ -2016,12 +2132,13 @@ void MainComponent::resized()
     const int moduleRowTop = footerTop - 48;
     const int moduleMargin = 14;
     const int moduleGap = 8;
-    const int moduleButtonWidth = (w - moduleMargin * 2 - moduleGap * 6) / 7;
+    const int moduleButtonWidth = (w - moduleMargin * 2 - moduleGap * 7) / 8;
     juce::TextButton* moduleButtons[] {
         &pitchCorrectionButton, &vocalLevelingButton, &vocalLimiterButton,
-        &warmthBodyButton, &vocalClarityButton, &breathControlButton, &vocalExciterButton
+        &warmthBodyButton, &vocalClarityButton, &breathControlButton,
+        &vocalExciterButton, &vocalSmoothButton
     };
-    for (int i = 0; i < 7; ++i)
+    for (int i = 0; i < 8; ++i)
         moduleButtons[i]->setBounds(moduleMargin + i * (moduleButtonWidth + moduleGap),
                                     moduleRowTop + 7, moduleButtonWidth, 34);
 
@@ -2076,6 +2193,15 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     lastBodyGainDb = 999.0f;
     clarityFilter.reset();
     clarityAirFilter.reset();
+    const auto smoothCoefficients = makeBandPassCoefficients((float)currentSampleRate, 3400.0f, 1.05f);
+    vocalSmoothDetectorFilter.setCoefficients(smoothCoefficients[0], smoothCoefficients[1],
+        smoothCoefficients[2], smoothCoefficients[3], smoothCoefficients[4]);
+    vocalSmoothBandFilter.setCoefficients(smoothCoefficients[0], smoothCoefficients[1],
+        smoothCoefficients[2], smoothCoefficients[3], smoothCoefficients[4]);
+    vocalSmoothDetectorFilter.reset();
+    vocalSmoothBandFilter.reset();
+    vocalSmoothEnvelope = 0.0f;
+    vocalSmoothGain = 1.0f;
     const auto exciterCoefficients = makeBandPassCoefficients((float)currentSampleRate, 4800.0f, 0.55f);
     vocalExciterFilter.setCoefficients(exciterCoefficients[0], exciterCoefficients[1],
         exciterCoefficients[2], exciterCoefficients[3], exciterCoefficients[4]);
@@ -2223,6 +2349,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
     const bool warmthBodyActive = useGainStage && warmthBodyEnabled.load();
     const bool vocalClarityActive = useGainStage && vocalClarityEnabled.load();
+    const bool vocalSmoothActive = useGainStage && vocalSmoothEnabled.load();
     const bool breathControlActive = useGainStage && breathControlEnabled.load();
     const bool vocalExciterActive = useGainStage && vocalExciterEnabled.load();
     const float exciterAmountValue = juce::jlimit(0.0f, 100.0f, vocalExciterAmount.load());
@@ -2231,6 +2358,16 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const float exciterNormaliser = std::tanh(exciterDrive);
     const float exciterTargetMix = vocalExciterActive ? exciterMixValue * 0.0035f : 0.0f;
     const float exciterMixSmoothing = std::exp(-1.0f / (sampleRate * 0.025f));
+    const float smoothDetectorAttack = std::exp(-1.0f / (sampleRate * 0.006f));
+    const float smoothDetectorRelease = std::exp(-1.0f / (sampleRate * 0.110f));
+    const float smoothGainAttack = std::exp(-1.0f / (sampleRate * 0.008f));
+    const float smoothGainRelease = std::exp(-1.0f / (sampleRate * 0.100f));
+    const float smoothSensitivityValue = juce::jlimit(0.0f, 100.0f,
+                                                       vocalSmoothSensitivity.load());
+    const float smoothIntensityValue = juce::jlimit(0.0f, 100.0f,
+                                                     vocalSmoothIntensity.load());
+    const float smoothThresholdDb = -18.0f - smoothSensitivityValue * 0.14f;
+    const float smoothMaximumReductionDb = smoothIntensityValue * 0.055f;
     const bool noiseGateActive = useGainStage && groupEnabled[5].load();
     const bool toneActive = useGainStage && groupEnabled[6].load();
     const bool reverbActive = useGainStage && groupEnabled[7].load();
@@ -2643,6 +2780,36 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             for (auto& filter : toneFilters)
                 sample = filter.process(sample);
 
+        if (vocalSmoothActive)
+        {
+            const float detectorSample = vocalSmoothDetectorFilter.process(sample);
+            const float resonanceBand = vocalSmoothBandFilter.process(sample);
+            const float detectorLevel = std::abs(detectorSample);
+            const float detectorCoefficient = detectorLevel > vocalSmoothEnvelope
+                ? smoothDetectorAttack : smoothDetectorRelease;
+            vocalSmoothEnvelope = detectorCoefficient * vocalSmoothEnvelope
+                                + (1.0f - detectorCoefficient) * detectorLevel;
+
+            const float resonanceDb = juce::Decibels::gainToDecibels(
+                vocalSmoothEnvelope, -100.0f);
+            const float excess = juce::jlimit(0.0f, 1.0f,
+                (resonanceDb - smoothThresholdDb) / 12.0f);
+            const float reductionDb = smoothMaximumReductionDb * excess;
+            const float targetGain = juce::Decibels::decibelsToGain(-reductionDb);
+            const float gainCoefficient = targetGain < vocalSmoothGain
+                ? smoothGainAttack : smoothGainRelease;
+            vocalSmoothGain = gainCoefficient * vocalSmoothGain
+                            + (1.0f - gainCoefficient) * targetGain;
+            sample -= resonanceBand * (1.0f - vocalSmoothGain);
+        }
+        else
+        {
+            vocalSmoothEnvelope = 0.0f;
+            vocalSmoothGain = 1.0f;
+            vocalSmoothDetectorFilter.reset();
+            vocalSmoothBandFilter.reset();
+        }
+
         if (vocalLevelingActive)
         {
             const float level = std::abs(sample);
@@ -2830,6 +2997,20 @@ void MainComponent::showVocalExciterModule()
     options.launchAsync();
 }
 
+
+
+void MainComponent::showVocalSmoothModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new VocalSmoothModuleContent(
+        vocalSmoothEnabled, vocalSmoothSensitivity, vocalSmoothIntensity));
+    options.dialogTitle = "Vocal Smooth Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
 
 void MainComponent::showVocalLimiterModule()
 {
