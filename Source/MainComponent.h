@@ -60,7 +60,7 @@ private:
         juce::ToggleButton("ON"), juce::ToggleButton("ON")
     };
 
-    juce::ToggleButton monitorToggle { "ON" };
+    juce::ToggleButton monitorToggle { "THEO DÕI ÂM THANH: BẬT" };
     juce::TextButton processButton { "BAT XU LY" };
     juce::TextButton bypassButton { "BYPASS" };
     juce::TextButton resetButton { "RESET" };
