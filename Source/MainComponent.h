@@ -153,6 +153,17 @@ private:
 
     double currentSampleRate { 44100.0 };
 
+    std::atomic<int> pitchSongKey { 0 };
+    std::atomic<int> pitchScale { 1 };
+    std::atomic<float> pitchCorrectionAmount { 50.0f };
+    std::atomic<float> pitchCorrectionSpeed { 45.0f };
+    std::atomic<int> pitchDetectedMidi { -1 };
+    std::atomic<int> pitchTargetMidi { -1 };
+    std::atomic<float> pitchDeviationCents { 0.0f };
+    std::array<float, 2048> pitchAnalysisBuffer {};
+    int pitchAnalysisWritePosition { 0 };
+    int pitchAnalysisSamplesSinceUpdate { 0 };
+
     std::atomic<float> inputGainLinear { 1.0f };
     std::atomic<float> outputGainLinear { 1.0f };
     std::atomic<float> masterVolumeLinear { 1.0f };
