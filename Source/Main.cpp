@@ -67,9 +67,17 @@ public:
             // Use a compact JUCE title bar: no Windows frame and no maximise button.
             setUsingNativeTitleBar (false);
             setTitleBarHeight (28);
-            setResizable (false, false);
+            setResizable (true, true);
+            setResizeLimits (1000, 640, 2200, 1400);
             setContentOwned (new MainComponent(), true);
-            centreWithSize (1536, 1052); // Match the 1536 x 1024 studio content area.
+
+            // Start at a comfortable size that fits the current display work area.
+            auto display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
+            auto workArea = display != nullptr ? display->userArea
+                                               : juce::Rectangle<int>(0, 0, 1280, 800);
+            const int initialWidth = juce::jlimit(1000, 1280, (int)(workArea.getWidth() * 0.94f));
+            const int initialHeight = juce::jlimit(640, 800, (int)(workArea.getHeight() * 0.92f));
+            centreWithSize(initialWidth, initialHeight);
             setVisible (true);
         }
 
