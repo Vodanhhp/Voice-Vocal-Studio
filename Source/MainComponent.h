@@ -136,6 +136,15 @@ private:
     std::array<BiquadFilter, 3> toneFilters;
     std::array<float, 3> lastToneGainDb { 999.0f, 999.0f, 999.0f };
 
+    std::atomic<float> reverbMixPercent { 20.0f };
+    std::atomic<float> reverbRoomPercent { 50.0f };
+    std::atomic<float> reverbTimeSeconds { 1.8f };
+    juce::Reverb reverb;
+    float lastReverbMixPercent { -1.0f };
+    float lastReverbRoomPercent { -1.0f };
+    float lastReverbTimeSeconds { -1.0f };
+    bool reverbWasActive { false };
+
     double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
