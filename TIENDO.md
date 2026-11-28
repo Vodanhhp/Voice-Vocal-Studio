@@ -391,3 +391,14 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Giữ nguyên tâm, bán kính, góc bắt đầu/kết thúc, màu sắc và độ dày nét của cung sáng trên núm kim loại.
 - Chỉ sửa phần vẽ giao diện trong `Source/MainComponent.cpp`; không thay đổi DSP, audio callback, tham số, preset hoặc Input/Output routing.
 - Đã cập nhật mã nguồn trên nhánh `main`. Cần người dùng Fetch origin → Pull origin → Rebuild Solution để xác nhận lỗi compile đã hết; chưa xác nhận build thành công.
+
+
+## 28/11/2026 – Tái thiết kế giao diện theo ảnh demo (đợt 1)
+- Đã đối chiếu trực tiếp ảnh demo chuẩn và ảnh giao diện hiện tại trên GitHub.
+- Làm rõ lại tỷ lệ 8 khu vực chính: Input/Output bên trái; EQ rộng ở trung tâm; Compressor và De-Esser xếp dọc bên phải; bốn nhóm Voice Enhance, Noise Gate, Tone Control và Reverb ở hàng dưới.
+- Tinh chỉnh tỷ lệ panel, khoảng cách, chiều cao hàng điều khiển, vùng đồ thị EQ và vùng đặt 5 núm EQ để hạn chế chồng lấn.
+- Bổ sung nền phổ âm thanh mang tính trang trí phía sau đường đáp tuyến EQ; đường đáp tuyến vẫn lấy trực tiếp từ 5 giá trị EQ hiện tại. Không thêm phân tích phổ vào audio callback.
+- Thiết kế công tắc ON/OFF dạng nút gạt phát sáng theo phong cách ảnh demo, áp dụng cho 8 nhóm chính và Monitor.
+- Bổ sung vạch mức dB cạnh đồng hồ Input/Output và tăng độ rõ của tiêu đề panel.
+- Giữ nguyên các điều khiển, tên tham số, preset, module nâng cao, xử lý DSP/audio callback, routing và hành vi chức năng. Không thay đổi thuật toán âm thanh.
+- Chưa có kết quả build hoặc ảnh chụp sau khi người dùng cập nhật; cần Pull, Rebuild và đối chiếu trực tiếp trên màn hình thực tế.
