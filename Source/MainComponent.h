@@ -73,9 +73,11 @@ private:
     juce::Label masterValueLabel;
 
     std::atomic<float> inputGainLinear { 1.0f };
-    std::atomic<float> outputGainLinear { 0.8f };
+    std::atomic<float> outputGainLinear { 1.0f };
+    std::atomic<float> masterVolumeLinear { 1.0f };
     std::atomic<float> inputPeak { 0.0f };
     std::atomic<bool> processingEnabled { false };
+    std::atomic<bool> monitorEnabled { true };
     std::atomic<bool> bypassEnabled { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
