@@ -352,3 +352,11 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Tổng cộng 109 vị trí/biểu thức được chuyển sang `juce::String::fromUTF8()`; đã rà soát không còn chuỗi octal UTF-8 trong hai file này.
 - Đã cập nhật mã nguồn trên nhánh `main`. Không thay đổi DSP, xử lý âm thanh, bố cục hoặc hành vi điều khiển.
 - Người dùng cần đồng bộ phiên bản mới, Rebuild Solution và kiểm tra toàn bộ giao diện. Chưa đánh dấu hoàn tất kiểm thử toàn bộ cho đến khi người dùng xác nhận.
+
+
+## 28/11/2026 – Sửa lỗi kiểu dữ liệu danh sách tên cấu hình preset
+- Sau khi chuyển chuỗi tiếng Việt sang `juce::String::fromUTF8()`, trình biên dịch báo lỗi không thể chuyển `juce::String` sang `const char* const` tại các dòng 1637–1641 trong `Source/MainComponent.cpp`.
+- Nguyên nhân: mảng `presetNames` vẫn khai báo phần tử kiểu `const char* const`, trong khi các phần tử khởi tạo đã là `juce::String`.
+- Đã sửa kiểu mảng thành `static const juce::String presetNames[14]` và dùng trực tiếp `presetNames[presetIndex]` khi ghép nội dung trạng thái.
+- Chỉ sửa kiểu dữ liệu danh sách tên preset; không thay đổi giá trị preset, DSP, giao diện hoặc xử lý âm thanh.
+- Đã cập nhật trên nhánh `main`; cần người dùng đồng bộ, Rebuild Solution và báo lại kết quả. Chưa xác nhận build thành công cho đến khi người dùng kiểm tra.
