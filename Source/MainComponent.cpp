@@ -277,7 +277,7 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
-    stopThời gianr();
+    stopTimer();
     shutdownAudio();
 }
 
