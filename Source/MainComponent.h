@@ -123,6 +123,13 @@ private:
     std::array<BiquadFilter, 3> voiceEnhanceFilters;
     std::array<float, 3> lastVoiceEnhanceGainDb { 999.0f, 999.0f, 999.0f };
 
+    std::atomic<float> noiseGateThresholdDb { -50.0f };
+    std::atomic<float> noiseGateHoldMs { 200.0f };
+    std::atomic<float> noiseGateReleaseMs { 300.0f };
+    float noiseGateEnvelope { 0.0f };
+    float noiseGateGain { 1.0f };
+    int noiseGateHoldCounter { 0 };
+
     double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
