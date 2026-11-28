@@ -452,6 +452,15 @@ MainComponent::ParameterControl* MainComponent::addParameter(
             else if (parameterIndex == 1)
                 deEsserFrequencyHz.store(value);
         }
+        else if (group == 4)
+        {
+            if (parameterIndex == 0)
+                voicePresence.store(value);
+            else if (parameterIndex == 1)
+                voiceWarmth.store(value);
+            else if (parameterIndex == 2)
+                voiceAir.store(value);
+        }
     };
 
     groups[(size_t)group].push_back(std::move(control));
@@ -843,6 +852,9 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     lastDeEsserFrequencyHz = 0.0f;
     deEsserDetectorFilter.reset();
     deEsserBandFilter.reset();
+    for (auto& filter : voiceEnhanceFilters)
+        filter.reset();
+    lastVoiceEnhanceGainDb.fill(999.0f);
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
@@ -876,6 +888,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool eqActive = useGainStage && groupEnabled[1].load();
     const bool compressorActive = useGainStage && groupEnabled[2].load();
     const bool deEsserActive = useGainStage && groupEnabled[3].load();
+    const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
@@ -946,6 +959,35 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         deEsserBandFilter.reset();
     }
 
+    if (voiceEnhanceActive)
+    {
+        const float presenceDb = (voicePresence.load() - 50.0f) * 0.08f;
+        const float warmthDb = (voiceWarmth.load() - 50.0f) * 0.08f;
+        const float airDb = (voiceAir.load() - 50.0f) * 0.08f;
+        const float gains[] { warmthDb, presenceDb, airDb };
+        for (int i = 0; i < 3; ++i)
+        {
+            if (std::abs(gains[i] - lastVoiceEnhanceGainDb[(size_t)i]) > 0.001f)
+            {
+                BiquadCoefficients coefficients;
+                if (i == 0)
+                    coefficients = makeLowShelfCoefficients(sampleRate, 150.0f, gains[i]);
+                else if (i == 1)
+                    coefficients = makePeakingCoefficients(sampleRate, 2800.0f, gains[i], 0.9f);
+                else
+                    coefficients = makeHighShelfCoefficients(sampleRate, 9500.0f, gains[i]);
+                voiceEnhanceFilters[(size_t)i].setCoefficients(coefficients[0], coefficients[1],
+                    coefficients[2], coefficients[3], coefficients[4]);
+                lastVoiceEnhanceGainDb[(size_t)i] = gains[i];
+            }
+        }
+    }
+    else
+    {
+        for (auto& filter : voiceEnhanceFilters)
+            filter.reset();
+    }
+
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
     {
@@ -998,6 +1040,10 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
                 sample -= sibilanceBand * attenuation;
             }
         }
+
+        if (voiceEnhanceActive)
+            for (auto& filter : voiceEnhanceFilters)
+                sample = filter.process(sample);
 
         left[i] = sample * masterGain;
     }
