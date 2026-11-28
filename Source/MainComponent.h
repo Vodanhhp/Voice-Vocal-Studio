@@ -118,8 +118,8 @@ private:
     BiquadFilter deEsserBandFilter;
 
     std::atomic<float> voicePresence { 60.0f };
-    std::atomic<float> voiceWarmth { 50.0f };
-    std::atomic<float> voiceAir { 70.0f };
+    std::atomic<float> voiceWarmth { 58.0f };
+    std::atomic<float> voiceAir { 60.0f };
     std::array<BiquadFilter, 3> voiceEnhanceFilters;
     std::array<float, 3> lastVoiceEnhanceGainDb { 999.0f, 999.0f, 999.0f };
 
