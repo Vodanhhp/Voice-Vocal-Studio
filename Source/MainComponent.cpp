@@ -249,8 +249,8 @@ MainComponent::MainComponent()
     addParameter("Tan so", 2000.0, 12000.0, 6000.0, " Hz", 3);
 
     addParameter("Do hien dien", 0.0, 100.0, 60.0, " %", 4);
-    addParameter("Do am", 0.0, 100.0, 50.0, " %", 4);
-    addParameter("Do thoang", 0.0, 100.0, 70.0, " %", 4);
+    addParameter("Do am", 0.0, 100.0, 58.0, " %", 4);
+    addParameter("Do thoang", 0.0, 100.0, 60.0, " %", 4);
 
     addParameter("Nguong", -80.0, 0.0, -50.0, " dB", 5);
     addParameter("Thoi gian giu", 0.0, 500.0, 200.0, " ms", 5);
@@ -961,9 +961,9 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
 
     if (voiceEnhanceActive)
     {
-        const float presenceDb = (voicePresence.load() - 50.0f) * 0.08f;
-        const float warmthDb = (voiceWarmth.load() - 50.0f) * 0.08f;
-        const float airDb = (voiceAir.load() - 50.0f) * 0.08f;
+        const float presenceDb = (voicePresence.load() - 50.0f) * 0.16f;
+        const float warmthDb = (voiceWarmth.load() - 50.0f) * 0.16f;
+        const float airDb = (voiceAir.load() - 50.0f) * 0.16f;
         const float gains[] { warmthDb, presenceDb, airDb };
         for (int i = 0; i < 3; ++i)
         {
