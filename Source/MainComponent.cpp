@@ -293,6 +293,12 @@ MainComponent::MainComponent()
     presetSelector.addItem("Giong nam am ap", 1);
     presetSelector.addItem("Giong nam day", 2);
     presetSelector.addItem("Karaoke nhac nhe", 3);
+    presetSelector.addItem("Giong muot ma", 4);
+    presetSelector.addItem("Giong sang ro", 5);
+    presetSelector.addItem("Giong tram am", 6);
+    presetSelector.addItem("Giong san khau", 7);
+    presetSelector.addItem("Giong truyen cam", 8);
+    presetSelector.addItem("Karaoke tu nhien", 9);
     presetSelector.setSelectedId(1);
     presetSelector.onChange = [this]
     {
@@ -424,7 +430,7 @@ MainComponent::~MainComponent()
 
 void MainComponent::applyBuiltInPreset(int presetId)
 {
-    static const double presetValues[3][8][5] =
+    static const double presetValues[9][8][5] =
     {
         {
             { 0.0, 0.0 },
@@ -455,15 +461,77 @@ void MainComponent::applyBuiltInPreset(int presetId)
             { -55.0, 200.0, 350.0 },
             { 1.5, 0.0, 2.5 },
             { 28.0, 60.0, 2.2 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 2.0, 1.0, 0.0, -1.5, -1.0 },
+            { -24.0, 2.2, 15.0, 180.0 },
+            { -36.0, 5800.0 },
+            { 54.0, 58.0, 48.0 },
+            { -54.0, 220.0, 320.0 },
+            { 1.5, 0.0, -1.0 },
+            { 24.0, 52.0, 1.9 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 1.0, 0.0, 0.0, 2.5, 2.0 },
+            { -23.0, 2.5, 8.0, 130.0 },
+            { -32.0, 6500.0 },
+            { 68.0, 52.0, 68.0 },
+            { -50.0, 180.0, 260.0 },
+            { 0.0, 1.0, 2.0 },
+            { 16.0, 40.0, 1.3 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 4.0, 2.0, 0.0, -0.5, -1.0 },
+            { -23.0, 2.8, 12.0, 170.0 },
+            { -32.0, 6000.0 },
+            { 55.0, 68.0, 48.0 },
+            { -52.0, 200.0, 300.0 },
+            { 3.0, 0.0, -1.0 },
+            { 20.0, 48.0, 1.6 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 3.0, 1.0, 0.0, 2.0, 1.5 },
+            { -26.0, 3.0, 8.0, 150.0 },
+            { -33.0, 6200.0 },
+            { 68.0, 58.0, 62.0 },
+            { -50.0, 180.0, 280.0 },
+            { 2.0, 0.0, 2.0 },
+            { 30.0, 65.0, 2.4 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 2.0, 1.0, 0.0, 1.0, 0.5 },
+            { -25.0, 2.4, 18.0, 220.0 },
+            { -35.0, 6000.0 },
+            { 60.0, 62.0, 54.0 },
+            { -55.0, 250.0, 380.0 },
+            { 2.0, 1.0, 0.0 },
+            { 28.0, 58.0, 2.2 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 2.0, 1.0, 0.0, 1.0, 1.0 },
+            { -21.0, 2.0, 15.0, 180.0 },
+            { -34.0, 6200.0 },
+            { 58.0, 56.0, 58.0 },
+            { -56.0, 220.0, 350.0 },
+            { 1.0, 0.0, 1.0 },
+            { 20.0, 50.0, 1.8 }
         }
     };
     static const int parameterCounts[8] = { 2, 5, 4, 2, 3, 3, 3, 3 };
-    static const char* const presetNames[3] =
+    static const char* const presetNames[9] =
     {
-        "Giong nam am ap", "Giong nam day", "Karaoke nhac nhe"
+        "Giong nam am ap", "Giong nam day", "Karaoke nhac nhe",
+        "Giong muot ma", "Giong sang ro", "Giong tram am",
+        "Giong san khau", "Giong truyen cam", "Karaoke tu nhien"
     };
 
-    if (presetId < 1 || presetId > 3)
+    if (presetId < 1 || presetId > 9)
         return;
 
     const int presetIndex = presetId - 1;
