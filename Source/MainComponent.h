@@ -156,6 +156,7 @@ private:
     void showPitchCorrectionModule();
     void showVocalLevelingModule();
     void showVocalLimiterModule();
+    void showVocalSmoothModule();
     void showWarmthBodyModule();
     void showVocalClarityModule();
     void showBreathControlModule();
@@ -189,6 +190,7 @@ private:
     juce::TextButton pitchCorrectionButton { "PITCH CORRECTION" };
     juce::TextButton vocalLevelingButton { "VOCAL LEVELING" };
     juce::TextButton vocalLimiterButton { "VOCAL LIMITER" };
+    juce::TextButton vocalSmoothButton { "VOCAL SMOOTH" };
     juce::TextButton warmthBodyButton { "WARMTH & BODY" };
     juce::TextButton vocalClarityButton { "VOCAL CLARITY" };
     juce::TextButton breathControlButton { "BREATH CONTROL" };
@@ -262,6 +264,13 @@ private:
     std::atomic<bool> pitchCorrectionEnabled { false };
     std::atomic<bool> vocalLevelingEnabled { false };
     std::atomic<bool> vocalLimiterEnabled { false };
+    std::atomic<bool> vocalSmoothEnabled { false };
+    std::atomic<float> vocalSmoothSensitivity { 45.0f };
+    std::atomic<float> vocalSmoothIntensity { 35.0f };
+    BiquadFilter vocalSmoothDetectorFilter;
+    BiquadFilter vocalSmoothBandFilter;
+    float vocalSmoothEnvelope { 0.0f };
+    float vocalSmoothGain { 1.0f };
     std::atomic<float> vocalLimiterCeilingDb { -1.0f };
     std::atomic<float> vocalLimiterReleaseMs { 80.0f };
     float vocalLimiterGain { 1.0f };
