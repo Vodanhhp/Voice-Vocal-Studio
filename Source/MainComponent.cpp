@@ -19,27 +19,56 @@ namespace
                    const juce::String& title, juce::Colour iconColour = cyan)
     {
         auto r = area.toFloat();
-        g.setColour(juce::Colours::black.withAlpha(0.48f));
-        g.fillRoundedRectangle(r.translated(0.0f, 4.0f), 12.0f);
-        g.setGradientFill(juce::ColourGradient(panelTop, r.getX(), r.getY(),
-                                                panelBottom, r.getX(), r.getBottom(), false));
+        const auto outer = r.expanded(1.5f);
+
+        // Deep shadow and a restrained cyan outer glow.
+        g.setColour(juce::Colours::black.withAlpha(0.82f));
+        g.fillRoundedRectangle(r.translated(0.0f, 5.0f), 13.0f);
+        g.setColour(cyan.withAlpha(0.075f));
+        g.drawRoundedRectangle(outer, 14.0f, 4.0f);
+
+        // Brushed-metal body with a darker lower recess.
+        g.setGradientFill(juce::ColourGradient(
+            juce::Colour(43, 55, 70), r.getX(), r.getY(),
+            juce::Colour(8, 13, 20), r.getX(), r.getBottom(), false));
         g.fillRoundedRectangle(r, 12.0f);
-        g.setColour(edge.withAlpha(0.85f));
-        g.drawRoundedRectangle(r, 12.0f, 1.2f);
-        g.setColour(juce::Colour(7, 12, 19).withAlpha(0.82f));
-        g.fillRoundedRectangle(r.getX() + 1.5f, r.getY() + 1.5f,
-                               r.getWidth() - 3.0f, 43.0f, 10.0f);
-        g.setColour(iconColour);
-        g.fillRoundedRectangle(r.getX() + 12.0f, r.getY() + 11.0f, 3.0f, 21.0f, 1.5f);
+        g.setColour(juce::Colour(105, 128, 151).withAlpha(0.78f));
+        g.drawRoundedRectangle(r.reduced(0.7f), 12.0f, 1.2f);
+        g.setColour(juce::Colour(2, 6, 11).withAlpha(0.92f));
+        g.drawRoundedRectangle(r.reduced(3.0f), 10.0f, 1.0f);
+
+        // Header rail, cyan accent and fine separator.
+        auto header = juce::Rectangle<float>(r.getX() + 2.0f, r.getY() + 2.0f,
+                                              r.getWidth() - 4.0f, 41.0f);
+        g.setGradientFill(juce::ColourGradient(
+            juce::Colour(18, 29, 42), header.getX(), header.getY(),
+            juce::Colour(5, 10, 17), header.getX(), header.getBottom(), false));
+        g.fillRoundedRectangle(header, 9.0f);
+        g.setColour(iconColour.withAlpha(0.9f));
+        g.fillRoundedRectangle(r.getX() + 9.0f, r.getY() + 9.0f, 4.0f, 25.0f, 2.0f);
+        g.setColour(iconColour.withAlpha(0.35f));
+        g.drawHorizontalLine((int)(r.getY() + 43.0f), r.getX() + 10.0f, r.getRight() - 10.0f);
+
         g.setColour(bright);
         g.setFont(juce::FontOptions(14.0f, juce::Font::bold));
-        g.drawFittedText(title, area.getX() + 24, area.getY() + 7,
-                         area.getWidth() - 104, 30,
+        g.drawFittedText(title, area.getX() + 22, area.getY() + 7,
+                         area.getWidth() - 100, 30,
                          juce::Justification::centredLeft, 1, 0.78f);
-        g.setColour(green.withAlpha(0.22f));
-        g.fillEllipse(r.getRight() - 29.0f, r.getY() + 14.0f, 12.0f, 12.0f);
+
+        // Small illuminated state jewel and machined corner fasteners.
+        g.setColour(green.withAlpha(0.18f));
+        g.fillEllipse(r.getRight() - 30.0f, r.getY() + 12.0f, 16.0f, 16.0f);
         g.setColour(green);
-        g.fillEllipse(r.getRight() - 25.5f, r.getY() + 17.5f, 5.0f, 5.0f);
+        g.fillEllipse(r.getRight() - 25.0f, r.getY() + 17.0f, 6.0f, 6.0f);
+        g.setColour(juce::Colour(120, 139, 157).withAlpha(0.55f));
+        for (const auto p : { juce::Point<float>(r.getX() + 8.0f, r.getY() + 8.0f),
+                              juce::Point<float>(r.getRight() - 8.0f, r.getBottom() - 8.0f) })
+        {
+            g.fillEllipse(p.x - 2.0f, p.y - 2.0f, 4.0f, 4.0f);
+            g.setColour(juce::Colour(25, 34, 44));
+            g.drawLine(p.x - 1.0f, p.y + 1.0f, p.x + 1.0f, p.y - 1.0f, 0.8f);
+            g.setColour(juce::Colour(120, 139, 157).withAlpha(0.55f));
+        }
     }
 
     using BiquadCoefficients = std::array<float, 5>;
@@ -1171,38 +1200,63 @@ void StudioKnobLookAndFeel::drawRotarySlider(
     const float cy = (float)y + radius + 4.0f;
     const float angle = startAngle + sliderPos * (endAngle - startAngle);
 
-    g.setColour(juce::Colour(3, 8, 14).withAlpha(0.8f));
-    g.fillEllipse(cx - radius - 3.0f, cy - radius - 3.0f,
-                  diameter + 6.0f, diameter + 6.0f);
-    g.setColour(juce::Colour(91, 117, 145));
-    g.drawEllipse(cx - radius, cy - radius, diameter, diameter, 1.6f);
+    // Outer shadow, illuminated bezel and engraved scale.
+    g.setColour(juce::Colours::black.withAlpha(0.92f));
+    g.fillEllipse(cx - radius - 5.0f, cy - radius - 5.0f,
+                  diameter + 10.0f, diameter + 10.0f);
+    g.setColour(cyan.withAlpha(0.13f));
+    g.drawEllipse(cx - radius - 2.0f, cy - radius - 2.0f,
+                  diameter + 4.0f, diameter + 4.0f, 3.0f);
+    g.setColour(juce::Colour(117, 143, 166));
+    g.drawEllipse(cx - radius, cy - radius, diameter, diameter, 2.0f);
 
-    juce::Path ring;
-    ring.addCentredArc(cx, cy, radius - 4.0f, radius - 4.0f, 0.0f,
-                       startAngle, endAngle, true);
-    g.setColour(juce::Colour(55, 77, 101));
-    g.strokePath(ring, juce::PathStrokeType(3.5f));
+    juce::Path track;
+    track.addCentredArc(cx, cy, radius - 4.0f, radius - 4.0f, 0.0f,
+                        startAngle, endAngle, true);
+    g.setColour(juce::Colour(26, 40, 55));
+    g.strokePath(track, juce::PathStrokeType(5.5f));
     juce::Path active;
     active.addCentredArc(cx, cy, radius - 4.0f, radius - 4.0f, 0.0f,
                          startAngle, angle, true);
-    g.setColour(blue);
-    g.strokePath(active, juce::PathStrokeType(4.2f,
+    g.setColour(cyan.withAlpha(0.20f));
+    g.strokePath(active, juce::PathStrokeType(8.0f));
+    g.setColour(cyan);
+    g.strokePath(active, juce::PathStrokeType(4.0f,
         juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
-    juce::ColourGradient metal(juce::Colour(221, 228, 235), cx, cy - radius,
-                               juce::Colour(66, 79, 94), cx, cy + radius, false);
-    g.setGradientFill(metal);
-    g.fillEllipse(cx - radius * 0.72f, cy - radius * 0.72f,
-                  radius * 1.44f, radius * 1.44f);
-    g.setColour(juce::Colour(15, 23, 33));
-    g.drawEllipse(cx - radius * 0.72f, cy - radius * 0.72f,
-                  radius * 1.44f, radius * 1.44f, 2.0f);
+    for (int i = 0; i <= 10; ++i)
+    {
+        const float a = startAngle + (endAngle - startAngle) * (float)i / 10.0f;
+        const float inner = radius - 10.0f;
+        const float outer = radius - 5.0f;
+        g.setColour(i <= (int)std::round(sliderPos * 10.0f)
+            ? cyan.withAlpha(0.95f) : juce::Colour(111, 132, 151).withAlpha(0.65f));
+        g.drawLine(cx + std::cos(a) * inner, cy + std::sin(a) * inner,
+                   cx + std::cos(a) * outer, cy + std::sin(a) * outer, 1.5f);
+    }
 
-    g.setColour(juce::Colour(23, 34, 47));
-    g.drawLine(cx, cy, cx + std::cos(angle) * radius * 0.55f,
-               cy + std::sin(angle) * radius * 0.55f, 3.0f);
-    g.setColour(juce::Colours::white);
-    g.fillEllipse(cx - 3.0f, cy - 3.0f, 6.0f, 6.0f);
+    // Machined silver knob with a dark inset and subtle top highlight.
+    juce::ColourGradient metal(juce::Colour(244, 248, 251), cx - radius * 0.3f,
+        cy - radius * 0.72f, juce::Colour(55, 69, 84), cx + radius * 0.25f,
+        cy + radius * 0.72f, false);
+    g.setGradientFill(metal);
+    g.fillEllipse(cx - radius * 0.70f, cy - radius * 0.70f,
+                  radius * 1.40f, radius * 1.40f);
+    g.setColour(juce::Colour(8, 15, 23));
+    g.drawEllipse(cx - radius * 0.70f, cy - radius * 0.70f,
+                  radius * 1.40f, radius * 1.40f, 2.2f);
+    g.setColour(juce::Colour(255, 255, 255).withAlpha(0.24f));
+    g.drawArc(cx - radius * 0.59f, cy - radius * 0.59f,
+              radius * 1.18f, radius * 1.18f, 3.65f, 5.75f, true, 1.4f);
+
+    // Pointer and centre cap.
+    g.setColour(juce::Colour(18, 29, 41));
+    g.drawLine(cx, cy, cx + std::cos(angle) * radius * 0.48f,
+               cy + std::sin(angle) * radius * 0.48f, 4.0f);
+    g.setColour(juce::Colour(242, 247, 251));
+    g.fillEllipse(cx - 4.0f, cy - 4.0f, 8.0f, 8.0f);
+    g.setColour(cyan.withAlpha(0.75f));
+    g.drawEllipse(cx - 4.0f, cy - 4.0f, 8.0f, 8.0f, 1.0f);
 }
 
 MainComponent::MainComponent()
