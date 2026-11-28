@@ -1,5 +1,6 @@
 #include "MainComponent.h"
 #include <cmath>
+#include <functional>
 
 namespace
 {
@@ -431,9 +432,10 @@ private:
         slider.setTextValueSuffix(suffix);
         slider.setColour(juce::Slider::trackColourId, juce::Colour(28, 164, 255));
         slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
-        slider.onValueChange = [this, &slider, onChange]
+        auto* sliderPointer = &slider;
+        slider.onValueChange = [sliderPointer, onChange]
         {
-            onChange(slider.getValue());
+            onChange(sliderPointer->getValue());
         };
         addAndMakeVisible(slider);
     }
