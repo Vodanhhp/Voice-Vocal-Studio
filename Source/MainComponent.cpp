@@ -132,6 +132,128 @@ namespace
                                1.0f - alpha);
     }
 
+
+class PitchCorrectionModuleContent final : public juce::Component
+{
+public:
+    PitchCorrectionModuleContent()
+    {
+        title.setText("PITCH CORRECTION", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText(
+            "Correct vocal notes in real time while preserving a natural singing character.",
+            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        keyLabel.setText("SONG KEY", juce::dontSendNotification);
+        scaleLabel.setText("SCALE", juce::dontSendNotification);
+        strengthLabel.setText("CORRECTION AMOUNT", juce::dontSendNotification);
+        speedLabel.setText("CORRECTION SPEED", juce::dontSendNotification);
+
+        for (auto* label : { &keyLabel, &scaleLabel, &strengthLabel, &speedLabel })
+        {
+            label->setFont(juce::FontOptions(12.0f, juce::Font::bold));
+            label->setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+            addAndMakeVisible(*label);
+        }
+
+        for (int i = 0; i < 12; ++i)
+            keySelector.addItem(juce::String::charToString((juce::juce_wchar)('C' + i)), i + 1);
+        keySelector.clear();
+        const char* keys[] { "C", "C#", "D", "D#", "E", "F",
+                             "F#", "G", "G#", "A", "A#", "B" };
+        for (int i = 0; i < 12; ++i)
+            keySelector.addItem(keys[i], i + 1);
+        keySelector.setSelectedId(1, juce::dontSendNotification);
+        addAndMakeVisible(keySelector);
+
+        scaleSelector.addItem("Major", 1);
+        scaleSelector.addItem("Natural Minor", 2);
+        scaleSelector.addItem("Chromatic", 3);
+        scaleSelector.setSelectedId(1, juce::dontSendNotification);
+        addAndMakeVisible(scaleSelector);
+
+        strengthSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+        strengthSlider.setRange(0.0, 100.0, 1.0);
+        strengthSlider.setValue(50.0, juce::dontSendNotification);
+        strengthSlider.setTextValueSuffix(" %");
+        addAndMakeVisible(strengthSlider);
+
+        speedSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+        speedSlider.setRange(5.0, 100.0, 1.0);
+        speedSlider.setValue(45.0, juce::dontSendNotification);
+        speedSlider.setTextValueSuffix(" %");
+        addAndMakeVisible(speedSlider);
+
+        status.setText("DSP is not connected yet. Controls will be enabled after the audio engine is implemented.",
+                       juce::dontSendNotification);
+        status.setFont(juce::FontOptions(12.0f));
+        status.setColour(juce::Label::textColourId, juce::Colour(255, 190, 90));
+        status.setJustificationType(juce::Justification::centredLeft);
+        addAndMakeVisible(status);
+
+        setSize(660, 430);
+        setControlsEnabled(false);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(28, 164, 255).withAlpha(0.18f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(34));
+        area.removeFromTop(20);
+
+        const int half = (area.getWidth() - 24) / 2;
+        auto rowOne = area.removeFromTop(76);
+        keyLabel.setBounds(rowOne.removeFromLeft(half).removeFromTop(22));
+        keySelector.setBounds(rowOne.getX(), rowOne.getY() + 27, half - 12, 34);
+        rowOne.removeFromLeft(12);
+        scaleLabel.setBounds(rowOne.getX(), rowOne.getY(), half, 22);
+        scaleSelector.setBounds(rowOne.getX(), rowOne.getY() + 27, half, 34);
+
+        area.removeFromTop(12);
+        auto rowTwo = area.removeFromTop(76);
+        strengthLabel.setBounds(rowTwo.removeFromTop(22));
+        strengthSlider.setBounds(rowTwo.removeFromTop(42));
+
+        area.removeFromTop(8);
+        auto rowThree = area.removeFromTop(76);
+        speedLabel.setBounds(rowThree.removeFromTop(22));
+        speedSlider.setBounds(rowThree.removeFromTop(42));
+
+        status.setBounds(area.removeFromTop(54));
+    }
+
+private:
+    void setControlsEnabled(bool enabled)
+    {
+        keySelector.setEnabled(enabled);
+        scaleSelector.setEnabled(enabled);
+        strengthSlider.setEnabled(enabled);
+        speedSlider.setEnabled(enabled);
+    }
+
+    juce::Label title, description, keyLabel, scaleLabel;
+    juce::Label strengthLabel, speedLabel, status;
+    juce::ComboBox keySelector, scaleSelector;
+    juce::Slider strengthSlider, speedSlider;
+};
+
 }
 
 void StudioKnobLookAndFeel::drawRotarySlider(
@@ -323,12 +445,15 @@ MainComponent::MainComponent()
     styleTextButton(bypassButton, juce::Colour(25, 71, 113));
     styleTextButton(resetButton, juce::Colour(49, 58, 71));
     styleTextButton(settingsButton, juce::Colour(49, 58, 71));
+    styleTextButton(pitchCorrectionButton, juce::Colour(18, 91, 145));
     addAndMakeVisible(savePresetButton);
     addAndMakeVisible(managePresetButton);
     addAndMakeVisible(processButton);
     addAndMakeVisible(bypassButton);
     addAndMakeVisible(resetButton);
     addAndMakeVisible(settingsButton);
+    addAndMakeVisible(pitchCorrectionButton);
+    pitchCorrectionButton.onClick = [this] { showPitchCorrectionModule(); };
 
     statusLabel.setText("San sang - cac bo xu ly dang o che do giao dien", juce::dontSendNotification);
     statusLabel.setFont(juce::FontOptions(10.5f));
@@ -994,6 +1119,7 @@ void MainComponent::resized()
     titleLabel.setBounds(108, 12, juce::jmin(420, (int)(w * 0.36f)), 46);
     subtitleLabel.setBounds(150, 56, juce::jmin(330, (int)(w * 0.28f)), 20);
     const int deviceX = (int)(w * 0.56f);
+    pitchCorrectionButton.setBounds(deviceX - 178, 36, 166, 34);
     deviceLabel.setBounds(deviceX, 10, (int)(w * 0.18f), 16);
     deviceSelector.setBounds(deviceX, 29, (int)(w * 0.20f), headerH - 38);
     connectionLabel.setBounds((int)(w * 0.79f), 28, (int)(w * 0.19f), 38);
@@ -1467,6 +1593,18 @@ void MainComponent::showAudioSettings()
     options.content.setOwned(new AudioSettingsContent(deviceManager));
     options.dialogTitle = "Cai dat thiet bi am thanh";
     options.dialogBackgroundColour = juce::Colour(18, 25, 35);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+void MainComponent::showPitchCorrectionModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new PitchCorrectionModuleContent());
+    options.dialogTitle = "Pitch Correction Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
     options.resizable = true;
