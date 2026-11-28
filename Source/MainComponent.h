@@ -153,6 +153,8 @@ private:
     PanelBounds calculatePanelBounds() const;
     void styleToggle(juce::ToggleButton& toggle);
     void showAudioSettings();
+    void refreshAudioOutputDevices();
+    void selectAudioOutputDevice();
     void showPitchCorrectionModule();
     void showVocalLevelingModule();
     void showVocalLimiterModule();
@@ -172,6 +174,7 @@ private:
     juce::ComboBox deviceSelector;
     juce::Label connectionLabel;
     juce::String lastAudioDeviceName;
+    juce::StringArray lastAudioOutputNames;
     juce::Label statusLabel;
 
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
