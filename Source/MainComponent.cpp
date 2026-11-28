@@ -479,6 +479,15 @@ MainComponent::ParameterControl* MainComponent::addParameter(
             else if (parameterIndex == 2)
                 toneTrebleDb.store(value);
         }
+        else if (group == 7)
+        {
+            if (parameterIndex == 0)
+                reverbMixPercent.store(value);
+            else if (parameterIndex == 1)
+                reverbRoomPercent.store(value);
+            else if (parameterIndex == 2)
+                reverbTimeSeconds.store(value);
+        }
     };
 
     groups[(size_t)group].push_back(std::move(control));
@@ -879,6 +888,11 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     for (auto& filter : toneFilters)
         filter.reset();
     lastToneGainDb.fill(999.0f);
+    reverb.reset();
+    lastReverbMixPercent = -1.0f;
+    lastReverbRoomPercent = -1.0f;
+    lastReverbTimeSeconds = -1.0f;
+    reverbWasActive = false;
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
@@ -915,6 +929,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
     const bool noiseGateActive = useGainStage && groupEnabled[5].load();
     const bool toneActive = useGainStage && groupEnabled[6].load();
+    const bool reverbActive = useGainStage && groupEnabled[7].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
@@ -1057,6 +1072,37 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             filter.reset();
     }
 
+    if (reverbActive)
+    {
+        const float mix = juce::jlimit(0.0f, 100.0f, reverbMixPercent.load());
+        const float room = juce::jlimit(0.0f, 100.0f, reverbRoomPercent.load());
+        const float time = juce::jlimit(0.1f, 5.0f, reverbTimeSeconds.load());
+        if (!reverbWasActive || std::abs(mix - lastReverbMixPercent) > 0.05f
+            || std::abs(room - lastReverbRoomPercent) > 0.05f
+            || std::abs(time - lastReverbTimeSeconds) > 0.005f)
+        {
+            juce::Reverb::Parameters parameters;
+            const float timeRatio = (time - 0.1f) / 4.9f;
+            const float roomRatio = room / 100.0f;
+            parameters.roomSize = 0.15f + timeRatio * 0.80f;
+            parameters.damping = 0.85f - roomRatio * 0.60f;
+            parameters.width = roomRatio;
+            parameters.wetLevel = (mix / 100.0f) * 0.5f;
+            parameters.dryLevel = 1.0f - parameters.wetLevel;
+            parameters.freezeMode = 0.0f;
+            reverb.setParameters(parameters);
+            lastReverbMixPercent = mix;
+            lastReverbRoomPercent = room;
+            lastReverbTimeSeconds = time;
+        }
+        reverbWasActive = true;
+    }
+    else if (reverbWasActive)
+    {
+        reverb.reset();
+        reverbWasActive = false;
+    }
+
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
     {
@@ -1146,6 +1192,9 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
 
         left[i] = sample * masterGain;
     }
+
+    if (reverbActive)
+        reverb.processMono(left, info.numSamples);
 
     compressorGainReductionDb.store(compressorActive ? blockGainReductionDb : 0.0f);
 
