@@ -181,3 +181,31 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Vocal Leveling chi chay khi BAT XU LY duoc bat, Bypass tat va cong tac Vocal Leveling ON. Khi tat module, gain rider tro ve unity theo smoothing.
 - Xu ly realtime dung state co dinh, khong them cap phat bo nho hay khoa trong audio callback.
 - Chua build hoac nghe thu tren may nguoi dung. Can Rebuild Solution va thu bang micro that; can kiem tra pumping, tieng on giua cau, do tu nhien va clipping.
+
+## 10. Dinh huong dau ra am thanh ao - 28/11/2026
+
+### Yeu cau da thong nhat
+- Luong chinh: Microphone / sound card input -> Voice Vocal Studio DSP -> loa/tai nghe de monitor.
+- Dong thoi can co duong gui chinh tin hieu da xu ly sang phan mem thu am.
+- Dung virtual audio device (uu tien VB-CABLE) lam dau vao cho phan mem thu am.
+- Muc tieu la phan mem thu am co the chon thiet bi ao lam recording input; khong tuyen bo rang moi phan mem tu dong nhan ma khong can chon thiet bi.
+
+### Phan biet driver va EXE
+- VB-CABLE la driver cap he thong Windows, phai cai rieng tren may dich; khong duoc dong goi hoac tu y cai driver vao bo cai Voice Vocal Studio.
+- Voice Vocal Studio chi chon va mo endpoint audio da duoc Windows cai dat.
+- Neu chi chon VB-CABLE lam output chinh thi am thanh se vao cable; can them mot duong monitor rieng de nguoi hat nghe qua loa/tai nghe dong thoi.
+
+### Lo trinh ky thuat
+1. Kiem tra va hoan thien viec liet ke/chon input va output endpoint trong Audio Settings.
+2. Thiet ke hai dau ra dong thoi: virtual recording output va hardware monitor output. Khong duoc chi copy cung mot AudioIODevice neu driver/device khong ho tro; phai xu ly khac biet sample rate, channel count va buffer.
+3. Dung buffer co kich thuoc co dinh / co che thread-safe phu hop giua audio callback; khong cap phat bo nho, khong khoa trong callback realtime.
+4. Them trang thai ro rang: chua cai VB-CABLE, da san sang, mat ket noi, hoac khong mo duoc endpoint.
+5. Kiem thu tren may dich voi micro that, VB-CABLE, loa/tai nghe va it nhat mot phan mem thu am. Xac nhan file thu co EQ/DSP/Reverb va khong bi lap am, mat tieng, clipping hoac dropouts.
+
+### Trang thai hien tai
+- JUCE AudioDeviceSelectorComponent da ton tai trong cua so Cai dat thiet bi am thanh va co the chon audio device theo kha nang driver.
+- Chua co duong xuat dong thoi rieng toi VB-CABLE va loa/tai nghe.
+- Chua co phat hien / kiem tra VB-CABLE rieng, chua co UI trang thai virtual output.
+- Chua duoc kiem thu voi VB-CABLE; chua the coi tinh nang thu am qua thiet bi ao la hoan thanh.
+- Khong thay doi hoac dong goi driver ben thu ba trong giai doan nay.
+
