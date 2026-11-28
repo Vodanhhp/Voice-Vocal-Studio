@@ -117,6 +117,12 @@ private:
     BiquadFilter deEsserDetectorFilter;
     BiquadFilter deEsserBandFilter;
 
+    std::atomic<float> voicePresence { 60.0f };
+    std::atomic<float> voiceWarmth { 50.0f };
+    std::atomic<float> voiceAir { 70.0f };
+    std::array<BiquadFilter, 3> voiceEnhanceFilters;
+    std::array<float, 3> lastVoiceEnhanceGainDb { 999.0f, 999.0f, 999.0f };
+
     double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
