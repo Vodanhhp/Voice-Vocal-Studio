@@ -262,9 +262,11 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Vocal Clarity: da co UI va DSP; nguoi dung xac nhan chuc nang hoat dong.
 - Breath Control: da co UI va DSP; nguoi dung xac nhan module hoat dong va nghe thay mot so thay doi nhe. Hieu qua giam hoi tho chua duoc danh gia day du.
 - Vocal Exciter: da viet UI va DSP prototype tren main, nhung chua build thanh cong va chua xac nhan hieu ung hoat dong tren may nguoi dung. Khong danh dau la module da hoat dong.
+- Vocal Smooth: da them UI va DSP dynamic resonance control tren main; chua build va chua nghe thu tren may nguoi dung.
 
-### Chua trien khai
+### Chua xac nhan sau khi trien khai
 - Vocal Limiter: da co UI va DSP sample-peak limiter trong ma nguon; chua build va chua duoc nguoi dung nghe thu. Khong danh dau la hoat dong cho den khi nguoi dung xac nhan.
+- Vocal Smooth: da co UI va DSP prototype; chua build va chua duoc nguoi dung nghe thu. Khong danh dau la hoat dong cho den khi nguoi dung xac nhan.
 
 ### Viec can lam tiep theo
 1. Nguoi dung Pull main, Rebuild Solution va kiem tra Vocal Exciter bang micro that; so sanh ON/OFF, bat dau Amount 20-30%, Effect Mix 15-25%.
@@ -280,3 +282,13 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The module only limits while global processing is enabled, Bypass is off and Vocal Limiter is ON. When switched off, any existing gain reduction recovers smoothly toward unity.
 - This is a sample-peak limiter without look-ahead or true-peak oversampling. It is an initial peak-control stage, not a guaranteed inter-sample true-peak ceiling or mastering brickwall limiter.
 - Build and microphone listening tests on the user's computer are pending. Start at -1.0 dBFS / 80 ms; compare ON/OFF on loud syllables and watch for pumping, transient distortion or an unnaturally squeezed vocal.
+
+
+### Implementation update 28/11/2026 - Vocal Smooth (dynamic resonance control prototype)
+- Added a dedicated Vocal Smooth module window with ON/OFF, Sensitivity and Smoothing Intensity controls. Added its button to the existing bottom module row without changing the main panel groups.
+- Added a pair of fixed band-pass filters centered near 3.4 kHz (Q 1.05): one for envelope detection and one for the signal band being attenuated.
+- The detector uses smoothed attack/release envelope tracking. When the upper-mid resonance band rises above the sensitivity threshold, the module smoothly reduces only that band; the rest of the vocal signal remains in place.
+- Default controls: Sensitivity 45%, Smoothing Intensity 35%. Intensity scales maximum reduction up to approximately 5.5 dB at 100%; the default setting is intentionally modest.
+- Filters and state are initialized in prepareToPlay. Processing uses preallocated filter state and adds no dynamic allocation or blocking lock in the audio callback.
+- Active only when global processing is enabled, Bypass is off and Vocal Smooth is ON. This is a single-band dynamic resonance-control prototype, not AI de-harshing or multi-band spectral processing. It may soften presence if overused and must be compared ON/OFF with the actual microphone.
+- Build and listening tests on the user's computer are pending. Start at Sensitivity 40-50% and Intensity 25-35%; raise only if harshness is audible, and check that consonants and vocal clarity remain natural.
