@@ -146,3 +146,12 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The module window is implemented as a separate content component so the same window pattern can be reused for future vocal modules.
 - User build/test is pending.
 - Next: user verifies the new window opens and closes correctly; then evaluate pitch-detection/correction DSP options and implement the audio processing separately.
+
+### Implementation update 28/11/2026 - Pitch tracking stage
+- Connected the Pitch Correction module controls to shared realtime parameters: song key, scale, correction amount and correction speed.
+- Added a fixed-size, allocation-free monophonic pitch-analysis ring buffer and periodic normalized autocorrelation tracking in the audio callback.
+- Added detected-note, nearest in-scale note and cents-offset readouts in the module window.
+- Major, Natural Minor and Chromatic scale target selection are reflected in the analysis.
+- Important: this is the pitch-detection and target-analysis stage only. It does not yet shift the audible signal or correct sung notes. Correction Amount and Speed are stored and ready for the next DSP stage; they are not yet audible controls.
+- User must rebuild and test note tracking with a clean, single vocal/mic input. Polyphonic music, strong reverb, noise and very breathy/unvoiced sounds can confuse a monophonic pitch detector.
+- Next: improve pitch tracking confidence/accuracy, then add a dedicated low-latency pitch-shifting engine before enabling audible correction.
