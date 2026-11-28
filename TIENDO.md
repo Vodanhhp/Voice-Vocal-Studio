@@ -209,3 +209,14 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Chua duoc kiem thu voi VB-CABLE; chua the coi tinh nang thu am qua thiet bi ao la hoan thanh.
 - Khong thay doi hoac dong goi driver ben thu ba trong giai doan nay.
 
+
+
+### Implementation update 28/11/2026 - Warmth & Body module (DSP stage 1)
+- Replaced the Warmth & Body placeholder window with a dedicated module window containing independent ON/OFF, Warmth and Body controls.
+- Connected the controls to atomic realtime parameters consumed by the audio callback.
+- Added a low-shelf stage centered around 145 Hz for controlled warmth and a peaking stage around 230 Hz for vocal body.
+- Both controls use a neutral midpoint of 50%; their ranges are limited to approximately +/-4 dB and +/-3 dB respectively to reduce the risk of excessive bass buildup.
+- The module is active only when the global processing chain is enabled, Bypass is off, and Warmth & Body is ON.
+- Filter state is preallocated and processed in the existing audio callback; no new allocations or blocking locks were introduced there.
+- This is an initial tonal-shaping implementation, not automatic room/mic correction. Listening tests are required to assess muddiness, proximity effect, microphone response and interaction with existing EQ/Voice Enhance/Tone controls.
+- Build and listening tests on the user's computer are pending. Do not mark the module as confirmed working until the user rebuilds and tests with a real microphone.
