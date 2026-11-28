@@ -311,3 +311,11 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Stereo Mix / What U Hear are recording inputs, not playback outputs. Their presence and names depend on the Windows audio backend and sound-card driver; they may be absent or disabled.
 - This stage does not yet create a second simultaneous output, route processed audio into a recording endpoint, or guarantee that Stereo Mix captures the processed microphone signal.
 - User build and hardware test are pending. Verify the playback list, switch between two available outputs if possible, and inspect the Recording device list in Audio Settings for Stereo Mix / What U Hear.
+
+
+### Cap nhat 28/11/2026 - Viet hoa dau tieng Viet tren giao dien
+- Chuyen cac chuoi tieng Viet khong dau trong giao dien chinh sang tieng Viet co dau: tieu de cac panel, nhan tham so, nut dieu khien, trang thai, ten preset, thong bao luu/nap cau hinh va hop thoai cai dat thiet bi.
+- Giu nguyen ten cac module va thuat ngu ky thuat dang dung bang tieng Anh.
+- Khong thay doi DSP, bo cuc giao dien hoac he thong Input/Output trong dot nay.
+- VoiceVocalStudio.jucer da co compiler flag /utf-8 cho Visual Studio 2026; can Rebuild va kiem tra hien thi chu co dau tren may nguoi dung.
+- Chua co ket qua build/test sau cap nhat.
