@@ -67,3 +67,13 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Da them mo va nap lai tep preset tuy chinh.
 - Tep preset luu gia tri cac nut dieu khien, trang thai bat/tat tung nhom va am luong tong.
 - Chua xac nhan build va kiem thu tren may nguoi dung; can Rebuild Solution va thu lan luot ba preset, luu tep, mo tep.
+
+## 8. Cap nhat 28/11/2026 - Mo rong lua chon chat giong
+
+- Mo rong danh sach preset tu 3 len 9 lua chon.
+- Giu nguyen ba preset ban dau: Giong nam am ap, Giong nam day, Karaoke nhac nhe.
+- Them cac lua chon: Giong muot ma, Giong sang ro, Giong tram am, Giong san khau, Giong truyen cam, Karaoke tu nhien.
+- Moi lua chon nap dong bo cac thong so EQ, Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control va Reverb; dong thoi cap nhat cac nut dieu khien tren giao dien.
+- Cac gia tri moi la diem khoi dau de thu nghiem, can nghe va hieu chinh tren micro/soundcard thuc te.
+- Chua xac nhan build va kiem thu tren may nguoi dung.
+
