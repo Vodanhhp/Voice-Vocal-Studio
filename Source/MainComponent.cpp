@@ -88,7 +88,6 @@ void StudioKnobLookAndFeel::drawRotarySlider(
 
 MainComponent::MainComponent()
 {
-    setSize(1536, 1024);
 
     titleLabel.setText("Voice Vocal Studio", juce::dontSendNotification);
     titleLabel.setFont(juce::FontOptions(38.0f, juce::Font::bold | juce::Font::italic));
@@ -259,6 +258,7 @@ MainComponent::MainComponent()
         statusLabel.setText("Cai dat thiet bi se duoc bo sung sau", juce::dontSendNotification);
     };
 
+    setSize(1536, 1024);
     resized();
     setAudioChannels(1, 2);
     startTimerHz(30);
@@ -524,7 +524,12 @@ void MainComponent::resized()
     {
         auto a = panel.reduced(9);
         const int count = (int)groups[(size_t)group].size();
+        if (count <= 0 || columns <= 0)
+            return;
+
         const int rows = (count + columns - 1) / columns;
+        if (rows <= 0)
+            return;
         const int slotW = a.getWidth() / columns;
         const int slotH = (a.getHeight() - 45) / rows;
         const int knobW = juce::jmin(116, slotW - 4);
