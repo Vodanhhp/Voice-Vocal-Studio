@@ -258,7 +258,7 @@ MainComponent::MainComponent()
         statusLabel.setText("Cai dat thiet bi se duoc bo sung sau", juce::dontSendNotification);
     };
 
-    setSize(1536, 1024);
+    setSize(1280, 800);
     resized();
     setAudioChannels(1, 2);
     startTimerHz(30);
@@ -325,21 +325,22 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
     PanelBounds p;
     const int w = getWidth();
     const int h = getHeight();
-    const int margin = 12;
-    const int gap = 12;
-    const int headerBottom = 122;
-    const int footerHeight = 104;
-    const int bottomHeight = juce::jmax(170, (h - headerBottom - footerHeight) / 4);
+    const int margin = juce::jlimit(8, 14, w / 110);
+    const int gap = juce::jlimit(8, 12, w / 140);
+    const int headerBottom = juce::jlimit(88, 108, h / 7);
+    const int footerHeight = juce::jlimit(76, 92, h / 9);
+    const int availablePanelsHeight = h - headerBottom - footerHeight - margin - gap;
+    const int bottomHeight = juce::jlimit(142, 205, (int)(availablePanelsHeight * 0.36f));
     const int bottomY = h - footerHeight - bottomHeight - margin;
-    const int topHeight = bottomY - headerBottom - gap;
-    const int leftWidth = juce::jlimit(250, 300, w / 5);
-    const int rightWidth = juce::jlimit(330, 390, w / 4);
+    const int topHeight = juce::jmax(190, bottomY - headerBottom - gap);
+    const int leftWidth = juce::jlimit(205, 270, (int)(w * 0.205f));
+    const int rightWidth = juce::jlimit(270, 340, (int)(w * 0.255f));
     const int centreWidth = w - margin * 2 - gap * 2 - leftWidth - rightWidth;
     const int rightX = margin + leftWidth + gap + centreWidth + gap;
 
     p[0] = { margin, headerBottom, leftWidth, topHeight };
     p[1] = { margin + leftWidth + gap, headerBottom, centreWidth, topHeight };
-    const int rightTopHeight = (topHeight - gap) * 2 / 3;
+    const int rightTopHeight = (topHeight - gap) * 3 / 5;
     p[2] = { rightX, headerBottom, rightWidth, rightTopHeight };
     p[3] = { rightX, headerBottom + rightTopHeight + gap, rightWidth,
              topHeight - rightTopHeight - gap };
@@ -360,31 +361,33 @@ void MainComponent::paint(juce::Graphics& g)
     g.fillAll();
 
     // Header fascia.
-    auto header = juce::Rectangle<float>(0.0f, 0.0f, (float)getWidth(), 112.0f);
+    const float headerHeight = (float)juce::jlimit(88, 108, getHeight() / 7);
+    auto header = juce::Rectangle<float>(0.0f, 0.0f, (float)getWidth(), headerHeight);
     g.setGradientFill(juce::ColourGradient(juce::Colour(34, 45, 60), 0.0f, 0.0f,
-                                            juce::Colour(9, 14, 22), 0.0f, 112.0f, false));
+                                            juce::Colour(9, 14, 22), 0.0f, headerHeight, false));
     g.fillRoundedRectangle(header, 14.0f);
     g.setColour(edge);
     g.drawRoundedRectangle(header.reduced(1.0f), 14.0f, 1.2f);
 
     // Neon microphone emblem.
+    const float logoScale = juce::jlimit(0.72f, 1.0f, headerHeight / 108.0f);
     g.setColour(cyan.withAlpha(0.18f));
-    g.fillEllipse(20.0f, 15.0f, 82.0f, 82.0f);
+    g.fillEllipse(18.0f, 9.0f, 78.0f * logoScale, 78.0f * logoScale);
     g.setColour(cyan);
-    g.drawRoundedRectangle(48.0f, 27.0f, 25.0f, 43.0f, 12.0f, 2.8f);
+    g.drawRoundedRectangle(45.0f, 20.0f, 24.0f, 40.0f, 11.0f, 2.6f);
     juce::Path microphoneArc;
-    microphoneArc.addArc(39.0f, 39.0f, 43.0f, 42.0f, 0.0f,
+    microphoneArc.addArc(37.0f, 31.0f, 40.0f, 40.0f, 0.0f,
                          juce::MathConstants<float>::pi, true);
-    g.strokePath(microphoneArc, juce::PathStrokeType(2.8f));
-    g.drawLine(60.5f, 81.0f, 60.5f, 89.0f, 2.5f);
-    g.drawLine(48.0f, 90.0f, 73.0f, 90.0f, 2.5f);
+    g.strokePath(microphoneArc, juce::PathStrokeType(2.6f));
+    g.drawLine(57.0f, 70.0f, 57.0f, 78.0f, 2.3f);
+    g.drawLine(45.0f, 79.0f, 69.0f, 79.0f, 2.3f);
 
     // Decorative waveform between the title and device strip.
     juce::Path wave;
-    wave.startNewSubPath(615.0f, 56.0f);
+    wave.startNewSubPath((float)getWidth() * 0.43f, headerHeight * 0.50f);
     const float waveValues[] { 0, -5, 8, -14, 20, -30, 14, -9, 5, 0 };
     for (int i = 0; i < 10; ++i)
-        wave.lineTo(615.0f + i * 10.0f, 56.0f + waveValues[i]);
+        wave.lineTo((float)getWidth() * 0.43f + i * 9.0f, headerHeight * 0.50f + waveValues[i] * 0.72f);
     g.setColour(cyan);
     g.strokePath(wave, juce::PathStrokeType(2.0f));
 
@@ -522,8 +525,9 @@ void MainComponent::paint(juce::Graphics& g)
     }
 
     // Footer plate.
-    auto footer = juce::Rectangle<float>(0.0f, (float)getHeight() - 100.0f,
-                                          (float)getWidth(), 100.0f);
+    const float footerHeight = (float)juce::jlimit(76, 92, getHeight() / 9);
+    auto footer = juce::Rectangle<float>(0.0f, (float)getHeight() - footerHeight,
+                                          (float)getWidth(), footerHeight);
     g.setGradientFill(juce::ColourGradient(juce::Colour(22, 30, 42), 0.0f, footer.getY(),
                                             juce::Colour(6, 10, 16), 0.0f, footer.getBottom(), false));
     g.fillRect(footer);
@@ -531,11 +535,12 @@ void MainComponent::paint(juce::Graphics& g)
     g.drawHorizontalLine((int)footer.getY(), 10.0f, (float)getWidth() - 10.0f);
 
     // Recessed footer zones mirror the three control groups in the approved mockup.
-    const float fy = footer.getY() + 8.0f;
+    const float fy = footer.getY() + 6.0f;
+    const float w = (float)getWidth();
     const juce::Rectangle<float> footerZones[] {
-        { 10.0f, fy, 690.0f, 84.0f },
-        { 708.0f, fy, 405.0f, 84.0f },
-        { 1120.0f, fy, 406.0f, 84.0f }
+        { 10.0f, fy, w * 0.34f, footerHeight - 12.0f },
+        { w * 0.36f, fy, w * 0.29f, footerHeight - 12.0f },
+        { w * 0.67f, fy, w * 0.32f, footerHeight - 12.0f }
     };
     for (const auto& zone : footerZones)
     {
@@ -548,11 +553,15 @@ void MainComponent::paint(juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    titleLabel.setBounds(116, 18, 485, 52);
-    subtitleLabel.setBounds(174, 67, 340, 22);
-    deviceLabel.setBounds(810, 17, 255, 16);
-    deviceSelector.setBounds(810, 36, 300, 45);
-    connectionLabel.setBounds(1140, 37, 330, 42);
+    const int w = getWidth();
+    const int h = getHeight();
+    const int headerH = juce::jlimit(88, 108, h / 7);
+    titleLabel.setBounds(108, 12, juce::jmin(420, w * 0.36), 46);
+    subtitleLabel.setBounds(150, 56, juce::jmin(330, w * 0.28), 20);
+    const int deviceX = (int)(w * 0.56f);
+    deviceLabel.setBounds(deviceX, 10, (int)(w * 0.18f), 16);
+    deviceSelector.setBounds(deviceX, 29, (int)(w * 0.20f), headerH - 38);
+    connectionLabel.setBounds((int)(w * 0.79f), 28, (int)(w * 0.19f), 38);
 
     const auto panels = calculatePanelBounds();
     for (int i = 0; i < 8; ++i)
@@ -628,19 +637,24 @@ void MainComponent::resized()
     for (int group = 4; group < 8; ++group)
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
-    const int fy = getHeight() - 88;
-    // Three footer zones: preset management, transport controls and master output.
-    presetSelector.setBounds(145, fy + 16, 205, 36);
-    savePresetButton.setBounds(360, fy + 16, 125, 36);
-    managePresetButton.setBounds(495, fy + 16, 125, 36);
-    processButton.setBounds(735, fy + 16, 112, 36);
-    bypassButton.setBounds(857, fy + 16, 105, 36);
-    resetButton.setBounds(972, fy + 16, 95, 36);
-    settingsButton.setBounds(1077, fy + 16, 105, 36);
-    masterVolumeLabel.setBounds(1198, fy + 5, 180, 24);
-    masterVolumeSlider.setBounds(1198, fy + 32, 245, 26);
-    masterValueLabel.setBounds(1442, fy + 30, 78, 30);
-    statusLabel.setBounds(22, fy + 62, 1120, 22);
+    const int footerTop = getHeight() - juce::jlimit(76, 92, getHeight() / 9);
+    const int footerY = footerTop + 12;
+    const int leftX = 18;
+    presetSelector.setBounds(leftX, footerY, 150, 34);
+    savePresetButton.setBounds(leftX + 158, footerY, 92, 34);
+    managePresetButton.setBounds(leftX + 258, footerY, 102, 34);
+
+    const int centreX = (int)(w * 0.37f);
+    processButton.setBounds(centreX, footerY, 100, 34);
+    bypassButton.setBounds(centreX + 108, footerY, 82, 34);
+    resetButton.setBounds(centreX + 198, footerY, 74, 34);
+    settingsButton.setBounds(centreX + 280, footerY, 86, 34);
+
+    const int masterX = (int)(w * 0.69f);
+    masterVolumeLabel.setBounds(masterX, footerTop + 5, 170, 20);
+    masterVolumeSlider.setBounds(masterX, footerY + 3, juce::jmax(110, w - masterX - 105), 25);
+    masterValueLabel.setBounds(w - 92, footerY, 82, 30);
+    statusLabel.setBounds(18, footerTop + 54, w - 36, 18);
 }
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
