@@ -39,6 +39,85 @@ namespace
         g.setColour(green);
         g.fillEllipse(r.getRight() - 25.5f, r.getY() + 17.5f, 5.0f, 5.0f);
     }
+
+    using BiquadCoefficients = std::array<float, 5>;
+
+    BiquadCoefficients normaliseBiquad(float b0, float b1, float b2,
+                                       float a0, float a1, float a2)
+    {
+        if (std::abs(a0) < 1.0e-9f)
+            return { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+        return { b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0 };
+    }
+
+    BiquadCoefficients makePeakingCoefficients(float sampleRate, float frequency,
+                                                float gainDb, float q)
+    {
+        if (std::abs(gainDb) < 0.001f)
+            return { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+        const float safeRate = juce::jmax(8000.0f, sampleRate);
+        const float f = juce::jlimit(20.0f, safeRate * 0.45f, frequency);
+        const float A = std::pow(10.0f, gainDb / 40.0f);
+        const float w0 = juce::MathConstants<float>::twoPi * f / safeRate;
+        const float cosine = std::cos(w0);
+        const float alpha = std::sin(w0) / (2.0f * q);
+
+        return normaliseBiquad(1.0f + alpha * A, -2.0f * cosine,
+                               1.0f - alpha * A,
+                               1.0f + alpha / A, -2.0f * cosine,
+                               1.0f - alpha / A);
+    }
+
+    BiquadCoefficients makeLowShelfCoefficients(float sampleRate, float frequency,
+                                                 float gainDb)
+    {
+        if (std::abs(gainDb) < 0.001f)
+            return { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+        const float safeRate = juce::jmax(8000.0f, sampleRate);
+        const float f = juce::jlimit(20.0f, safeRate * 0.45f, frequency);
+        const float A = std::pow(10.0f, gainDb / 40.0f);
+        const float w0 = juce::MathConstants<float>::twoPi * f / safeRate;
+        const float cosine = std::cos(w0);
+        const float sine = std::sin(w0);
+        const float alpha = sine * 0.5f * std::sqrt(2.0f);
+        const float beta = 2.0f * std::sqrt(A) * alpha;
+
+        return normaliseBiquad(
+            A * ((A + 1.0f) - (A - 1.0f) * cosine + beta),
+            2.0f * A * ((A - 1.0f) - (A + 1.0f) * cosine),
+            A * ((A + 1.0f) - (A - 1.0f) * cosine - beta),
+            (A + 1.0f) + (A - 1.0f) * cosine + beta,
+            -2.0f * ((A - 1.0f) + (A + 1.0f) * cosine),
+            (A + 1.0f) + (A - 1.0f) * cosine - beta);
+    }
+
+    BiquadCoefficients makeHighShelfCoefficients(float sampleRate, float frequency,
+                                                  float gainDb)
+    {
+        if (std::abs(gainDb) < 0.001f)
+            return { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+        const float safeRate = juce::jmax(8000.0f, sampleRate);
+        const float f = juce::jlimit(20.0f, safeRate * 0.45f, frequency);
+        const float A = std::pow(10.0f, gainDb / 40.0f);
+        const float w0 = juce::MathConstants<float>::twoPi * f / safeRate;
+        const float cosine = std::cos(w0);
+        const float sine = std::sin(w0);
+        const float alpha = sine * 0.5f * std::sqrt(2.0f);
+        const float beta = 2.0f * std::sqrt(A) * alpha;
+
+        return normaliseBiquad(
+            A * ((A + 1.0f) + (A - 1.0f) * cosine + beta),
+            -2.0f * A * ((A - 1.0f) + (A + 1.0f) * cosine),
+            A * ((A + 1.0f) + (A - 1.0f) * cosine - beta),
+            (A + 1.0f) - (A - 1.0f) * cosine + beta,
+            2.0f * ((A - 1.0f) - (A + 1.0f) * cosine),
+            (A + 1.0f) - (A - 1.0f) * cosine - beta);
+    }
+
 }
 
 void StudioKnobLookAndFeel::drawRotarySlider(
@@ -121,10 +200,18 @@ MainComponent::MainComponent()
     monitorToggle.setToggleState(true, juce::dontSendNotification);
     addAndMakeVisible(monitorToggle);
 
-    for (auto& toggle : groupToggles)
+    for (size_t i = 0; i < groupToggles.size(); ++i)
     {
+        auto& toggle = groupToggles[i];
         styleToggle(toggle);
         toggle.setToggleState(true, juce::dontSendNotification);
+        groupEnabled[i].store(true);
+        toggle.onClick = [this, i]
+        {
+            const bool enabled = groupToggles[i].getToggleState();
+            groupEnabled[i].store(enabled);
+            groupToggles[i].setButtonText(enabled ? "BAT" : "TAT");
+        };
         addAndMakeVisible(toggle);
     }
 
@@ -297,6 +384,7 @@ MainComponent::ParameterControl* MainComponent::addParameter(
 
     auto control = std::make_unique<ParameterControl>();
     auto* result = control.get();
+    const int parameterIndex = (int)groups[(size_t)group].size();
 
     result->label.setText(name, juce::dontSendNotification);
     result->label.setFont(juce::FontOptions(11.0f, juce::Font::bold));
@@ -318,13 +406,20 @@ MainComponent::ParameterControl* MainComponent::addParameter(
     result->slider.setColour(juce::Slider::textBoxOutlineColourId, edge);
     addAndMakeVisible(result->slider);
 
-    result->slider.onValueChange = [this, name, slider = &result->slider]
+    if (group == 1 && parameterIndex >= 0 && parameterIndex < (int)eqGainDb.size())
+        eqGainDb[(size_t)parameterIndex].store((float)initial);
+
+    result->slider.onValueChange = [this, name, group, parameterIndex,
+                                    slider = &result->slider]
     {
         const float value = (float)slider->getValue();
         if (name == "Do loi dau vao")
             inputGainLinear.store(juce::Decibels::decibelsToGain(value));
         else if (name == "Do loi dau ra")
             outputGainLinear.store(juce::Decibels::decibelsToGain(value));
+        else if (group == 1 && parameterIndex >= 0
+                 && parameterIndex < (int)eqGainDb.size())
+            eqGainDb[(size_t)parameterIndex].store(value);
     };
 
     groups[(size_t)group].push_back(std::move(control));
@@ -676,7 +771,11 @@ void MainComponent::resized()
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    juce::ignoreUnused(samplesPerBlockExpected, sampleRate);
+    juce::ignoreUnused(samplesPerBlockExpected);
+    currentSampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
+    for (auto& filter : eqFilters)
+        filter.reset();
+    lastAppliedEqGainDb.fill(999.0f);
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
@@ -708,15 +807,53 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     // (EQ, compressor, etc.) will be inserted here in later steps.
     // Bypass skips that stage, while Master Volume remains active.
     const bool useGainStage = processingEnabled.load() && !bypassEnabled.load();
+    const bool eqActive = useGainStage && groupEnabled[1].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
     const float masterGain = masterVolumeLinear.load();
-    const float gain = channelGain * masterGain;
+
+    if (eqActive)
+    {
+        const float sampleRate = (float)currentSampleRate;
+        for (size_t band = 0; band < eqFilters.size(); ++band)
+        {
+            const float gainDb = eqGainDb[band].load();
+            if (std::abs(gainDb - lastAppliedEqGainDb[band]) > 0.001f)
+            {
+                BiquadCoefficients coefficients;
+                if (band == 0)
+                    coefficients = makeLowShelfCoefficients(sampleRate, 80.0f, gainDb);
+                else if (band == 4)
+                    coefficients = makeHighShelfCoefficients(sampleRate, 12000.0f, gainDb);
+                else
+                {
+                    const float frequencies[] { 0.0f, 250.0f, 1000.0f, 4000.0f, 0.0f };
+                    coefficients = makePeakingCoefficients(sampleRate, frequencies[band],
+                                                           gainDb, 0.8f);
+                }
+
+                eqFilters[band].setCoefficients(coefficients[0], coefficients[1],
+                    coefficients[2], coefficients[3], coefficients[4]);
+                lastAppliedEqGainDb[band] = gainDb;
+            }
+        }
+    }
+    else
+    {
+        for (auto& filter : eqFilters)
+            filter.reset();
+    }
 
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
-        left[i] = input[i] * gain;
+    {
+        float sample = input[i] * channelGain;
+        if (eqActive)
+            for (auto& filter : eqFilters)
+                sample = filter.process(sample);
+        left[i] = sample * masterGain;
+    }
 
     // Duplicate the mono microphone signal to every enabled output channel.
     for (int ch = 1; ch < channels; ++ch)
