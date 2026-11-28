@@ -58,3 +58,12 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Không ghi nhận chức năng là hoàn thành nếu mới chỉ có giao diện.
 - Không tự ý thay đổi cấu hình GitHub hoặc project local ngoài phạm vi đã thống nhất.
 - Cập nhật file TIENDO.md sau mỗi phiên làm việc quan trọng.
+
+## 7. Cap nhat 28/11/2026 - Preset
+
+- Da ket noi ba preset co san voi cac tham so DSP: Giong nam am ap, Giong nam day, Karaoke nhac nhe.
+- Chon preset se nap lai thong so cho cac nhom xu ly va bat cac nhom xu ly.
+- Da them luu cau hinh tuy chinh ra tep `.vvpreset` trong thu muc du lieu nguoi dung.
+- Da them mo va nap lai tep preset tuy chinh.
+- Tep preset luu gia tri cac nut dieu khien, trang thai bat/tat tung nhom va am luong tong.
+- Chua xac nhan build va kiem thu tren may nguoi dung; can Rebuild Solution va thu lan luot ba preset, luu tep, mo tep.
