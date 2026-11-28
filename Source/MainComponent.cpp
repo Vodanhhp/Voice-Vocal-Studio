@@ -32,9 +32,10 @@ namespace
         g.setColour(iconColour);
         g.fillRoundedRectangle(r.getX() + 12.0f, r.getY() + 11.0f, 3.0f, 21.0f, 1.5f);
         g.setColour(bright);
-        g.setFont(juce::FontOptions(16.0f, juce::Font::bold));
-        g.drawText(title, area.getX() + 24, area.getY() + 7,
-                   area.getWidth() - 115, 30, juce::Justification::centredLeft);
+        g.setFont(juce::FontOptions(14.0f, juce::Font::bold));
+        g.drawFittedText(title, area.getX() + 24, area.getY() + 7,
+                         area.getWidth() - 104, 30,
+                         juce::Justification::centredLeft, 1, 0.78f);
         g.setColour(green.withAlpha(0.22f));
         g.fillEllipse(r.getRight() - 29.0f, r.getY() + 14.0f, 12.0f, 12.0f);
         g.setColour(green);
@@ -1837,17 +1838,17 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
     PanelBounds p;
     const int w = getWidth();
     const int h = getHeight();
-    const int margin = juce::jlimit(8, 14, w / 110);
-    const int gap = juce::jlimit(8, 12, w / 140);
+    const int margin = juce::jlimit(10, 14, w / 115);
+    const int gap = juce::jlimit(9, 12, w / 145);
     const int headerBottom = juce::jlimit(88, 108, h / 7);
     const int footerHeight = juce::jlimit(76, 92, h / 9);
-    const int moduleRowHeight = 48;
+    const int moduleRowHeight = 50;
     const int availablePanelsHeight = h - headerBottom - footerHeight - moduleRowHeight - margin - gap;
-    const int bottomHeight = juce::jlimit(142, 205, (int)(availablePanelsHeight * 0.36f));
+    const int bottomHeight = juce::jlimit(150, 195, (int)(availablePanelsHeight * 0.35f));
     const int bottomY = h - footerHeight - moduleRowHeight - bottomHeight - margin;
-    const int topHeight = juce::jmax(190, bottomY - headerBottom - gap);
-    const int leftWidth = juce::jlimit(205, 270, (int)(w * 0.205f));
-    const int rightWidth = juce::jlimit(270, 340, (int)(w * 0.255f));
+    const int topHeight = juce::jmax(205, bottomY - headerBottom - gap);
+    const int leftWidth = juce::jlimit(215, 265, (int)(w * 0.205f));
+    const int rightWidth = juce::jlimit(285, 335, (int)(w * 0.255f));
     const int centreWidth = w - margin * 2 - gap * 2 - leftWidth - rightWidth;
     const int rightX = margin + leftWidth + gap + centreWidth + gap;
 
@@ -2180,7 +2181,8 @@ void MainComponent::resized()
         }
     };
 
-    layoutSmallGroup(2, panels[2], 4);
+    // Compressor uses a balanced 2 x 2 layout so labels and controls have room.
+    layoutSmallGroup(2, panels[2], 2);
     layoutSmallGroup(3, panels[3], 2);
     for (int group = 4; group < 8; ++group)
         layoutSmallGroup(group, panels[(size_t)group], 3);
