@@ -891,6 +891,121 @@ private:
 };
 
 
+
+class VocalLimiterModuleContent final : public juce::Component
+{
+public:
+    VocalLimiterModuleContent(std::atomic<bool>& enabled,
+                              std::atomic<float>& ceiling,
+                              std::atomic<float>& release)
+        : enabledParameter(enabled), ceilingParameter(ceiling),
+          releaseParameter(release)
+    {
+        title.setText("VOCAL LIMITER", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("Control sudden vocal peaks and help prevent output clipping.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        configureSlider(ceilingLabel, ceilingSlider, "OUTPUT CEILING",
+                        ceilingParameter.load(), -6.0, -0.1, 0.1, " dBFS",
+                        [this](double value) { ceilingParameter.store((float)value); });
+        configureSlider(releaseLabel, releaseSlider, "RELEASE TIME",
+                        releaseParameter.load(), 20.0, 300.0, 1.0, " ms",
+                        [this](double value) { releaseParameter.store((float)value); });
+
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        updateToggleText();
+        enableToggle.setColour(juce::ToggleButton::textColourId,
+                               juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            enabledParameter.store(enableToggle.getToggleState());
+            updateToggleText();
+        };
+        addAndMakeVisible(enableToggle);
+
+        note.setText("Start at -1.0 dBFS and 80 ms. Sample-peak limiter; no look-ahead.",
+                     juce::dontSendNotification);
+        note.setFont(juce::FontOptions(12.0f));
+        note.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(note);
+        setSize(620, 390);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(80, 155, 220).withAlpha(0.16f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(42));
+        area.removeFromTop(14);
+        ceilingLabel.setBounds(area.removeFromTop(22));
+        ceilingSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(12);
+        releaseLabel.setBounds(area.removeFromTop(22));
+        releaseSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(14);
+        enableToggle.setBounds(area.removeFromTop(34));
+        note.setBounds(area.removeFromTop(48));
+    }
+
+private:
+    void configureSlider(juce::Label& label, juce::Slider& slider,
+                         const juce::String& caption, double initial,
+                         double minimum, double maximum, double interval,
+                         const juce::String& suffix,
+                         std::function<void(double)> onChange)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 82, 26);
+        slider.setRange(minimum, maximum, interval);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setTextValueSuffix(suffix);
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(80, 155, 220));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
+        auto* sliderPointer = &slider;
+        slider.onValueChange = [sliderPointer, onChange]
+        {
+            onChange(sliderPointer->getValue());
+        };
+        addAndMakeVisible(slider);
+    }
+
+    void updateToggleText()
+    {
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "VOCAL LIMITER: ON" : "VOCAL LIMITER: OFF");
+    }
+
+    std::atomic<bool>& enabledParameter;
+    std::atomic<float>& ceilingParameter;
+    std::atomic<float>& releaseParameter;
+    juce::Label title, description, ceilingLabel, releaseLabel, note;
+    juce::Slider ceilingSlider, releaseSlider;
+    juce::ToggleButton enableToggle { "VOCAL LIMITER: OFF" };
+};
+
+
 class PlannedVocalModuleContent final : public juce::Component
 {
 public:
@@ -1142,7 +1257,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(vocalExciterButton);
     pitchCorrectionButton.onClick = [this] { showPitchCorrectionModule(); };
     vocalLevelingButton.onClick = [this] { showVocalLevelingModule(); };
-    vocalLimiterButton.onClick = [this] { showPlannedVocalModule("VOCAL LIMITER"); };
+    vocalLimiterButton.onClick = [this] { showVocalLimiterModule(); };
     warmthBodyButton.onClick = [this] { showWarmthBodyModule(); };
     vocalClarityButton.onClick = [this] { showVocalClarityModule(); };
     breathControlButton.onClick = [this] { showBreathControlModule(); };
@@ -1942,6 +2057,7 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     pitchShifter.reset();
     vocalLevelEnvelope = 0.0f;
     vocalLevelGain = 1.0f;
+    vocalLimiterGain = 1.0f;
     for (auto& filter : eqFilters)
         filter.reset();
     lastAppliedEqGainDb.fill(999.0f);
@@ -2560,6 +2676,33 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     if (reverbActive)
         reverb.processMono(left, info.numSamples);
 
+    // Final sample-peak limiter after all processing, Reverb and Master Volume.
+    const bool limiterActive = useGainStage && vocalLimiterEnabled.load();
+    const float limiterCeilingDb = juce::jlimit(-6.0f, -0.1f,
+                                                vocalLimiterCeilingDb.load());
+    const float limiterCeiling = juce::Decibels::decibelsToGain(limiterCeilingDb);
+    const float limiterReleaseSeconds = juce::jlimit(20.0f, 300.0f,
+        vocalLimiterReleaseMs.load()) * 0.001f;
+    const float limiterReleaseCoefficient = std::exp(
+        -1.0f / ((float)currentSampleRate * limiterReleaseSeconds));
+
+    for (int i = 0; i < info.numSamples; ++i)
+    {
+        const float sample = left[i];
+        const float magnitude = std::abs(sample);
+        const float targetGain = limiterActive && magnitude > limiterCeiling
+            ? limiterCeiling / juce::jmax(magnitude, 1.0e-9f)
+            : 1.0f;
+
+        if (targetGain < vocalLimiterGain)
+            vocalLimiterGain = targetGain;
+        else
+            vocalLimiterGain = limiterReleaseCoefficient * vocalLimiterGain
+                             + (1.0f - limiterReleaseCoefficient);
+
+        left[i] = sample * vocalLimiterGain;
+    }
+
     compressorGainReductionDb.store(compressorActive ? blockGainReductionDb : 0.0f);
 
     // Duplicate the mono microphone signal to every enabled output channel.
@@ -2680,6 +2823,20 @@ void MainComponent::showVocalExciterModule()
     options.content.setOwned(new VocalExciterModuleContent(
         vocalExciterEnabled, vocalExciterAmount, vocalExciterMix));
     options.dialogTitle = "Vocal Exciter Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+
+void MainComponent::showVocalLimiterModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new VocalLimiterModuleContent(
+        vocalLimiterEnabled, vocalLimiterCeilingDb, vocalLimiterReleaseMs));
+    options.dialogTitle = "Vocal Limiter Module";
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
