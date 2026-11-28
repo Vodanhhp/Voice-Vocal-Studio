@@ -130,6 +130,12 @@ private:
     float noiseGateGain { 1.0f };
     int noiseGateHoldCounter { 0 };
 
+    std::atomic<float> toneBassDb { 2.0f };
+    std::atomic<float> toneMidDb { 0.0f };
+    std::atomic<float> toneTrebleDb { 2.0f };
+    std::array<BiquadFilter, 3> toneFilters;
+    std::array<float, 3> lastToneGainDb { 999.0f, 999.0f, 999.0f };
+
     double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
