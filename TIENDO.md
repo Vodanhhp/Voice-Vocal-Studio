@@ -369,3 +369,11 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Đã cập nhật và tải lại kiểm tra Source/MainComponent.cpp trên `main`; phần mã quanh vị trí lỗi hiện liền mạch.
 - Không thay đổi DSP, xử lý âm thanh, bố cục hoặc hành vi điều khiển.
 - Người dùng cần Fetch origin → Pull origin → Rebuild Solution. Chưa xác nhận build thành công cho đến khi người dùng kiểm tra.
+
+
+## 28/11/2026 – Cân chỉnh bố cục giao diện chính
+- Chỉnh lại tỷ lệ và khoảng cách 8 panel trong `calculatePanelBounds()`, dành thêm không gian tối thiểu cho các cụm điều khiển.
+- Thu gọn tiêu đề panel bằng `drawFittedText` để hạn chế cắt chữ ở các panel hẹp.
+- Chuyển Compressor từ 4 núm trên một hàng sang bố cục 2 hàng × 2 cột để nhãn và điều khiển dễ đọc hơn.
+- Không thay đổi DSP, tham số xử lý, preset, Input/Output, routing hoặc hành vi các nút.
+- Chưa xác nhận build/runtime; cần Pull về máy và kiểm tra giao diện thực tế ở cửa sổ chính.
