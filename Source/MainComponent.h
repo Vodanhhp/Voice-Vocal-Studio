@@ -67,6 +67,7 @@ private:
     PanelBounds calculatePanelBounds() const;
     void styleToggle(juce::ToggleButton& toggle);
     void showAudioSettings();
+    void showPitchCorrectionModule();
     void applyBuiltInPreset(int presetId);
     void savePresetToFile(const juce::File& file);
     bool loadPresetFromFile(const juce::File& file);
@@ -92,6 +93,7 @@ private:
     juce::TextButton bypassButton { "BO QUA" };
     juce::TextButton resetButton { "DAT LAI" };
     juce::TextButton settingsButton { "CAI DAT" };
+    juce::TextButton pitchCorrectionButton { "PITCH CORRECTION" };
     juce::TextButton savePresetButton { "LUU CAI DAT" };
     juce::TextButton managePresetButton { "QUAN LY..." };
     juce::ComboBox presetSelector;
