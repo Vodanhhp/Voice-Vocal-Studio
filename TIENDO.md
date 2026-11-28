@@ -377,3 +377,10 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Chuyển Compressor từ 4 núm trên một hàng sang bố cục 2 hàng × 2 cột để nhãn và điều khiển dễ đọc hơn.
 - Không thay đổi DSP, tham số xử lý, preset, Input/Output, routing hoặc hành vi các nút.
 - Chưa xác nhận build/runtime; cần Pull về máy và kiểm tra giao diện thực tế ở cửa sổ chính.
+
+
+## 28/11/2026 – Đợt 2: làm mới diện mạo panel và núm điều khiển
+- Thay phần vẽ panel phẳng bằng lớp vỏ kiểu thiết bị phòng thu: thân kim loại tối có chiều sâu, viền đôi, ánh cyan nhẹ, thanh tiêu đề riêng, đường phân cách và chi tiết ốc góc.
+- Thiết kế lại rotary knob theo hướng núm kim loại bạc gia công, có bezel phát sáng, vòng mức cyan, vạch chia và kim chỉ thị rõ hơn.
+- Giữ nguyên kích thước cửa sổ, bố cục component, giá trị tham số, DSP/audio callback, preset, Input/Output và routing.
+- Đây là thay đổi giao diện đồ họa; cần người dùng Pull, Rebuild và gửi ảnh chụp để xác nhận mức độ khác biệt trên máy thực tế. Chưa xác nhận build/runtime.
