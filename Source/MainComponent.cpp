@@ -492,7 +492,8 @@ void MainComponent::resized()
         const int knobW = juce::jmin(170, a.getWidth() - 30);
         const int knobH = juce::jmin(190, (a.getHeight() - 105) / 2);
         const int x = a.getCentreX() - knobW / 2;
-        for (int i = 0; i < 2; ++i)
+        const int inputControlCount = juce::jmin(2, (int)groups[0].size());
+        for (int i = 0; i < inputControlCount; ++i)
         {
             auto& c = *groups[0][(size_t)i];
             const int y = a.getY() + 48 + i * (knobH + 18);
@@ -509,7 +510,8 @@ void MainComponent::resized()
         const int slot = a.getWidth() / 5;
         const int knobW = juce::jmin(132, slot - 8);
         const int knobH = juce::jmin(164, a.getBottom() - top - 6);
-        for (int i = 0; i < 5; ++i)
+        const int eqControlCount = juce::jmin(5, (int)groups[1].size());
+        for (int i = 0; i < eqControlCount; ++i)
         {
             auto& c = *groups[1][(size_t)i];
             const int x = a.getX() + i * slot;
