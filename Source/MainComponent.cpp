@@ -325,7 +325,7 @@ MainComponent::MainComponent()
         processingEnabled.store(!processingEnabled.load());
         processButton.setButtonText(processingEnabled.load() ? "DUNG XU LY" : "BAT XU LY");
         statusLabel.setText(processingEnabled.load()
-            ? "Da bat tang xu ly tin hieu; cac hieu ung DSP se duoc bo sung tiep theo"
+            ? "Da bat chuoi xu ly tin hieu"
             : "Da tat xu ly tin hieu", juce::dontSendNotification);
     };
     bypassButton.onClick = [this]
@@ -816,6 +816,8 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     for (auto& filter : eqFilters)
         filter.reset();
     lastAppliedEqGainDb.fill(999.0f);
+    compressorEnvelope = 0.0f;
+    compressorGainReductionDb.store(0.0f);
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
