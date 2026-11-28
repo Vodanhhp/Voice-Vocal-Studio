@@ -558,6 +558,115 @@ private:
     juce::ToggleButton enableToggle { "WARMTH & BODY: OFF" };
 };
 
+
+class VocalClarityModuleContent final : public juce::Component
+{
+public:
+    VocalClarityModuleContent(std::atomic<bool>& enabled,
+                              std::atomic<float>& clarity,
+                              std::atomic<float>& air)
+        : enabledParameter(enabled), clarityParameter(clarity), airParameter(air)
+    {
+        title.setText("VOCAL CLARITY", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("Bring vocal words forward with controlled presence and air.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        configureSlider(clarityLabel, claritySlider, "CLARITY", clarityParameter.load(),
+                        [this](double value) { clarityParameter.store((float)value); });
+        configureSlider(airLabel, airSlider, "AIR", airParameter.load(),
+                        [this](double value) { airParameter.store((float)value); });
+
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        updateToggleText();
+        enableToggle.setColour(juce::ToggleButton::textColourId,
+                               juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            enabledParameter.store(enableToggle.getToggleState());
+            updateToggleText();
+        };
+        addAndMakeVisible(enableToggle);
+
+        note.setText("Start near 50%. Increase gently; too much presence or air can make S sounds sharp.",
+                     juce::dontSendNotification);
+        note.setFont(juce::FontOptions(12.0f));
+        note.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(note);
+        setSize(620, 390);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(50, 213, 255).withAlpha(0.15f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(42));
+        area.removeFromTop(14);
+        clarityLabel.setBounds(area.removeFromTop(22));
+        claritySlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(12);
+        airLabel.setBounds(area.removeFromTop(22));
+        airSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(14);
+        enableToggle.setBounds(area.removeFromTop(34));
+        note.setBounds(area.removeFromTop(42));
+    }
+
+private:
+    void configureSlider(juce::Label& label, juce::Slider& slider,
+                         const juce::String& caption, double initial,
+                         std::function<void(double)> onChange)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 72, 26);
+        slider.setRange(0.0, 100.0, 1.0);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setTextValueSuffix(" %");
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(50, 213, 255));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
+        auto* sliderPointer = &slider;
+        slider.onValueChange = [sliderPointer, onChange]
+        {
+            onChange(sliderPointer->getValue());
+        };
+        addAndMakeVisible(slider);
+    }
+
+    void updateToggleText()
+    {
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "VOCAL CLARITY: ON" : "VOCAL CLARITY: OFF");
+    }
+
+    std::atomic<bool>& enabledParameter;
+    std::atomic<float>& clarityParameter;
+    std::atomic<float>& airParameter;
+    juce::Label title, description, clarityLabel, airLabel, note;
+    juce::Slider claritySlider, airSlider;
+    juce::ToggleButton enableToggle { "VOCAL CLARITY: OFF" };
+};
+
 class PlannedVocalModuleContent final : public juce::Component
 {
 public:
@@ -811,7 +920,7 @@ MainComponent::MainComponent()
     vocalLevelingButton.onClick = [this] { showVocalLevelingModule(); };
     vocalLimiterButton.onClick = [this] { showPlannedVocalModule("VOCAL LIMITER"); };
     warmthBodyButton.onClick = [this] { showWarmthBodyModule(); };
-    vocalClarityButton.onClick = [this] { showPlannedVocalModule("VOCAL CLARITY"); };
+    vocalClarityButton.onClick = [this] { showVocalClarityModule(); };
     breathControlButton.onClick = [this] { showPlannedVocalModule("BREATH CONTROL"); };
     vocalExciterButton.onClick = [this] { showPlannedVocalModule("VOCAL EXCITER"); };
 
@@ -1625,6 +1734,10 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     bodyFilter.reset();
     lastWarmthGainDb = 999.0f;
     lastBodyGainDb = 999.0f;
+    clarityFilter.reset();
+    clarityAirFilter.reset();
+    lastClarityGainDb = 999.0f;
+    lastClarityAirGainDb = 999.0f;
     noiseGateEnvelope = 0.0f;
     noiseGateGain = 1.0f;
     noiseGateHoldCounter = 0;
@@ -1755,6 +1868,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool deEsserActive = useGainStage && groupEnabled[3].load();
     const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
     const bool warmthBodyActive = useGainStage && warmthBodyEnabled.load();
+    const bool vocalClarityActive = useGainStage && vocalClarityEnabled.load();
     const bool noiseGateActive = useGainStage && groupEnabled[5].load();
     const bool toneActive = useGainStage && groupEnabled[6].load();
     const bool reverbActive = useGainStage && groupEnabled[7].load();
@@ -1903,6 +2017,31 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     {
         warmthFilter.reset();
         bodyFilter.reset();
+    }
+
+    if (vocalClarityActive)
+    {
+        const float clarityDb = (juce::jlimit(0.0f, 100.0f, clarityAmount.load()) - 50.0f) * 0.06f;
+        const float airDb = (juce::jlimit(0.0f, 100.0f, clarityAir.load()) - 50.0f) * 0.05f;
+        if (std::abs(clarityDb - lastClarityGainDb) > 0.001f)
+        {
+            const auto coefficients = makePeakingCoefficients(sampleRate, 3200.0f, clarityDb, 0.9f);
+            clarityFilter.setCoefficients(coefficients[0], coefficients[1],
+                coefficients[2], coefficients[3], coefficients[4]);
+            lastClarityGainDb = clarityDb;
+        }
+        if (std::abs(airDb - lastClarityAirGainDb) > 0.001f)
+        {
+            const auto coefficients = makeHighShelfCoefficients(sampleRate, 8500.0f, airDb);
+            clarityAirFilter.setCoefficients(coefficients[0], coefficients[1],
+                coefficients[2], coefficients[3], coefficients[4]);
+            lastClarityAirGainDb = airDb;
+        }
+    }
+    else
+    {
+        clarityFilter.reset();
+        clarityAirFilter.reset();
     }
 
     const float gateThresholdDb = noiseGateThresholdDb.load();
@@ -2070,6 +2209,12 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             sample = bodyFilter.process(sample);
         }
 
+        if (vocalClarityActive)
+        {
+            sample = clarityFilter.process(sample);
+            sample = clarityAirFilter.process(sample);
+        }
+
         if (toneActive)
             for (auto& filter : toneFilters)
                 sample = filter.process(sample);
@@ -2187,6 +2332,19 @@ void MainComponent::showWarmthBodyModule()
     options.content.setOwned(new WarmthBodyModuleContent(
         warmthBodyEnabled, warmthAmount, bodyAmount));
     options.dialogTitle = "Warmth & Body Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+void MainComponent::showVocalClarityModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new VocalClarityModuleContent(
+        vocalClarityEnabled, clarityAmount, clarityAir));
+    options.dialogTitle = "Vocal Clarity Module";
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
