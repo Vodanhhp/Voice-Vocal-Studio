@@ -220,3 +220,14 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Filter state is preallocated and processed in the existing audio callback; no new allocations or blocking locks were introduced there.
 - This is an initial tonal-shaping implementation, not automatic room/mic correction. Listening tests are required to assess muddiness, proximity effect, microphone response and interaction with existing EQ/Voice Enhance/Tone controls.
 - Build and listening tests on the user's computer are pending. Do not mark the module as confirmed working until the user rebuilds and tests with a real microphone.
+
+
+### Implementation update 28/11/2026 - Vocal Clarity module (DSP stage 2)
+- Replaced the Vocal Clarity placeholder with a dedicated module window containing independent ON/OFF, Clarity and Air controls.
+- Connected both controls to atomic realtime parameters read by the audio callback.
+- Clarity uses a moderate peaking EQ centered near 3.2 kHz to improve articulation and vocal presence.
+- Air uses a high-shelf stage near 8.5 kHz for controlled upper-frequency openness.
+- Both controls are neutral at 50%; their ranges are limited to approximately +/-3 dB to reduce harshness and sibilance.
+- The module is active only when the global processing chain is enabled, Bypass is off, and Vocal Clarity is ON.
+- Filter coefficients are updated outside the per-sample loop when control values change; filter state is preallocated and no new callback allocations or blocking locks were introduced.
+- Build and listening tests on the user's computer are pending. Listen for intelligibility, harsh consonants, excessive S sounds and interaction with De-Esser, Voice Enhance and Tone Control.
