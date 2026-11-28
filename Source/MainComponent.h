@@ -185,8 +185,8 @@ private:
         juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT")
     };
 
-    juce::ToggleButton monitorToggle { "THEO DOI AM THANH: BẬT" };
-    juce::TextButton processButton { "BẬT XU LY" };
+    juce::ToggleButton monitorToggle { "THEO DÕI ÂM THANH: BẬT" };
+    juce::TextButton processButton { "BẬT XỬ LÝ" };
     juce::TextButton bypassButton { "BỎ QUA" };
     juce::TextButton resetButton { "ĐẶT LẠI" };
     juce::TextButton settingsButton { "CÀI ĐẶT" };
@@ -198,7 +198,7 @@ private:
     juce::TextButton vocalClarityButton { "VOCAL CLARITY" };
     juce::TextButton breathControlButton { "BREATH CONTROL" };
     juce::TextButton vocalExciterButton { "VOCAL EXCITER" };
-    juce::TextButton savePresetButton { "LUU CÀI ĐẶT" };
+    juce::TextButton savePresetButton { "LƯU CÀI ĐẶT" };
     juce::TextButton managePresetButton { "QUẢN LÝ..." };
     juce::ComboBox presetSelector;
     std::unique_ptr<juce::FileChooser> presetFileChooser;
