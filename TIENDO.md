@@ -175,7 +175,7 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 ### Cap nhat 28/11/2026 - Hang nut vocal va Vocal Leveling
 - Giu nguyen 8 nhom xu ly chinh tren giao dien; khong di chuyen cac panel Dau vao/Dau ra, EQ, Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control va Reverb.
 - Dua Pitch Correction xuong hang nut rieng o phia duoi, cung cac nut Vocal Leveling, Vocal Limiter, Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter.
-- Moi nut mo mot cua so rieng. Cac cua so cua Vocal Limiter, Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter hien la khung gioi thieu; chua co DSP va chua duoc ket noi dieu khien. Khong duoc coi la tinh nang da hoat dong.
+- Moi nut mo mot cua so rieng. Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter da duoc them UI va DSP prototype; Vocal Limiter van chua duoc trien khai DSP. Khong coi module nao la hoan tat san pham truoc khi build va nghe thu tren may dich.
 - Them cua so Vocal Leveling voi cong tac ON/OFF, Target Level, Maximum Boost va Maximum Reduction.
 - Them bo can bang muc am luong theo envelope, gioi han muc tang/cat, smoothing va nguong bao ve doan tin hieu nho de tranh nang tieng on khi hat ngat cau.
 - Vocal Leveling chi chay khi BAT XU LY duoc bat, Bypass tat va cong tac Vocal Leveling ON. Khi tat module, gain rider tro ve unity theo smoothing.
@@ -252,3 +252,21 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The module is active only when global processing is enabled, Bypass is off, and Vocal Exciter is ON.
 - This is a subtle harmonic-excitation prototype, not a spectral enhancer or automatic de-esser. Excessive settings can emphasize hiss, S sounds and microphone noise; evaluate with the actual microphone and compare ON/OFF.
 - Build and listening tests on the user's computer are pending. Start around Amount 20-30% and Effect Mix 15-25%, then raise gradually only if the vocal needs more brightness.
+
+
+## 11. Trang thai cong viec - cap nhat sau khi nguoi dung thu Breath Control (28/11/2026)
+
+### Da co phan xu ly DSP trong ma nguon
+- Vocal Leveling: da co UI va DSP trong audio callback; can tiep tuc kiem tra thuc te neu chua co ket qua nghe thu day du.
+- Warmth & Body: da co UI va DSP; nguoi dung da nghe thu bang micro tai nghe va bao am thanh co cai thien.
+- Vocal Clarity: da co UI va DSP; nguoi dung xac nhan chuc nang hoat dong.
+- Breath Control: da co UI va DSP; nguoi dung xac nhan module hoat dong va nghe thay mot so thay doi nhe. Hieu qua giam hoi tho chua duoc danh gia day du.
+- Vocal Exciter: da co UI va DSP prototype; vua cap nhat len main. Chua build va chua nghe thu tren may nguoi dung.
+
+### Chua trien khai
+- Vocal Limiter: nut rieng da co tren giao dien chinh, nhung chua co module DSP thuc su. Khong duoc nham lan nut giao dien/khung module voi tinh nang da hoat dong. Day la module tiep theo can lam sau khi nguoi dung kiem tra Vocal Exciter hoac khi nguoi dung yeu cau tiep tuc.
+
+### Viec can lam tiep theo
+1. Nguoi dung Pull main, Rebuild Solution va kiem tra Vocal Exciter bang micro that; so sanh ON/OFF, bat dau Amount 20-30%, Effect Mix 15-25%.
+2. Sau khi co ket qua Exciter, trien khai Vocal Limiter: peak detection, adjustable ceiling/threshold, fast attack va controlled release, gain smoothing; tranh clipping ma khong lam giong bi bop/nghet.
+3. Kiem tra build va nghe thu tung module tren may dich. Chi danh dau hoan tat sau khi nguoi dung xac nhan.
