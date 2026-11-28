@@ -1632,7 +1632,7 @@ void MainComponent::applyBuiltInPreset(int presetId)
         }
     };
     static const int parameterCounts[8] = { 2, 5, 4, 2, 3, 3, 3, 3 };
-    static const char* const presetNames[14] =
+    static const juce::String presetNames[14] =
     {
         juce::String::fromUTF8("Giọng nam ấm áp"), juce::String::fromUTF8("Giọng nam dày"), juce::String::fromUTF8("Karaoke nhạc nhẹ"),
         juce::String::fromUTF8("Giọng mượt mà"), juce::String::fromUTF8("Giọng sáng rõ"), juce::String::fromUTF8("Giọng trầm ấm"),
@@ -1660,7 +1660,7 @@ void MainComponent::applyBuiltInPreset(int presetId)
     }
 
     masterVolumeSlider.setValue(0.0, juce::sendNotification);
-    statusLabel.setText(juce::String::fromUTF8("Đã nạp cấu hình: ") + juce::String(presetNames[presetIndex]),
+    statusLabel.setText(juce::String::fromUTF8("Đã nạp cấu hình: ") + presetNames[presetIndex],
                         juce::dontSendNotification);
 }
 
