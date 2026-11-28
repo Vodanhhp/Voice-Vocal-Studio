@@ -102,6 +102,14 @@ private:
     std::array<float, 5> lastAppliedEqGainDb {
         999.0f, 999.0f, 999.0f, 999.0f, 999.0f
     };
+
+    std::atomic<float> compressorThresholdDb { -18.0f };
+    std::atomic<float> compressorRatio { 3.0f };
+    std::atomic<float> compressorAttackMs { 10.0f };
+    std::atomic<float> compressorReleaseMs { 150.0f };
+    std::atomic<float> compressorGainReductionDb { 0.0f };
+    float compressorEnvelope { 0.0f };
+
     double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
