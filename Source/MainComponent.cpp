@@ -227,16 +227,19 @@ MainComponent::MainComponent()
     {
         const bool enabled = monitorToggle.getToggleState();
         monitorEnabled.store(enabled);
-        statusLabel.setText(enabled ? "Monitor truc tiep da bat" : "Monitor da tat - khong gui am thanh ra loa",
+        monitorToggle.setButtonText(enabled ? "THEO DÕI ÂM THANH: BẬT" : "THEO DÕI ÂM THANH: TẮT");
+        statusLabel.setText(enabled ? "Đã bật theo dõi âm thanh trực tiếp"
+                                    : "Đã tắt theo dõi - không gửi âm thanh ra loa",
                             juce::dontSendNotification);
     };
 
     processButton.onClick = [this]
     {
         processingEnabled.store(!processingEnabled.load());
+        processButton.setButtonText(processingEnabled.load() ? "DỪNG XỬ LÝ" : "BẬT XỬ LÝ");
         statusLabel.setText(processingEnabled.load()
-            ? "Monitor dang chay - cac module DSP se duoc noi o buoc tiep theo"
-            : "Monitor da tat", juce::dontSendNotification);
+            ? "Đã bật tầng xử lý tín hiệu; các hiệu ứng DSP sẽ được bổ sung tiếp theo"
+            : "Đã tắt xử lý tín hiệu", juce::dontSendNotification);
     };
     bypassButton.onClick = [this]
     {
