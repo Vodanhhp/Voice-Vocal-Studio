@@ -556,8 +556,8 @@ void MainComponent::resized()
     const int w = getWidth();
     const int h = getHeight();
     const int headerH = juce::jlimit(88, 108, h / 7);
-    titleLabel.setBounds(108, 12, juce::jmin(420, w * 0.36), 46);
-    subtitleLabel.setBounds(150, 56, juce::jmin(330, w * 0.28), 20);
+    titleLabel.setBounds(108, 12, juce::jmin(420, (int)(w * 0.36f)), 46);
+    subtitleLabel.setBounds(150, 56, juce::jmin(330, (int)(w * 0.28f)), 20);
     const int deviceX = (int)(w * 0.56f);
     deviceLabel.setBounds(deviceX, 10, (int)(w * 0.18f), 16);
     deviceSelector.setBounds(deviceX, 29, (int)(w * 0.20f), headerH - 38);
