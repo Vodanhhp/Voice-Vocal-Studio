@@ -461,6 +461,15 @@ MainComponent::ParameterControl* MainComponent::addParameter(
             else if (parameterIndex == 2)
                 voiceAir.store(value);
         }
+        else if (group == 5)
+        {
+            if (parameterIndex == 0)
+                noiseGateThresholdDb.store(value);
+            else if (parameterIndex == 1)
+                noiseGateHoldMs.store(value);
+            else if (parameterIndex == 2)
+                noiseGateReleaseMs.store(value);
+        }
     };
 
     groups[(size_t)group].push_back(std::move(control));
@@ -855,6 +864,9 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     for (auto& filter : voiceEnhanceFilters)
         filter.reset();
     lastVoiceEnhanceGainDb.fill(999.0f);
+    noiseGateEnvelope = 0.0f;
+    noiseGateGain = 1.0f;
+    noiseGateHoldCounter = 0;
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
@@ -889,6 +901,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool compressorActive = useGainStage && groupEnabled[2].load();
     const bool deEsserActive = useGainStage && groupEnabled[3].load();
     const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
+    const bool noiseGateActive = useGainStage && groupEnabled[5].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
@@ -988,10 +1001,52 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             filter.reset();
     }
 
+    const float gateThresholdDb = noiseGateThresholdDb.load();
+    const float gateHoldMs = noiseGateHoldMs.load();
+    const float gateReleaseMs = juce::jmax(10.0f, noiseGateReleaseMs.load());
+    const float gateDetectorAttack = std::exp(-1.0f / (sampleRate * 0.002f));
+    const float gateDetectorRelease = std::exp(-1.0f / (sampleRate * 0.030f));
+    const float gateOpenCoefficient = std::exp(-1.0f / (sampleRate * 0.005f));
+    const float gateCloseCoefficient = std::exp(-1.0f / (sampleRate * gateReleaseMs * 0.001f));
+    const int gateHoldSamples = juce::roundToInt(gateHoldMs * sampleRate * 0.001f);
+
+    if (!noiseGateActive)
+    {
+        noiseGateEnvelope = 0.0f;
+        noiseGateGain = 1.0f;
+        noiseGateHoldCounter = 0;
+    }
+
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
     {
         float sample = input[i] * channelGain;
+
+        if (noiseGateActive)
+        {
+            const float detectorLevel = std::abs(sample);
+            const float detectorCoefficient = detectorLevel > noiseGateEnvelope
+                ? gateDetectorAttack : gateDetectorRelease;
+            noiseGateEnvelope = detectorCoefficient * noiseGateEnvelope
+                              + (1.0f - detectorCoefficient) * detectorLevel;
+
+            const float envelopeDb = juce::Decibels::gainToDecibels(
+                noiseGateEnvelope, -100.0f);
+            if (envelopeDb >= gateThresholdDb)
+                noiseGateHoldCounter = gateHoldSamples;
+            else if (noiseGateHoldCounter > 0)
+                --noiseGateHoldCounter;
+
+            const float targetGain = (envelopeDb >= gateThresholdDb
+                                      || noiseGateHoldCounter > 0)
+                ? 1.0f : 0.001f;
+            const float gainCoefficient = targetGain > noiseGateGain
+                ? gateOpenCoefficient : gateCloseCoefficient;
+            noiseGateGain = gainCoefficient * noiseGateGain
+                          + (1.0f - gainCoefficient) * targetGain;
+            sample *= noiseGateGain;
+        }
+
         if (eqActive)
             for (auto& filter : eqFilters)
                 sample = filter.process(sample);
