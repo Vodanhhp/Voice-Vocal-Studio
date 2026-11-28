@@ -116,6 +116,8 @@ namespace
             (A + 1.0f) - (A - 1.0f) * cosine + beta,
             2.0f * ((A - 1.0f) - (A + 1.0f) * cosine),
             (A + 1.0f) - (A - 1.0f) * cosine - beta);
+    }
+
     BiquadCoefficients makeBandPassCoefficients(float sampleRate, float frequency, float q)
     {
         const float safeRate = juce::jmax(8000.0f, sampleRate);
@@ -128,8 +130,6 @@ namespace
         return normaliseBiquad(alpha, 0.0f, -alpha,
                                1.0f + alpha, -2.0f * cosine,
                                1.0f - alpha);
-    }
-
     }
 
 }
