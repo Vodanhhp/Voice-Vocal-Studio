@@ -67,6 +67,9 @@ private:
     PanelBounds calculatePanelBounds() const;
     void styleToggle(juce::ToggleButton& toggle);
     void showAudioSettings();
+    void applyBuiltInPreset(int presetId);
+    void savePresetToFile(const juce::File& file);
+    bool loadPresetFromFile(const juce::File& file);
 
     juce::Label titleLabel;
     juce::Label subtitleLabel;
@@ -92,6 +95,7 @@ private:
     juce::TextButton savePresetButton { "LUU CAI DAT" };
     juce::TextButton managePresetButton { "QUAN LY..." };
     juce::ComboBox presetSelector;
+    std::unique_ptr<juce::FileChooser> presetFileChooser;
     juce::Slider masterVolumeSlider;
     juce::Label masterVolumeLabel;
     juce::Label masterValueLabel;
