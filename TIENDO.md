@@ -261,7 +261,7 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Warmth & Body: da co UI va DSP; nguoi dung da nghe thu bang micro tai nghe va bao am thanh co cai thien.
 - Vocal Clarity: da co UI va DSP; nguoi dung xac nhan chuc nang hoat dong.
 - Breath Control: da co UI va DSP; nguoi dung xac nhan module hoat dong va nghe thay mot so thay doi nhe. Hieu qua giam hoi tho chua duoc danh gia day du.
-- Vocal Exciter: da co UI va DSP prototype; vua cap nhat len main. Chua build va chua nghe thu tren may nguoi dung.
+- Vocal Exciter: da viet UI va DSP prototype tren main, nhung chua build thanh cong va chua xac nhan hieu ung hoat dong tren may nguoi dung. Khong danh dau la module da hoat dong.
 
 ### Chua trien khai
 - Vocal Limiter: nut rieng da co tren giao dien chinh, nhung chua co module DSP thuc su. Khong duoc nham lan nut giao dien/khung module voi tinh nang da hoat dong. Day la module tiep theo can lam sau khi nguoi dung kiem tra Vocal Exciter hoac khi nguoi dung yeu cau tiep tuc.
