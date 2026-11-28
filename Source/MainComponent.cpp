@@ -330,6 +330,161 @@ private:
     juce::Slider strengthSlider, speedSlider;
     juce::ToggleButton enableToggle { "PITCH CORRECTION: OFF" };
 };
+
+class VocalLevelingModuleContent final : public juce::Component
+{
+public:
+    VocalLevelingModuleContent(std::atomic<bool>& enabled,
+                               std::atomic<float>& targetDb,
+                               std::atomic<float>& maxBoostDb,
+                               std::atomic<float>& maxCutDb)
+        : enabledParameter(enabled), targetParameter(targetDb),
+          boostParameter(maxBoostDb), cutParameter(maxCutDb)
+    {
+        title.setText("VOCAL LEVELING", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("Smooth vocal level control with limited gain riding.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        configureSlider(targetLabel, targetSlider, "TARGET LEVEL", -30.0, -12.0,
+                        targetParameter.load(), " dB",
+                        [this](double v) { targetParameter.store((float)v); });
+        configureSlider(boostLabel, boostSlider, "MAXIMUM BOOST", 0.0, 12.0,
+                        boostParameter.load(), " dB",
+                        [this](double v) { boostParameter.store((float)v); });
+        configureSlider(cutLabel, cutSlider, "MAXIMUM REDUCTION", 0.0, 12.0,
+                        cutParameter.load(), " dB",
+                        [this](double v) { cutParameter.store((float)v); });
+
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "VOCAL LEVELING: ON" : "VOCAL LEVELING: OFF");
+        enableToggle.setColour(juce::ToggleButton::textColourId,
+                               juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            const bool on = enableToggle.getToggleState();
+            enabledParameter.store(on);
+            enableToggle.setButtonText(on ? "VOCAL LEVELING: ON"
+                                          : "VOCAL LEVELING: OFF");
+        };
+        addAndMakeVisible(enableToggle);
+
+        note.setText("Low-level pauses are protected to avoid lifting room noise.",
+                     juce::dontSendNotification);
+        note.setFont(juce::FontOptions(12.0f));
+        note.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(note);
+        setSize(620, 470);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(28, 164, 255).withAlpha(0.16f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(34));
+        area.removeFromTop(18);
+        targetLabel.setBounds(area.removeFromTop(22));
+        targetSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(10);
+        boostLabel.setBounds(area.removeFromTop(22));
+        boostSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(10);
+        cutLabel.setBounds(area.removeFromTop(22));
+        cutSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(16);
+        enableToggle.setBounds(area.removeFromTop(34));
+        note.setBounds(area.removeFromTop(34));
+    }
+
+private:
+    void configureSlider(juce::Label& label, juce::Slider& slider,
+                         const juce::String& caption, double minimum,
+                         double maximum, double initial, const juce::String& suffix,
+                         std::function<void(double)> onChange)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 72, 26);
+        slider.setRange(minimum, maximum, 0.5);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setTextValueSuffix(suffix);
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(28, 164, 255));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
+        slider.onValueChange = [this, &slider, onChange]
+        {
+            onChange(slider.getValue());
+        };
+        addAndMakeVisible(slider);
+    }
+
+    std::atomic<bool>& enabledParameter;
+    std::atomic<float>& targetParameter;
+    std::atomic<float>& boostParameter;
+    std::atomic<float>& cutParameter;
+    juce::Label title, description, targetLabel, boostLabel, cutLabel, note;
+    juce::Slider targetSlider, boostSlider, cutSlider;
+    juce::ToggleButton enableToggle { "VOCAL LEVELING: OFF" };
+};
+
+class PlannedVocalModuleContent final : public juce::Component
+{
+public:
+    explicit PlannedVocalModuleContent(const juce::String& moduleName)
+    {
+        title.setText(moduleName, juce::dontSendNotification);
+        title.setFont(juce::FontOptions(24.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("This module has its own window. Audio processing and controls are not connected yet.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        description.setJustificationType(juce::Justification::centredLeft);
+        addAndMakeVisible(description);
+
+        setSize(560, 250);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 12.0f, 1.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(48));
+        area.removeFromTop(18);
+        description.setBounds(area.removeFromTop(70));
+    }
+
+private:
+    juce::Label title, description;
+};
 }
 
 void StudioKnobLookAndFeel::drawRotarySlider(
@@ -522,6 +677,12 @@ MainComponent::MainComponent()
     styleTextButton(resetButton, juce::Colour(49, 58, 71));
     styleTextButton(settingsButton, juce::Colour(49, 58, 71));
     styleTextButton(pitchCorrectionButton, juce::Colour(18, 91, 145));
+    styleTextButton(vocalLevelingButton, juce::Colour(18, 105, 145));
+    styleTextButton(vocalLimiterButton, juce::Colour(39, 75, 112));
+    styleTextButton(warmthBodyButton, juce::Colour(105, 67, 39));
+    styleTextButton(vocalClarityButton, juce::Colour(39, 92, 91));
+    styleTextButton(breathControlButton, juce::Colour(64, 76, 112));
+    styleTextButton(vocalExciterButton, juce::Colour(88, 63, 112));
     addAndMakeVisible(savePresetButton);
     addAndMakeVisible(managePresetButton);
     addAndMakeVisible(processButton);
@@ -529,7 +690,19 @@ MainComponent::MainComponent()
     addAndMakeVisible(resetButton);
     addAndMakeVisible(settingsButton);
     addAndMakeVisible(pitchCorrectionButton);
+    addAndMakeVisible(vocalLevelingButton);
+    addAndMakeVisible(vocalLimiterButton);
+    addAndMakeVisible(warmthBodyButton);
+    addAndMakeVisible(vocalClarityButton);
+    addAndMakeVisible(breathControlButton);
+    addAndMakeVisible(vocalExciterButton);
     pitchCorrectionButton.onClick = [this] { showPitchCorrectionModule(); };
+    vocalLevelingButton.onClick = [this] { showVocalLevelingModule(); };
+    vocalLimiterButton.onClick = [this] { showPlannedVocalModule("VOCAL LIMITER"); };
+    warmthBodyButton.onClick = [this] { showPlannedVocalModule("WARMTH & BODY"); };
+    vocalClarityButton.onClick = [this] { showPlannedVocalModule("VOCAL CLARITY"); };
+    breathControlButton.onClick = [this] { showPlannedVocalModule("BREATH CONTROL"); };
+    vocalExciterButton.onClick = [this] { showPlannedVocalModule("VOCAL EXCITER"); };
 
     statusLabel.setText("San sang - cac bo xu ly dang o che do giao dien", juce::dontSendNotification);
     statusLabel.setFont(juce::FontOptions(10.5f));
@@ -936,9 +1109,10 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
     const int gap = juce::jlimit(8, 12, w / 140);
     const int headerBottom = juce::jlimit(88, 108, h / 7);
     const int footerHeight = juce::jlimit(76, 92, h / 9);
-    const int availablePanelsHeight = h - headerBottom - footerHeight - margin - gap;
+    const int moduleRowHeight = 48;
+    const int availablePanelsHeight = h - headerBottom - footerHeight - moduleRowHeight - margin - gap;
     const int bottomHeight = juce::jlimit(142, 205, (int)(availablePanelsHeight * 0.36f));
-    const int bottomY = h - footerHeight - bottomHeight - margin;
+    const int bottomY = h - footerHeight - moduleRowHeight - bottomHeight - margin;
     const int topHeight = juce::jmax(190, bottomY - headerBottom - gap);
     const int leftWidth = juce::jlimit(205, 270, (int)(w * 0.205f));
     const int rightWidth = juce::jlimit(270, 340, (int)(w * 0.255f));
@@ -1195,7 +1369,6 @@ void MainComponent::resized()
     titleLabel.setBounds(108, 12, juce::jmin(420, (int)(w * 0.36f)), 46);
     subtitleLabel.setBounds(150, 56, juce::jmin(330, (int)(w * 0.28f)), 20);
     const int deviceX = (int)(w * 0.56f);
-    pitchCorrectionButton.setBounds(deviceX - 178, 36, 166, 34);
     deviceLabel.setBounds(deviceX, 10, (int)(w * 0.18f), 16);
     deviceSelector.setBounds(deviceX, 29, (int)(w * 0.20f), headerH - 38);
     connectionLabel.setBounds((int)(w * 0.79f), 28, (int)(w * 0.19f), 38);
@@ -1281,6 +1454,18 @@ void MainComponent::resized()
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
     const int footerTop = getHeight() - juce::jlimit(76, 92, getHeight() / 9);
+    const int moduleRowTop = footerTop - 48;
+    const int moduleMargin = 14;
+    const int moduleGap = 8;
+    const int moduleButtonWidth = (w - moduleMargin * 2 - moduleGap * 6) / 7;
+    juce::TextButton* moduleButtons[] {
+        &pitchCorrectionButton, &vocalLevelingButton, &vocalLimiterButton,
+        &warmthBodyButton, &vocalClarityButton, &breathControlButton, &vocalExciterButton
+    };
+    for (int i = 0; i < 7; ++i)
+        moduleButtons[i]->setBounds(moduleMargin + i * (moduleButtonWidth + moduleGap),
+                                    moduleRowTop + 7, moduleButtonWidth, 34);
+
     const int footerY = footerTop + 12;
     const int leftX = 18;
     presetSelector.setBounds(leftX, footerY, 150, 34);
@@ -1311,6 +1496,8 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     pitchTargetMidi.store(-1);
     pitchDeviationCents.store(0.0f);
     pitchShifter.reset();
+    vocalLevelEnvelope = 0.0f;
+    vocalLevelGain = 1.0f;
     for (auto& filter : eqFilters)
         filter.reset();
     lastAppliedEqGainDb.fill(999.0f);
@@ -1471,6 +1658,18 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const float pitchTargetRatio = std::pow(2.0f, -appliedCorrectionCents / 1200.0f);
     const float pitchSmoothingMs = 125.0f
         - juce::jlimit(5.0f, 100.0f, pitchCorrectionSpeed.load()) * 1.10f;
+    const bool vocalLevelingActive = useGainStage && vocalLevelingEnabled.load();
+    const float vocalTargetLinear = juce::Decibels::decibelsToGain(
+        juce::jlimit(-30.0f, -12.0f, vocalLevelTargetDb.load()));
+    const float vocalMaximumBoost = juce::Decibels::decibelsToGain(
+        juce::jlimit(0.0f, 12.0f, vocalLevelMaxBoostDb.load()));
+    const float vocalMinimumGain = juce::Decibels::decibelsToGain(
+        -juce::jlimit(0.0f, 12.0f, vocalLevelMaxCutDb.load()));
+    const float vocalEnvelopeAttack = std::exp(-1.0f / (sampleRate * 0.030f));
+    const float vocalEnvelopeRelease = std::exp(-1.0f / (sampleRate * 0.250f));
+    const float vocalGainUp = std::exp(-1.0f / (sampleRate * 0.120f));
+    const float vocalGainDown = std::exp(-1.0f / (sampleRate * 0.350f));
+    const float vocalGainReturn = std::exp(-1.0f / (sampleRate * 0.080f));
 
     if (eqActive)
     {
@@ -1728,6 +1927,33 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             for (auto& filter : toneFilters)
                 sample = filter.process(sample);
 
+        if (vocalLevelingActive)
+        {
+            const float level = std::abs(sample);
+            const float envelopeCoefficient = level > vocalLevelEnvelope
+                ? vocalEnvelopeAttack : vocalEnvelopeRelease;
+            vocalLevelEnvelope = envelopeCoefficient * vocalLevelEnvelope
+                               + (1.0f - envelopeCoefficient) * level;
+
+            const float envelopeDb = juce::Decibels::gainToDecibels(
+                vocalLevelEnvelope, -100.0f);
+            float targetGain = 1.0f;
+            if (envelopeDb > -48.0f)
+                targetGain = vocalTargetLinear / juce::jmax(1.0e-5f, vocalLevelEnvelope);
+
+            targetGain = juce::jlimit(vocalMinimumGain, vocalMaximumBoost, targetGain);
+            const float gainCoefficient = targetGain > vocalLevelGain
+                ? vocalGainUp : vocalGainDown;
+            vocalLevelGain = gainCoefficient * vocalLevelGain
+                           + (1.0f - gainCoefficient) * targetGain;
+        }
+        else
+        {
+            vocalLevelGain = vocalGainReturn * vocalLevelGain
+                           + (1.0f - vocalGainReturn);
+        }
+
+        sample *= vocalLevelGain;
         left[i] = sample * masterGain;
     }
 
@@ -1787,6 +2013,32 @@ void MainComponent::showPitchCorrectionModule()
         pitchDetectedMidi, pitchTargetMidi, pitchDeviationCents,
         pitchCorrectionEnabled));
     options.dialogTitle = "Pitch Correction Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+void MainComponent::showVocalLevelingModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new VocalLevelingModuleContent(
+        vocalLevelingEnabled, vocalLevelTargetDb,
+        vocalLevelMaxBoostDb, vocalLevelMaxCutDb));
+    options.dialogTitle = "Vocal Leveling Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+void MainComponent::showPlannedVocalModule(const juce::String& moduleName)
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new PlannedVocalModuleContent(moduleName));
+    options.dialogTitle = moduleName;
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
