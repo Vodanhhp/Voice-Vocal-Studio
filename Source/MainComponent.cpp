@@ -304,6 +304,7 @@ MainComponent::MainComponent()
     {
         applyBuiltInPreset(presetSelector.getSelectedId());
     };
+    applyBuiltInPreset(1);
     presetSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(11, 17, 25));
     presetSelector.setColour(juce::ComboBox::textColourId, bright);
     presetSelector.setColour(juce::ComboBox::outlineColourId, edge);
