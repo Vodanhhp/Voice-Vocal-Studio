@@ -667,6 +667,118 @@ private:
     juce::ToggleButton enableToggle { "VOCAL CLARITY: OFF" };
 };
 
+class BreathControlModuleContent final : public juce::Component
+{
+public:
+    BreathControlModuleContent(std::atomic<bool>& enabled,
+                               std::atomic<float>& sensitivity,
+                               std::atomic<float>& reduction)
+        : enabledParameter(enabled), sensitivityParameter(sensitivity),
+          reductionParameter(reduction)
+    {
+        title.setText("BREATH CONTROL", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("Reduce distracting breath noise while keeping natural vocal detail.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        configureSlider(sensitivityLabel, sensitivitySlider, "SENSITIVITY",
+                        sensitivityParameter.load(),
+                        [this](double value) { sensitivityParameter.store((float)value); });
+        configureSlider(reductionLabel, reductionSlider, "BREATH REDUCTION",
+                        reductionParameter.load(),
+                        [this](double value) { reductionParameter.store((float)value); });
+
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        updateToggleText();
+        enableToggle.setColour(juce::ToggleButton::textColourId,
+                               juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            enabledParameter.store(enableToggle.getToggleState());
+            updateToggleText();
+        };
+        addAndMakeVisible(enableToggle);
+
+        note.setText("Start with low reduction. Excessive settings may soften quiet consonants and vocal air.",
+                     juce::dontSendNotification);
+        note.setFont(juce::FontOptions(12.0f));
+        note.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(note);
+        setSize(620, 390);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(125, 145, 205).withAlpha(0.16f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(42));
+        area.removeFromTop(14);
+        sensitivityLabel.setBounds(area.removeFromTop(22));
+        sensitivitySlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(12);
+        reductionLabel.setBounds(area.removeFromTop(22));
+        reductionSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(14);
+        enableToggle.setBounds(area.removeFromTop(34));
+        note.setBounds(area.removeFromTop(42));
+    }
+
+private:
+    void configureSlider(juce::Label& label, juce::Slider& slider,
+                         const juce::String& caption, double initial,
+                         std::function<void(double)> onChange)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 72, 26);
+        slider.setRange(0.0, 100.0, 1.0);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setTextValueSuffix(" %");
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(125, 145, 205));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
+        auto* sliderPointer = &slider;
+        slider.onValueChange = [sliderPointer, onChange]
+        {
+            onChange(sliderPointer->getValue());
+        };
+        addAndMakeVisible(slider);
+    }
+
+    void updateToggleText()
+    {
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "BREATH CONTROL: ON" : "BREATH CONTROL: OFF");
+    }
+
+    std::atomic<bool>& enabledParameter;
+    std::atomic<float>& sensitivityParameter;
+    std::atomic<float>& reductionParameter;
+    juce::Label title, description, sensitivityLabel, reductionLabel, note;
+    juce::Slider sensitivitySlider, reductionSlider;
+    juce::ToggleButton enableToggle { "BREATH CONTROL: OFF" };
+};
+
+
 class PlannedVocalModuleContent final : public juce::Component
 {
 public:
@@ -921,7 +1033,7 @@ MainComponent::MainComponent()
     vocalLimiterButton.onClick = [this] { showPlannedVocalModule("VOCAL LIMITER"); };
     warmthBodyButton.onClick = [this] { showWarmthBodyModule(); };
     vocalClarityButton.onClick = [this] { showVocalClarityModule(); };
-    breathControlButton.onClick = [this] { showPlannedVocalModule("BREATH CONTROL"); };
+    breathControlButton.onClick = [this] { showBreathControlModule(); };
     vocalExciterButton.onClick = [this] { showPlannedVocalModule("VOCAL EXCITER"); };
 
     statusLabel.setText("San sang - cac bo xu ly dang o che do giao dien", juce::dontSendNotification);
@@ -1736,6 +1848,14 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     lastBodyGainDb = 999.0f;
     clarityFilter.reset();
     clarityAirFilter.reset();
+    const auto breathCoefficients = makeBandPassCoefficients((float)currentSampleRate, 5500.0f, 0.70f);
+    breathDetectorFilter.setCoefficients(breathCoefficients[0], breathCoefficients[1],
+        breathCoefficients[2], breathCoefficients[3], breathCoefficients[4]);
+    breathBandFilter.setCoefficients(breathCoefficients[0], breathCoefficients[1],
+        breathCoefficients[2], breathCoefficients[3], breathCoefficients[4]);
+    breathDetectorEnvelope = 0.0f;
+    breathVoiceEnvelope = 0.0f;
+    breathReductionGain = 1.0f;
     lastClarityGainDb = 999.0f;
     lastClarityAirGainDb = 999.0f;
     noiseGateEnvelope = 0.0f;
@@ -1869,6 +1989,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
     const bool warmthBodyActive = useGainStage && warmthBodyEnabled.load();
     const bool vocalClarityActive = useGainStage && vocalClarityEnabled.load();
+    const bool breathControlActive = useGainStage && breathControlEnabled.load();
     const bool noiseGateActive = useGainStage && groupEnabled[5].load();
     const bool toneActive = useGainStage && groupEnabled[6].load();
     const bool reverbActive = useGainStage && groupEnabled[7].load();
@@ -2044,6 +2165,25 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         clarityAirFilter.reset();
     }
 
+    const float breathSensitivityValue = juce::jlimit(0.0f, 100.0f, breathSensitivity.load());
+    const float breathReductionValue = juce::jlimit(0.0f, 100.0f, breathReduction.load());
+    const float breathThresholdDb = -38.0f - breathSensitivityValue * 0.14f;
+    const float breathMaximumReductionDb = breathReductionValue * 0.084f;
+    const float breathDetectorAttack = std::exp(-1.0f / (sampleRate * 0.004f));
+    const float breathDetectorRelease = std::exp(-1.0f / (sampleRate * 0.090f));
+    const float breathVoiceAttack = std::exp(-1.0f / (sampleRate * 0.012f));
+    const float breathVoiceRelease = std::exp(-1.0f / (sampleRate * 0.100f));
+    const float breathGainAttack = std::exp(-1.0f / (sampleRate * 0.008f));
+    const float breathGainRelease = std::exp(-1.0f / (sampleRate * 0.140f));
+    if (!breathControlActive)
+    {
+        breathDetectorEnvelope = 0.0f;
+        breathVoiceEnvelope = 0.0f;
+        breathReductionGain = 1.0f;
+        breathDetectorFilter.reset();
+        breathBandFilter.reset();
+    }
+
     const float gateThresholdDb = noiseGateThresholdDb.load();
     const float gateHoldMs = noiseGateHoldMs.load();
     const float gateReleaseMs = juce::jmax(10.0f, noiseGateReleaseMs.load());
@@ -2199,6 +2339,40 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             }
         }
 
+        if (breathControlActive)
+        {
+            const float detectorSample = breathDetectorFilter.process(sample);
+            const float breathBand = breathBandFilter.process(sample);
+            const float detectorLevel = std::abs(detectorSample);
+            const float detectorCoefficient = detectorLevel > breathDetectorEnvelope
+                ? breathDetectorAttack : breathDetectorRelease;
+            breathDetectorEnvelope = detectorCoefficient * breathDetectorEnvelope
+                                   + (1.0f - detectorCoefficient) * detectorLevel;
+
+            const float voiceLevel = std::abs(sample);
+            const float voiceCoefficient = voiceLevel > breathVoiceEnvelope
+                ? breathVoiceAttack : breathVoiceRelease;
+            breathVoiceEnvelope = voiceCoefficient * breathVoiceEnvelope
+                                + (1.0f - voiceCoefficient) * voiceLevel;
+
+            const float breathLevelDb = juce::Decibels::gainToDecibels(
+                breathDetectorEnvelope, -100.0f);
+            const float voiceLevelDb = juce::Decibels::gainToDecibels(
+                breathVoiceEnvelope, -100.0f);
+            const bool likelyBreath = breathLevelDb > breathThresholdDb
+                                   && voiceLevelDb < -25.0f;
+            const float excess = likelyBreath
+                ? juce::jlimit(0.0f, 1.0f, (breathLevelDb - breathThresholdDb) / 18.0f)
+                : 0.0f;
+            const float targetReductionDb = breathMaximumReductionDb * excess;
+            const float targetGain = juce::Decibels::decibelsToGain(-targetReductionDb);
+            const float gainCoefficient = targetGain < breathReductionGain
+                ? breathGainAttack : breathGainRelease;
+            breathReductionGain = gainCoefficient * breathReductionGain
+                                + (1.0f - gainCoefficient) * targetGain;
+            sample -= breathBand * (1.0f - breathReductionGain);
+        }
+
         if (voiceEnhanceActive)
             for (auto& filter : voiceEnhanceFilters)
                 sample = filter.process(sample);
@@ -2345,6 +2519,19 @@ void MainComponent::showVocalClarityModule()
     options.content.setOwned(new VocalClarityModuleContent(
         vocalClarityEnabled, clarityAmount, clarityAir));
     options.dialogTitle = "Vocal Clarity Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+void MainComponent::showBreathControlModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new BreathControlModuleContent(
+        breathControlEnabled, breathSensitivity, breathReduction));
+    options.dialogTitle = "Breath Control Module";
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
