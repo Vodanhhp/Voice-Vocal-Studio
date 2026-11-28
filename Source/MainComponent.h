@@ -42,12 +42,14 @@ private:
                                    const juce::String& suffix, int group);
     PanelBounds calculatePanelBounds() const;
     void styleToggle(juce::ToggleButton& toggle);
+    void showAudioSettings();
 
     juce::Label titleLabel;
     juce::Label subtitleLabel;
     juce::Label deviceLabel;
     juce::ComboBox deviceSelector;
     juce::Label connectionLabel;
+    juce::String lastAudioDeviceName;
     juce::Label statusLabel;
 
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
