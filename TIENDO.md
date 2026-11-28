@@ -175,7 +175,7 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 ### Cap nhat 28/11/2026 - Hang nut vocal va Vocal Leveling
 - Giu nguyen 8 nhom xu ly chinh tren giao dien; khong di chuyen cac panel Dau vao/Dau ra, EQ, Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control va Reverb.
 - Dua Pitch Correction xuong hang nut rieng o phia duoi, cung cac nut Vocal Leveling, Vocal Limiter, Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter.
-- Moi nut mo mot cua so rieng. Warmth & Body, Vocal Clarity, Breath Control va Vocal Exciter da duoc them UI va DSP prototype; Vocal Limiter van chua duoc trien khai DSP. Khong coi module nao la hoan tat san pham truoc khi build va nghe thu tren may dich.
+- Moi nut mo mot cua so rieng. Warmth & Body, Vocal Clarity, Breath Control, Vocal Exciter va Vocal Limiter da co UI va DSP prototype. Vocal Limiter moi duoc cap nhat, chua build va chua nghe thu tren may dich.
 - Them cua so Vocal Leveling voi cong tac ON/OFF, Target Level, Maximum Boost va Maximum Reduction.
 - Them bo can bang muc am luong theo envelope, gioi han muc tang/cat, smoothing va nguong bao ve doan tin hieu nho de tranh nang tieng on khi hat ngat cau.
 - Vocal Leveling chi chay khi BAT XU LY duoc bat, Bypass tat va cong tac Vocal Leveling ON. Khi tat module, gain rider tro ve unity theo smoothing.
@@ -264,9 +264,19 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Vocal Exciter: da viet UI va DSP prototype tren main, nhung chua build thanh cong va chua xac nhan hieu ung hoat dong tren may nguoi dung. Khong danh dau la module da hoat dong.
 
 ### Chua trien khai
-- Vocal Limiter: nut rieng da co tren giao dien chinh, nhung chua co module DSP thuc su. Khong duoc nham lan nut giao dien/khung module voi tinh nang da hoat dong. Day la module tiep theo can lam sau khi nguoi dung kiem tra Vocal Exciter hoac khi nguoi dung yeu cau tiep tuc.
+- Vocal Limiter: da co UI va DSP sample-peak limiter trong ma nguon; chua build va chua duoc nguoi dung nghe thu. Khong danh dau la hoat dong cho den khi nguoi dung xac nhan.
 
 ### Viec can lam tiep theo
 1. Nguoi dung Pull main, Rebuild Solution va kiem tra Vocal Exciter bang micro that; so sanh ON/OFF, bat dau Amount 20-30%, Effect Mix 15-25%.
-2. Sau khi co ket qua Exciter, trien khai Vocal Limiter: peak detection, adjustable ceiling/threshold, fast attack va controlled release, gain smoothing; tranh clipping ma khong lam giong bi bop/nghet.
+2. Rebuild va nghe thu Vocal Limiter tren may nguoi dung: bat/tat de so sanh cac doan hat nho va hat lon, kiem tra clipping, pumping va cam giac giong bi bop/nghet.
 3. Kiem tra build va nghe thu tung module tren may dich. Chi danh dau hoan tat sau khi nguoi dung xac nhan.
+
+
+### Implementation update 28/11/2026 - Vocal Limiter (DSP prototype)
+- Replaced the Vocal Limiter placeholder with a dedicated module window and connected ON/OFF, Output Ceiling and Release Time controls to atomic parameters.
+- Default settings: ceiling -1.0 dBFS and release 80 ms. UI ranges: ceiling -6.0 to -0.1 dBFS; release 20 to 300 ms.
+- Added a final mono sample-peak gain limiter after the processing chain, Reverb and Master Volume, before duplicating the signal to output channels.
+- Gain reduction is applied immediately when a sample exceeds the ceiling; gain recovery follows a smoothed exponential release. The gain state is initialized in prepareToPlay and no dynamic allocation or blocking lock was added to the audio callback.
+- The module only limits while global processing is enabled, Bypass is off and Vocal Limiter is ON. When switched off, any existing gain reduction recovers smoothly toward unity.
+- This is a sample-peak limiter without look-ahead or true-peak oversampling. It is an initial peak-control stage, not a guaranteed inter-sample true-peak ceiling or mastering brickwall limiter.
+- Build and microphone listening tests on the user's computer are pending. Start at -1.0 dBFS / 80 ms; compare ON/OFF on loud syllables and watch for pumping, transient distortion or an unnaturally squeezed vocal.
