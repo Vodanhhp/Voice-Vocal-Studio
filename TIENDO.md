@@ -411,3 +411,12 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Điều chỉnh giới hạn kích thước núm EQ và các nhóm điều khiển nhỏ để tránh núm bị co quá mức khi panel thiếu chiều cao.
 - Giữ nguyên kích thước cửa sổ 1280 × 800, các điều khiển, tham số, preset, DSP/audio callback, routing và hành vi chức năng.
 - Đây là thay đổi bố cục giao diện trên mã nguồn; chưa có kết quả build/runtime. Người dùng cần Fetch origin → Pull origin → Rebuild Solution và gửi ảnh giao diện sau khi chạy để kiểm tra căn chỉnh thực tế.
+
+
+## 28/11/2026 – Đợt 3: chống chồng lấn và đồng bộ kích thước núm vặn
+- Sửa nguyên nhân trực tiếp gây đè núm: trước đây layoutSmallGroup ép chiều cao slider tối thiểu 58 px dù ô điều khiển thực tế có thể thấp hơn, khiến slider tràn sang hàng kế tiếp.
+- Chuyển mỗi điều khiển trong các panel nhỏ sang ô bố trí riêng; kích thước núm vuông, tự co theo chiều rộng/cao thực tế của ô, bao gồm cả vùng hiển thị giá trị.
+- Căn lại nhóm Input/Output và 5 núm EQ để slider không vượt khỏi vùng được cấp.
+- Tăng tỷ lệ chiều cao panel Compressor lên 70% vùng cột phải để có thêm chỗ cho bố cục 2 × 2; De-Esser nhận phần còn lại.
+- Không thay đổi DSP, tham số, preset, routing hoặc kích thước cửa sổ.
+- Chưa có kết quả build/runtime; cần người dùng pull và kiểm tra giao diện thực tế.
