@@ -319,3 +319,10 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Khong thay doi DSP, bo cuc giao dien hoac he thong Input/Output trong dot nay.
 - VoiceVocalStudio.jucer da co compiler flag /utf-8 cho Visual Studio 2026; can Rebuild va kiem tra hien thi chu co dau tren may nguoi dung.
 - Chua co ket qua build/test sau cap nhat.
+
+
+## Cập nhật 28/11/2026 – Sửa mã hóa chuỗi tiếng Việt
+
+- Chuyển toàn bộ ký tự tiếng Việt nằm trong chuỗi C++ ở `Source/MainComponent.cpp` và `Source/MainComponent.h` sang các byte UTF-8 dạng escape bát phân (`\\ooo`) để tránh trình biên dịch diễn giải sai bảng mã nguồn.
+- Giữ nguyên nội dung hiển thị, tên module, giao diện và xử lý âm thanh; không thay đổi Input/Output routing.
+- Đã kiểm tra lại: không còn ký tự ngoài ASCII bên trong các chuỗi ký tự C++ ở hai tệp trên. Cần người dùng Rebuild và kiểm tra trực tiếp trên Windows để xác nhận hiển thị.
