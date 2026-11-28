@@ -360,3 +360,12 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Đã sửa kiểu mảng thành `static const juce::String presetNames[14]` và dùng trực tiếp `presetNames[presetIndex]` khi ghép nội dung trạng thái.
 - Chỉ sửa kiểu dữ liệu danh sách tên preset; không thay đổi giá trị preset, DSP, giao diện hoặc xử lý âm thanh.
 - Đã cập nhật trên nhánh `main`; cần người dùng đồng bộ, Rebuild Solution và báo lại kết quả. Chưa xác nhận build thành công cho đến khi người dùng kiểm tra.
+
+
+## 28/11/2026 – Xóa dấu Git conflict còn sót trong MainComponent.cpp
+- Người dùng báo lỗi biên dịch: `syntax error: '<<'` tại dòng 1219.
+- Kiểm tra mã nguồn trên nhánh `main` xác định còn sót ba dòng đánh dấu xung đột Git: `<<<<<<< HEAD`, `=======`, và `>>>>>>> 04b206659c481a305ceb2d60103ac8e76f88152f` ngay trước phần cấu hình `deviceLabel`.
+- Đã xóa đúng ba dòng đánh dấu xung đột; giữ nguyên toàn bộ mã giao diện xung quanh.
+- Đã cập nhật và tải lại kiểm tra Source/MainComponent.cpp trên `main`; phần mã quanh vị trí lỗi hiện liền mạch.
+- Không thay đổi DSP, xử lý âm thanh, bố cục hoặc hành vi điều khiển.
+- Người dùng cần Fetch origin → Pull origin → Rebuild Solution. Chưa xác nhận build thành công cho đến khi người dùng kiểm tra.
