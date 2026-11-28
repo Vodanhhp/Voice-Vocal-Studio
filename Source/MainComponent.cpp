@@ -1246,8 +1246,10 @@ void StudioKnobLookAndFeel::drawRotarySlider(
     g.drawEllipse(cx - radius * 0.70f, cy - radius * 0.70f,
                   radius * 1.40f, radius * 1.40f, 2.2f);
     g.setColour(juce::Colour(255, 255, 255).withAlpha(0.24f));
-    g.drawArc(cx - radius * 0.59f, cy - radius * 0.59f,
-              radius * 1.18f, radius * 1.18f, 3.65f, 5.75f, true, 1.4f);
+    juce::Path highlightArc;
+    highlightArc.addCentredArc(cx, cy, radius * 0.59f, radius * 0.59f,
+                               0.0f, 3.65f, 5.75f, true);
+    g.strokePath(highlightArc, juce::PathStrokeType(1.4f));
 
     // Pointer and centre cap.
     g.setColour(juce::Colour(18, 29, 41));
