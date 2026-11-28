@@ -301,3 +301,13 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The new values are conservative starting points, not studio-certified settings. Actual results depend on microphone, distance, voice range, room acoustics and external mixer processing. The user must audition and fine-tune each profile.
 - The preset system currently applies the 8 core groups. Dedicated modules such as Vocal Leveling, Warmth & Body, Vocal Clarity, Breath Control, Vocal Exciter, Vocal Smooth and Vocal Limiter are not yet stored/applied as part of built-in preset profiles.
 - Build and listening tests for all 14 presets are pending.
+
+
+### Implementation update 28/11/2026 - Windows audio device selection (stage 1)
+- Enabled the main-window playback device combo and connected it to JUCE AudioDeviceManager.
+- The combo enumerates playback endpoints exposed by the currently selected Windows/JUCE audio backend and switches the active output device when the user selects one.
+- The Audio Settings window continues to expose recording inputs and playback outputs through AudioDeviceSelectorComponent.
+- Added guidance in Audio Settings to look for Windows recording endpoints named Stereo Mix or What U Hear when the installed sound driver provides them.
+- Stereo Mix / What U Hear are recording inputs, not playback outputs. Their presence and names depend on the Windows audio backend and sound-card driver; they may be absent or disabled.
+- This stage does not yet create a second simultaneous output, route processed audio into a recording endpoint, or guarantee that Stereo Mix captures the processed microphone signal.
+- User build and hardware test are pending. Verify the playback list, switch between two available outputs if possible, and inspect the Recording device list in Audio Settings for Stereo Mix / What U Hear.
