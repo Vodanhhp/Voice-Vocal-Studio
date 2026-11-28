@@ -75,7 +75,7 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Them cac lua chon: Giong muot ma, Giong sang ro, Giong tram am, Giong san khau, Giong truyen cam, Karaoke tu nhien.
 - Moi lua chon nap dong bo cac thong so EQ, Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control va Reverb; dong thoi cap nhat cac nut dieu khien tren giao dien.
 - Cac gia tri moi la diem khoi dau de thu nghiem, can nghe va hieu chinh tren micro/soundcard thuc te.
-- Chua xac nhan build va kiem thu tren may nguoi dung.
+- Nguoi dung da Rebuild va kiem tra ca 9 preset; cac nut dieu khien cap nhat dong bo dung nhu mong doi.
 
 
 ## 9. Project checkpoint 28/11/2026 - Advanced vocal modules
@@ -96,9 +96,9 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Five-band parametric EQ and its calculated response curve are implemented.
 - Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control and Reverb DSP are implemented.
 - Three original built-in presets and custom preset save/load are implemented.
-- The built-in preset list has recently been expanded to nine voice choices. This latest expansion has NOT yet been confirmed by the user's local build and listening tests.
+- The built-in preset list has nine voice choices. The user has rebuilt and tested all nine; selecting each preset updates the corresponding controls as expected.
 - The user has tested the earlier DSP blocks individually and confirmed audible operation for EQ, Compressor, Voice Enhance, Noise Gate, Tone Control and Reverb. De-Esser was accepted provisionally and may need further listening tests.
-- Do not claim the nine-preset expansion is tested until the user reports a successful build and test.
+- Nine-preset expansion is confirmed tested by the user on 28/11/2026.
 
 ### Planned advanced modules and implementation order
 1. Pitch Correction / Auto-Tune:
@@ -136,3 +136,13 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - [ ] Design a reusable module-window pattern and agree how module buttons open/close their dedicated controls.
 - [ ] Evaluate pitch-correction DSP options and their latency/licensing before implementation.
 - [ ] Implement and test the first advanced module as a separate, isolated unit.
+
+
+### Implementation update 28/11/2026 - First module window scaffold
+- Added a dedicated PITCH CORRECTION button to the main studio header.
+- Clicking the button opens a separate, resizable Pitch Correction module window.
+- Added the planned key, scale, correction amount and correction speed controls to establish the module layout.
+- These controls are deliberately disabled and clearly marked as not connected to DSP yet; this is UI scaffolding only, not pitch correction processing.
+- The module window is implemented as a separate content component so the same window pattern can be reused for future vocal modules.
+- User build/test is pending.
+- Next: user verifies the new window opens and closes correctly; then evaluate pitch-detection/correction DSP options and implement the audio processing separately.
