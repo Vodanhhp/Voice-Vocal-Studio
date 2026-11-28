@@ -77,3 +77,62 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Cac gia tri moi la diem khoi dau de thu nghiem, can nghe va hieu chinh tren micro/soundcard thuc te.
 - Chua xac nhan build va kiem thu tren may nguoi dung.
 
+
+## 9. Project checkpoint 28/11/2026 - Advanced vocal modules
+
+### Confirmed product/UI direction
+- The primary product goal is to improve singing voice quality and provide convincing, controllable voice-character changes.
+- Advanced effects will be implemented as separate modules.
+- Each module will have its own dedicated window or panel, opened only when the user clicks that module's button.
+- Keep the main studio screen compact and uncluttered; do not place every advanced control on the main screen.
+- Modules should be independently enableable/disableable and should cooperate safely in the realtime audio chain.
+- Provide simple coordinated vocal modes/presets for ordinary users, while retaining deeper controls inside each module for advanced users.
+- Preserve the existing working audio engine and DSP modules; add new processing as isolated modules rather than rewriting working code.
+- Keep source/UI text ASCII-only for now to avoid encoding problems.
+
+### Current implementation status
+- Realtime JUCE audio device handling and the existing main studio UI are implemented.
+- Input/output gain, monitor, processing and bypass routing are implemented.
+- Five-band parametric EQ and its calculated response curve are implemented.
+- Compressor, De-Esser, Voice Enhance, Noise Gate, Tone Control and Reverb DSP are implemented.
+- Three original built-in presets and custom preset save/load are implemented.
+- The built-in preset list has recently been expanded to nine voice choices. This latest expansion has NOT yet been confirmed by the user's local build and listening tests.
+- The user has tested the earlier DSP blocks individually and confirmed audible operation for EQ, Compressor, Voice Enhance, Noise Gate, Tone Control and Reverb. De-Esser was accepted provisionally and may need further listening tests.
+- Do not claim the nine-preset expansion is tested until the user reports a successful build and test.
+
+### Planned advanced modules and implementation order
+1. Pitch Correction / Auto-Tune:
+   - Real-time pitch detection and correction with adjustable correction strength.
+   - Provide key/scale selection; do not promise reliable musical correction without a suitable key/scale or other musical context.
+   - Compare proven DSP implementations before choosing whether to build internally or add a dependency.
+2. Vocal Leveling:
+   - Improve vocal loudness consistency while preserving natural dynamics.
+   - Review the current compressor before adding a separate rider/leveling stage.
+3. Harmonic Saturation / Exciter:
+   - Add controlled harmonics for warmth, density and presence without harsh clipping.
+4. Pitch and Formant Shifter:
+   - Support stylized lower/deeper and higher/feminine vocal characters.
+   - Pitch and formant must be treated as separate controls; pitch alone does not create a convincing timbre change.
+   - Evaluate sound quality and latency carefully; do not promise realistic identity conversion.
+5. Vocal Doubler and Harmonizer:
+   - Add vocal thickening/widening and harmony voices after the core pitch/formant path is stable.
+6. Character Voice Effects:
+   - Robot, Radio/Telephone and Alien/Character effects.
+   - These are creative effects and can be scheduled after the core singing-quality modules.
+
+### Engineering rules for new modules
+- First inspect the current JUCE version, project configuration and existing audio callback before selecting libraries or changing dependencies.
+- Keep realtime audio processing safe: avoid memory allocation, file I/O, blocking locks and expensive setup in the audio callback.
+- Prepare buffers, filters and processing state outside the callback where possible.
+- Test each module independently, then test combinations for CPU load, latency, clicks, dropouts and clipping.
+- Prefer proven DSP libraries for difficult pitch/formant processing, but inspect license, compatibility, realtime suitability and maintenance before adding any dependency.
+- Add one module at a time. Build and listen-test on the user's actual microphone and audio interface before moving to the next module.
+- Do not redesign the main UI or alter existing working DSP without a specific reason and approval.
+
+### Immediate next steps
+- [ ] User pulls the latest main branch and builds/tests all nine built-in presets.
+- [ ] Fetch and inspect the latest MainComponent.h, MainComponent.cpp and VoiceVocalStudio.jucer before any code changes.
+- [ ] Confirm the JUCE version and current audio callback structure.
+- [ ] Design a reusable module-window pattern and agree how module buttons open/close their dedicated controls.
+- [ ] Evaluate pitch-correction DSP options and their latency/licensing before implementation.
+- [ ] Implement and test the first advanced module as a separate, isolated unit.
