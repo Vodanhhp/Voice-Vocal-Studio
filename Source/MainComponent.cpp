@@ -1970,7 +1970,7 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
 
     p[0] = { margin, headerBottom, leftWidth, topHeight };
     p[1] = { margin + leftWidth + gap, headerBottom, centreWidth, topHeight };
-    const int rightTopHeight = (topHeight - gap) * 62 / 100;
+    const int rightTopHeight = (topHeight - gap) * 70 / 100;
     p[2] = { rightX, headerBottom, rightWidth, rightTopHeight };
     p[3] = { rightX, headerBottom + rightTopHeight + gap, rightWidth,
              topHeight - rightTopHeight - gap };
@@ -2274,22 +2274,22 @@ void MainComponent::resized()
     // Input and output controls are large, stacked rotary controls.
     {
         auto a = panels[0].reduced(10);
-        const int knobW = juce::jmin(145, a.getWidth() - 82);
-        const int x = a.getX() + 5;
+        const int availableWidth = juce::jmax(40, a.getWidth() - 72);
         const int inputControlCount = juce::jmin(2, (int)groups[0].size());
         const int firstRowY = a.getY() + 48;
         const int monitorTop = a.getBottom() - 38;
-        const int rowAreaHeight = juce::jmax(120, monitorTop - firstRowY - 10);
+        const int rowAreaHeight = juce::jmax(80, monitorTop - firstRowY - 10);
         const int rowHeight = rowAreaHeight / juce::jmax(1, inputControlCount);
         const int labelHeight = 22;
-        const int valueBoxAndGap = 26;
-        const int sliderHeight = juce::jmax(70, rowHeight - labelHeight - valueBoxAndGap);
         for (int i = 0; i < inputControlCount; ++i)
         {
             auto& c = *groups[0][(size_t)i];
             const int rowY = firstRowY + i * rowHeight;
-            c.label.setBounds(a.getX(), rowY, a.getWidth(), labelHeight);
-            c.slider.setBounds(x, rowY + labelHeight, knobW, sliderHeight);
+            const int sliderHeight = juce::jmax(24, rowHeight - labelHeight - 4);
+            const int sliderSize = juce::jmin(availableWidth, sliderHeight);
+            c.label.setBounds(a.getX(), rowY, a.getWidth() - 58, labelHeight);
+            c.slider.setBounds(a.getX() + (availableWidth - sliderSize) / 2,
+                               rowY + labelHeight, sliderSize, sliderHeight);
         }
         monitorToggle.setBounds(a.getX() + 8, a.getBottom() - 34, a.getWidth() - 16, 28);
     }
@@ -2299,43 +2299,54 @@ void MainComponent::resized()
         auto a = panels[1].reduced(12);
         const int top = a.getY() + (int)(a.getHeight() * 0.64f);
         const int slot = a.getWidth() / 5;
-        const int knobW = juce::jmin(132, slot - 8);
-        const int knobH = juce::jmax(86, juce::jmin(150, a.getBottom() - top - 8));
         const int eqControlCount = juce::jmin(5, (int)groups[1].size());
+        const int availableHeight = juce::jmax(30, a.getBottom() - top - 4);
+        const int sliderSize = juce::jmin(juce::jmin(124, slot - 8), availableHeight - 24);
         for (int i = 0; i < eqControlCount; ++i)
         {
             auto& c = *groups[1][(size_t)i];
             const int x = a.getX() + i * slot;
-            c.label.setBounds(x, top, slot, 24);
-            c.slider.setBounds(x + (slot - knobW) / 2, top + 22, knobW, knobH);
+            c.label.setBounds(x, top, slot, 22);
+            c.slider.setBounds(x + (slot - sliderSize) / 2, top + 22,
+                               sliderSize, sliderSize + 20);
         }
     }
 
     auto layoutSmallGroup = [this](int group, juce::Rectangle<int> panel, int columns)
     {
-        auto a = panel.reduced(9);
+        auto area = panel.reduced(9);
         const int count = (int)groups[(size_t)group].size();
         if (count <= 0 || columns <= 0)
             return;
 
         const int rows = (count + columns - 1) / columns;
-        if (rows <= 0)
-            return;
-        const int reservedRight = group == 2 ? 36 : 0;
-        a.setRight(a.getRight() - reservedRight);
-        const int slotW = a.getWidth() / columns;
-        const int slotH = (a.getHeight() - 45) / rows;
-        const int knobW = juce::jmin(116, slotW - 4);
-        const int knobH = juce::jmax(58, juce::jmin(118, slotH - 14));
+        const int reservedRight = group == 2 ? 30 : 0;
+        area.setRight(area.getRight() - reservedRight);
+
+        // Each control gets a strictly bounded cell. The rotary slider is
+        // square and is never allowed to extend into the next row/column.
+        const int contentTop = area.getY() + 43;
+        const int contentBottom = area.getBottom() - 5;
+        const int contentHeight = juce::jmax(24, contentBottom - contentTop);
+        const int slotW = area.getWidth() / columns;
+        const int slotH = contentHeight / rows;
+        const int labelHeight = 20;
+
         for (int i = 0; i < count; ++i)
         {
             auto& c = *groups[(size_t)group][(size_t)i];
             const int col = i % columns;
             const int row = i / columns;
-            const int x = a.getX() + col * slotW;
-            const int y = a.getY() + 44 + row * slotH;
-            c.label.setBounds(x, y, slotW, 20);
-            c.slider.setBounds(x + (slotW - knobW) / 2, y + 18, knobW, knobH);
+            const int cellX = area.getX() + col * slotW;
+            const int cellY = contentTop + row * slotH;
+            const int sliderAvailableHeight = juce::jmax(22, slotH - labelHeight - 2);
+            const int sliderSize = juce::jmax(22,
+                juce::jmin(juce::jmin(104, slotW - 6), sliderAvailableHeight - 20));
+
+            c.label.setBounds(cellX, cellY, slotW, labelHeight);
+            c.slider.setBounds(cellX + (slotW - sliderSize) / 2,
+                               cellY + labelHeight,
+                               sliderSize, sliderSize + 20);
         }
     };
 
