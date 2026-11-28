@@ -294,6 +294,10 @@ MainComponent::MainComponent()
     presetSelector.addItem("Giong nam day", 2);
     presetSelector.addItem("Karaoke nhac nhe", 3);
     presetSelector.setSelectedId(1);
+    presetSelector.onChange = [this]
+    {
+        applyBuiltInPreset(presetSelector.getSelectedId());
+    };
     presetSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(11, 17, 25));
     presetSelector.setColour(juce::ComboBox::textColourId, bright);
     presetSelector.setColour(juce::ComboBox::outlineColourId, edge);
@@ -359,11 +363,47 @@ MainComponent::MainComponent()
     };
     savePresetButton.onClick = [this]
     {
-        statusLabel.setText("Chuc nang luu cai dat se duoc bo sung sau", juce::dontSendNotification);
+        const auto directory = juce::File::getSpecialLocation(
+            juce::File::userApplicationDataDirectory)
+            .getChildFile("VoiceVocalStudio").getChildFile("Presets");
+        directory.createDirectory();
+        presetFileChooser = std::make_unique<juce::FileChooser>(
+            "Luu cau hinh giong hat", directory.getChildFile("CauHinhMoi.vvpreset"),
+            "*.vvpreset");
+        juce::Component::SafePointer<MainComponent> safeThis(this);
+        presetFileChooser->launchAsync(juce::FileBrowserComponent::saveMode
+                                       | juce::FileBrowserComponent::canSelectFiles,
+            [safeThis](const juce::FileChooser& chooser)
+            {
+                if (safeThis == nullptr)
+                    return;
+                auto file = chooser.getResult();
+                if (file == juce::File())
+                    return;
+                if (!file.hasFileExtension("vvpreset"))
+                    file = file.withFileExtension("vvpreset");
+                safeThis->savePresetToFile(file);
+            });
     };
     managePresetButton.onClick = [this]
     {
-        statusLabel.setText("Chuc nang quan ly cai dat se duoc bo sung sau", juce::dontSendNotification);
+        const auto directory = juce::File::getSpecialLocation(
+            juce::File::userApplicationDataDirectory)
+            .getChildFile("VoiceVocalStudio").getChildFile("Presets");
+        directory.createDirectory();
+        presetFileChooser = std::make_unique<juce::FileChooser>(
+            "Mo cau hinh da luu", directory, "*.vvpreset");
+        juce::Component::SafePointer<MainComponent> safeThis(this);
+        presetFileChooser->launchAsync(juce::FileBrowserComponent::openMode
+                                       | juce::FileBrowserComponent::canSelectFiles,
+            [safeThis](const juce::FileChooser& chooser)
+            {
+                if (safeThis == nullptr)
+                    return;
+                const auto file = chooser.getResult();
+                if (file != juce::File())
+                    safeThis->loadPresetFromFile(file);
+            });
     };
     settingsButton.onClick = [this]
     {
@@ -380,6 +420,129 @@ MainComponent::~MainComponent()
 {
     stopTimer();
     shutdownAudio();
+}
+
+void MainComponent::applyBuiltInPreset(int presetId)
+{
+    static const double presetValues[3][8][5] =
+    {
+        {
+            { 0.0, 0.0 },
+            { 3.0, 1.5, 0.0, 2.0, 1.0 },
+            { -22.0, 2.5, 10.0, 160.0 },
+            { -32.0, 6200.0 },
+            { 62.0, 60.0, 58.0 },
+            { -52.0, 180.0, 280.0 },
+            { 2.0, 0.0, 2.0 },
+            { 22.0, 48.0, 1.7 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 4.0, 2.0, 0.0, 1.5, 0.5 },
+            { -24.0, 3.0, 8.0, 140.0 },
+            { -30.0, 6000.0 },
+            { 64.0, 64.0, 55.0 },
+            { -50.0, 220.0, 320.0 },
+            { 3.0, 1.0, 1.5 },
+            { 18.0, 42.0, 1.5 }
+        },
+        {
+            { 0.0, 0.0 },
+            { 2.0, 1.0, 0.0, 2.0, 2.0 },
+            { -20.0, 2.0, 15.0, 180.0 },
+            { -34.0, 6500.0 },
+            { 58.0, 55.0, 65.0 },
+            { -55.0, 200.0, 350.0 },
+            { 1.5, 0.0, 2.5 },
+            { 28.0, 60.0, 2.2 }
+        }
+    };
+    static const int parameterCounts[8] = { 2, 5, 4, 2, 3, 3, 3, 3 };
+    static const char* const presetNames[3] =
+    {
+        "Giong nam am ap", "Giong nam day", "Karaoke nhac nhe"
+    };
+
+    if (presetId < 1 || presetId > 3)
+        return;
+
+    const int presetIndex = presetId - 1;
+    for (int group = 0; group < 8; ++group)
+    {
+        for (int parameter = 0; parameter < parameterCounts[group]; ++parameter)
+        {
+            auto& slider = groups[(size_t)group][(size_t)parameter]->slider;
+            slider.setValue(presetValues[presetIndex][group][parameter],
+                            juce::sendNotification);
+        }
+
+        groupToggles[(size_t)group].setToggleState(true, juce::dontSendNotification);
+        groupEnabled[(size_t)group].store(true);
+        groupToggles[(size_t)group].setButtonText("BAT");
+    }
+
+    masterVolumeSlider.setValue(0.0, juce::sendNotification);
+    statusLabel.setText("Da nap cau hinh: " + juce::String(presetNames[presetIndex]),
+                        juce::dontSendNotification);
+}
+
+void MainComponent::savePresetToFile(const juce::File& file)
+{
+    auto preset = std::make_unique<juce::XmlElement>("VOICE_VOCAL_PRESET");
+    preset->setAttribute("version", 1);
+    preset->setAttribute("masterVolumeDb", masterVolumeSlider.getValue());
+
+    for (size_t group = 0; group < groups.size(); ++group)
+    {
+        preset->setAttribute("group" + juce::String((int)group) + "Enabled",
+                             groupToggles[group].getToggleState());
+        for (size_t parameter = 0; parameter < groups[group].size(); ++parameter)
+        {
+            const auto key = "g" + juce::String((int)group)
+                + "p" + juce::String((int)parameter);
+            preset->setAttribute(key, groups[group][parameter]->slider.getValue());
+        }
+    }
+
+    if (preset->writeTo(file))
+        statusLabel.setText("Da luu cau hinh: " + file.getFileNameWithoutExtension(),
+                            juce::dontSendNotification);
+    else
+        statusLabel.setText("Khong the luu tep cau hinh", juce::dontSendNotification);
+}
+
+bool MainComponent::loadPresetFromFile(const juce::File& file)
+{
+    auto xml = juce::XmlDocument::parse(file);
+    if (xml == nullptr || !xml->hasTagName("VOICE_VOCAL_PRESET"))
+    {
+        statusLabel.setText("Tep cau hinh khong hop le", juce::dontSendNotification);
+        return false;
+    }
+
+    for (size_t group = 0; group < groups.size(); ++group)
+    {
+        const auto enabledKey = "group" + juce::String((int)group) + "Enabled";
+        const bool enabled = xml->getBoolAttribute(enabledKey, true);
+        groupToggles[group].setToggleState(enabled, juce::dontSendNotification);
+        groupEnabled[group].store(enabled);
+        groupToggles[group].setButtonText(enabled ? "BAT" : "TAT");
+
+        for (size_t parameter = 0; parameter < groups[group].size(); ++parameter)
+        {
+            const auto key = "g" + juce::String((int)group)
+                + "p" + juce::String((int)parameter);
+            if (xml->hasAttribute(key))
+                groups[group][parameter]->slider.setValue(
+                    xml->getDoubleAttribute(key), juce::sendNotification);
+        }
+    }
+
+    masterVolumeSlider.setValue(xml->getDoubleAttribute("masterVolumeDb", 0.0),
+                                juce::sendNotification);
+    statusLabel.setText("Da nap cau hinh: " + file.getFileNameWithoutExtension(),
+                        juce::dontSendNotification);
+    return true;
 }
 
 void MainComponent::styleToggle(juce::ToggleButton& toggle)
