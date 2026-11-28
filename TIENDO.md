@@ -326,3 +326,29 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Chuyển toàn bộ ký tự tiếng Việt nằm trong chuỗi C++ ở `Source/MainComponent.cpp` và `Source/MainComponent.h` sang các byte UTF-8 dạng escape bát phân (`\\ooo`) để tránh trình biên dịch diễn giải sai bảng mã nguồn.
 - Giữ nguyên nội dung hiển thị, tên module, giao diện và xử lý âm thanh; không thay đổi Input/Output routing.
 - Đã kiểm tra lại: không còn ký tự ngoài ASCII bên trong các chuỗi ký tự C++ ở hai tệp trên. Cần người dùng Rebuild và kiểm tra trực tiếp trên Windows để xác nhận hiển thị.
+
+
+## 28/11/2026 – Lỗi hiển thị tiếng Việt trong giao diện JUCE (đã xác định nguyên nhân, đã sửa mã nguồn)
+
+### Triệu chứng
+- Chữ tiếng Việt có dấu trong mã nguồn hiển thị bình thường ở Visual Studio, nhưng khi chạy ứng dụng thì một số chữ bị biến dạng hoặc thành ký tự ô vuông.
+- Đã thử lưu mã nguồn UTF-8 và rebuild nhưng không khắc phục được. Vì vậy không kết luận đây là lỗi font hoặc lỗi bộ gõ/hiển thị của Windows.
+
+### Nguyên nhân đã kiểm chứng
+- Chuỗi ký tự UTF-8 dạng `const char*` truyền trực tiếp vào API JUCE có thể bị chuyển đổi theo mã ký tự không phù hợp, dẫn đến `juce::String` nhận sai nội dung.
+- Thử nghiệm trực tiếp trên nhãn “THIẾT BỊ PHÁT ÂM THANH”: truyền chuỗi trực tiếp vẫn lỗi; bọc bằng `juce::String::fromUTF8("THIẾT BỊ PHÁT ÂM THANH")` thì ứng dụng hiển thị tiếng Việt có dấu chính xác.
+- Đây là cách sửa đã được người dùng chạy thử và xác nhận thành công trên máy Windows/Visual Studio.
+
+### Quy tắc bắt buộc khi viết/sửa giao diện về sau
+- Mọi chuỗi tiếng Việt truyền vào API JUCE phải được bọc rõ ràng bằng `juce::String::fromUTF8("Nội dung tiếng Việt")`.
+- Áp dụng cho cả `setText`, `setButtonText`, tên tham số, nhãn, nút, tooltip và chuỗi khởi tạo component.
+- Giữ nguyên chữ Unicode tiếng Việt có dấu trực tiếp trong mã nguồn để dễ đọc, dễ bảo trì.
+- Không quay lại dùng chuỗi UTF-8 truyền trực tiếp dưới dạng `const char*`; không thay bằng mã octal khó đọc.
+- Khi thêm giao diện mới, phải rà soát cả chuỗi trong file `.cpp` và `.h`, không chỉ các lệnh `setText`.
+
+### Phạm vi sửa và trạng thái
+- Đã sửa `Source/MainComponent.cpp`: 94 vị trí/biểu thức chuỗi.
+- Đã sửa `Source/MainComponent.h`: 15 vị trí/biểu thức chuỗi.
+- Tổng cộng 109 vị trí/biểu thức được chuyển sang `juce::String::fromUTF8()`; đã rà soát không còn chuỗi octal UTF-8 trong hai file này.
+- Đã cập nhật mã nguồn trên nhánh `main`. Không thay đổi DSP, xử lý âm thanh, bố cục hoặc hành vi điều khiển.
+- Người dùng cần đồng bộ phiên bản mới, Rebuild Solution và kiểm tra toàn bộ giao diện. Chưa đánh dấu hoàn tất kiểm thử toàn bộ cho đến khi người dùng xác nhận.

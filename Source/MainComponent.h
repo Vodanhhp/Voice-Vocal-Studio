@@ -179,17 +179,17 @@ private:
 
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
     std::array<juce::ToggleButton, 8> groupToggles {
-        juce::ToggleButton("B\341\272\254T"), juce::ToggleButton("B\341\272\254T"),
-        juce::ToggleButton("B\341\272\254T"), juce::ToggleButton("B\341\272\254T"),
-        juce::ToggleButton("B\341\272\254T"), juce::ToggleButton("B\341\272\254T"),
-        juce::ToggleButton("B\341\272\254T"), juce::ToggleButton("B\341\272\254T")
+        juce::ToggleButton(juce::String::fromUTF8("BẬT")), juce::ToggleButton(juce::String::fromUTF8("BẬT")),
+        juce::ToggleButton(juce::String::fromUTF8("BẬT")), juce::ToggleButton(juce::String::fromUTF8("BẬT")),
+        juce::ToggleButton(juce::String::fromUTF8("BẬT")), juce::ToggleButton(juce::String::fromUTF8("BẬT")),
+        juce::ToggleButton(juce::String::fromUTF8("BẬT")), juce::ToggleButton(juce::String::fromUTF8("BẬT"))
     };
 
-    juce::ToggleButton monitorToggle { "THEO D\303\225I \303\202M THANH: B\341\272\254T" };
-    juce::TextButton processButton { "B\341\272\254T X\341\273\254 L\303\235" };
-    juce::TextButton bypassButton { "B\341\273\216 QUA" };
-    juce::TextButton resetButton { "\304\220\341\272\266T L\341\272\240I" };
-    juce::TextButton settingsButton { "C\303\200I \304\220\341\272\266T" };
+    juce::ToggleButton monitorToggle { juce::String::fromUTF8("THEO DÕI ÂM THANH: BẬT") };
+    juce::TextButton processButton { juce::String::fromUTF8("BẬT XỬ LÝ") };
+    juce::TextButton bypassButton { juce::String::fromUTF8("BỎ QUA") };
+    juce::TextButton resetButton { juce::String::fromUTF8("ĐẶT LẠI") };
+    juce::TextButton settingsButton { juce::String::fromUTF8("CÀI ĐẶT") };
     juce::TextButton pitchCorrectionButton { "PITCH CORRECTION" };
     juce::TextButton vocalLevelingButton { "VOCAL LEVELING" };
     juce::TextButton vocalLimiterButton { "VOCAL LIMITER" };
@@ -198,8 +198,8 @@ private:
     juce::TextButton vocalClarityButton { "VOCAL CLARITY" };
     juce::TextButton breathControlButton { "BREATH CONTROL" };
     juce::TextButton vocalExciterButton { "VOCAL EXCITER" };
-    juce::TextButton savePresetButton { "L\306\257U C\303\200I \304\220\341\272\266T" };
-    juce::TextButton managePresetButton { "QU\341\272\242N L\303\235..." };
+    juce::TextButton savePresetButton { juce::String::fromUTF8("LƯU CÀI ĐẶT") };
+    juce::TextButton managePresetButton { juce::String::fromUTF8("QUẢN LÝ...") };
     juce::ComboBox presetSelector;
     std::unique_ptr<juce::FileChooser> presetFileChooser;
     juce::Slider masterVolumeSlider;
