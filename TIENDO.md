@@ -326,3 +326,10 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Chuyển toàn bộ ký tự tiếng Việt nằm trong chuỗi C++ ở `Source/MainComponent.cpp` và `Source/MainComponent.h` sang các byte UTF-8 dạng escape bát phân (`\\ooo`) để tránh trình biên dịch diễn giải sai bảng mã nguồn.
 - Giữ nguyên nội dung hiển thị, tên module, giao diện và xử lý âm thanh; không thay đổi Input/Output routing.
 - Đã kiểm tra lại: không còn ký tự ngoài ASCII bên trong các chuỗi ký tự C++ ở hai tệp trên. Cần người dùng Rebuild và kiểm tra trực tiếp trên Windows để xác nhận hiển thị.
+
+
+## 28/11/2026 – Sửa chuyển đổi chuỗi tiếng Việt trong JUCE
+- Đã xác định nguyên nhân hiển thị sai: chuỗi UTF-8 truyền trực tiếp vào các API JUCE narrow-string không được chuyển đổi rõ ràng.
+- Toàn bộ chuỗi giao diện tiếng Việt trong `MainComponent.cpp` và `MainComponent.h` được chuyển sang `juce::String::fromUTF8("...")`, giữ nguyên chữ Unicode có dấu dễ đọc trong mã nguồn.
+- Chỉ thay cách tạo chuỗi giao diện; không thay đổi DSP, xử lý âm thanh, bố cục hoặc hành vi điều khiển.
+- Cần người dùng đồng bộ mã nguồn và kiểm tra lại trên Windows/Visual Studio.
