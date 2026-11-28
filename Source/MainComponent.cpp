@@ -779,6 +779,118 @@ private:
 };
 
 
+
+class VocalExciterModuleContent final : public juce::Component
+{
+public:
+    VocalExciterModuleContent(std::atomic<bool>& enabled,
+                              std::atomic<float>& amount,
+                              std::atomic<float>& mix)
+        : enabledParameter(enabled), amountParameter(amount), mixParameter(mix)
+    {
+        title.setText("VOCAL EXCITER", juce::dontSendNotification);
+        title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
+        title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        addAndMakeVisible(title);
+
+        description.setText("Add controlled upper harmonics for a brighter, more lively vocal.",
+                            juce::dontSendNotification);
+        description.setFont(juce::FontOptions(14.0f));
+        description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(description);
+
+        configureSlider(amountLabel, amountSlider, "EXCITER AMOUNT",
+                        amountParameter.load(),
+                        [this](double value) { amountParameter.store((float)value); });
+        configureSlider(mixLabel, mixSlider, "EFFECT MIX",
+                        mixParameter.load(),
+                        [this](double value) { mixParameter.store((float)value); });
+
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        updateToggleText();
+        enableToggle.setColour(juce::ToggleButton::textColourId,
+                               juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            enabledParameter.store(enableToggle.getToggleState());
+            updateToggleText();
+        };
+        addAndMakeVisible(enableToggle);
+
+        note.setText("Use a low amount first. Too much exciter can make S sounds and hiss harsh.",
+                     juce::dontSendNotification);
+        note.setFont(juce::FontOptions(12.0f));
+        note.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
+        addAndMakeVisible(note);
+        setSize(620, 390);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        g.fillAll(juce::Colour(13, 19, 28));
+        auto area = getLocalBounds().toFloat().reduced(1.0f);
+        g.setColour(juce::Colour(74, 94, 116));
+        g.drawRoundedRectangle(area, 12.0f, 1.0f);
+        g.setColour(juce::Colour(175, 105, 220).withAlpha(0.16f));
+        g.fillRoundedRectangle(18.0f, 18.0f, (float)getWidth() - 36.0f, 72.0f, 10.0f);
+    }
+
+    void resized() override
+    {
+        auto area = getLocalBounds().reduced(28);
+        title.setBounds(area.removeFromTop(42));
+        description.setBounds(area.removeFromTop(42));
+        area.removeFromTop(14);
+        amountLabel.setBounds(area.removeFromTop(22));
+        amountSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(12);
+        mixLabel.setBounds(area.removeFromTop(22));
+        mixSlider.setBounds(area.removeFromTop(44));
+        area.removeFromTop(14);
+        enableToggle.setBounds(area.removeFromTop(34));
+        note.setBounds(area.removeFromTop(42));
+    }
+
+private:
+    void configureSlider(juce::Label& label, juce::Slider& slider,
+                         const juce::String& caption, double initial,
+                         std::function<void(double)> onChange)
+    {
+        label.setText(caption, juce::dontSendNotification);
+        label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        label.setColour(juce::Label::textColourId, juce::Colour(210, 222, 235));
+        addAndMakeVisible(label);
+
+        slider.setSliderStyle(juce::Slider::LinearHorizontal);
+        slider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 72, 26);
+        slider.setRange(0.0, 100.0, 1.0);
+        slider.setValue(initial, juce::dontSendNotification);
+        slider.setTextValueSuffix(" %");
+        slider.setColour(juce::Slider::trackColourId, juce::Colour(175, 105, 220));
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colour(235, 243, 252));
+        auto* sliderPointer = &slider;
+        slider.onValueChange = [sliderPointer, onChange]
+        {
+            onChange(sliderPointer->getValue());
+        };
+        addAndMakeVisible(slider);
+    }
+
+    void updateToggleText()
+    {
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "VOCAL EXCITER: ON" : "VOCAL EXCITER: OFF");
+    }
+
+    std::atomic<bool>& enabledParameter;
+    std::atomic<float>& amountParameter;
+    std::atomic<float>& mixParameter;
+    juce::Label title, description, amountLabel, mixLabel, note;
+    juce::Slider amountSlider, mixSlider;
+    juce::ToggleButton enableToggle { "VOCAL EXCITER: OFF" };
+};
+
+
 class PlannedVocalModuleContent final : public juce::Component
 {
 public:
@@ -1034,7 +1146,7 @@ MainComponent::MainComponent()
     warmthBodyButton.onClick = [this] { showWarmthBodyModule(); };
     vocalClarityButton.onClick = [this] { showVocalClarityModule(); };
     breathControlButton.onClick = [this] { showBreathControlModule(); };
-    vocalExciterButton.onClick = [this] { showPlannedVocalModule("VOCAL EXCITER"); };
+    vocalExciterButton.onClick = [this] { showVocalExciterModule(); };
 
     statusLabel.setText("San sang - cac bo xu ly dang o che do giao dien", juce::dontSendNotification);
     statusLabel.setFont(juce::FontOptions(10.5f));
@@ -1848,6 +1960,11 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     lastBodyGainDb = 999.0f;
     clarityFilter.reset();
     clarityAirFilter.reset();
+    const auto exciterCoefficients = makeBandPassCoefficients((float)currentSampleRate, 4800.0f, 0.55f);
+    vocalExciterFilter.setCoefficients(exciterCoefficients[0], exciterCoefficients[1],
+        exciterCoefficients[2], exciterCoefficients[3], exciterCoefficients[4]);
+    vocalExciterFilter.reset();
+    vocalExciterMixGain = 0.0f;
     const auto breathCoefficients = makeBandPassCoefficients((float)currentSampleRate, 5500.0f, 0.70f);
     breathDetectorFilter.setCoefficients(breathCoefficients[0], breathCoefficients[1],
         breathCoefficients[2], breathCoefficients[3], breathCoefficients[4]);
@@ -1990,6 +2107,13 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool warmthBodyActive = useGainStage && warmthBodyEnabled.load();
     const bool vocalClarityActive = useGainStage && vocalClarityEnabled.load();
     const bool breathControlActive = useGainStage && breathControlEnabled.load();
+    const bool vocalExciterActive = useGainStage && vocalExciterEnabled.load();
+    const float exciterAmountValue = juce::jlimit(0.0f, 100.0f, vocalExciterAmount.load());
+    const float exciterMixValue = juce::jlimit(0.0f, 100.0f, vocalExciterMix.load());
+    const float exciterDrive = 1.0f + exciterAmountValue * 0.055f;
+    const float exciterNormaliser = std::tanh(exciterDrive);
+    const float exciterTargetMix = vocalExciterActive ? exciterMixValue * 0.0035f : 0.0f;
+    const float exciterMixSmoothing = std::exp(-1.0f / (sampleRate * 0.025f));
     const bool noiseGateActive = useGainStage && groupEnabled[5].load();
     const bool toneActive = useGainStage && groupEnabled[6].load();
     const bool reverbActive = useGainStage && groupEnabled[7].load();
@@ -2389,6 +2513,16 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             sample = clarityAirFilter.process(sample);
         }
 
+        const float exciterBand = vocalExciterFilter.process(sample);
+        vocalExciterMixGain = exciterMixSmoothing * vocalExciterMixGain
+                            + (1.0f - exciterMixSmoothing) * exciterTargetMix;
+        if (vocalExciterMixGain > 0.00001f)
+        {
+            const float saturatedBand = std::tanh(exciterBand * exciterDrive)
+                                      / juce::jmax(0.001f, exciterNormaliser);
+            sample += (saturatedBand - exciterBand) * vocalExciterMixGain;
+        }
+
         if (toneActive)
             for (auto& filter : toneFilters)
                 sample = filter.process(sample);
@@ -2532,6 +2666,20 @@ void MainComponent::showBreathControlModule()
     options.content.setOwned(new BreathControlModuleContent(
         breathControlEnabled, breathSensitivity, breathReduction));
     options.dialogTitle = "Breath Control Module";
+    options.dialogBackgroundColour = juce::Colour(13, 19, 28);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = true;
+    options.launchAsync();
+}
+
+
+void MainComponent::showVocalExciterModule()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new VocalExciterModuleContent(
+        vocalExciterEnabled, vocalExciterAmount, vocalExciterMix));
+    options.dialogTitle = "Vocal Exciter Module";
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
