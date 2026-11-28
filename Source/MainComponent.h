@@ -157,6 +157,7 @@ private:
     void showVocalLevelingModule();
     void showWarmthBodyModule();
     void showVocalClarityModule();
+    void showBreathControlModule();
     void showPlannedVocalModule(const juce::String& moduleName);
     void applyBuiltInPreset(int presetId);
     void savePresetToFile(const juce::File& file);
@@ -268,6 +269,14 @@ private:
     std::atomic<bool> vocalClarityEnabled { false };
     std::atomic<float> clarityAmount { 50.0f };
     std::atomic<float> clarityAir { 50.0f };
+    std::atomic<bool> breathControlEnabled { false };
+    std::atomic<float> breathSensitivity { 50.0f };
+    std::atomic<float> breathReduction { 35.0f };
+    BiquadFilter breathDetectorFilter;
+    BiquadFilter breathBandFilter;
+    float breathDetectorEnvelope { 0.0f };
+    float breathVoiceEnvelope { 0.0f };
+    float breathReductionGain { 1.0f };
     BiquadFilter clarityFilter;
     BiquadFilter clarityAirFilter;
     float lastClarityGainDb { 999.0f };
