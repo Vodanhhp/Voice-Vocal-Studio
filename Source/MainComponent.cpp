@@ -570,53 +570,77 @@ void MainComponent::paint(juce::Graphics& g)
     g.setColour(juce::Colour(90, 125, 160));
     g.drawHorizontalLine((int)graph.getCentreY(), graph.getX(), graph.getRight());
 
-    // Blue spectrum silhouette behind the EQ response curve.
-    juce::Path spectrum;
-    spectrum.startNewSubPath(graph.getX(), graph.getBottom() - 2.0f);
-    const int spectrumBars = 115;
-    for (int i = 0; i < spectrumBars; ++i)
+    // Draw the actual combined EQ response from the five current knob values.
+    // The frequency axis is logarithmic, matching a conventional parametric EQ.
+    const float bandGains[] {
+        eqGainDb[0].load(), eqGainDb[1].load(), eqGainDb[2].load(),
+        eqGainDb[3].load(), eqGainDb[4].load()
+    };
+    const float bandFrequencies[] { 80.0f, 250.0f, 1000.0f, 4000.0f, 12000.0f };
+    const float logMin = std::log(20.0f);
+    const float logMax = std::log(20000.0f);
+    auto responseAt = [&bandGains, &bandFrequencies, logMin, logMax](float frequency)
     {
-        const float t = (float)i / (float)(spectrumBars - 1);
-        const float envelope = 0.22f + 0.78f * std::exp(-2.7f * t);
-        const float modulation = 0.22f + 0.78f * std::abs(
-            std::sin((float)i * 1.73f) * std::cos((float)i * 0.37f));
-        const float barHeight = graph.getHeight() * 0.48f * envelope * modulation;
-        const float x = graph.getX() + t * graph.getWidth();
-        spectrum.lineTo(x, graph.getBottom() - barHeight);
-    }
-    spectrum.lineTo(graph.getRight(), graph.getBottom() - 2.0f);
-    spectrum.closeSubPath();
-    g.setColour(juce::Colour(16, 111, 211).withAlpha(0.23f));
-    g.fillPath(spectrum);
+        const float safeFrequency = juce::jmax(20.0f, frequency);
+        const float logFrequency = std::log(safeFrequency);
+        const float lowShelf = bandGains[0]
+            / (1.0f + std::pow(safeFrequency / bandFrequencies[0], 4.0f));
+        const float highShelf = bandGains[4]
+            / (1.0f + std::pow(bandFrequencies[4] / safeFrequency, 4.0f));
+        float response = lowShelf + highShelf;
+        for (int band = 1; band < 4; ++band)
+        {
+            const float distance = (logFrequency - std::log(bandFrequencies[band])) / 0.72f;
+            response += bandGains[band] * std::exp(-0.5f * distance * distance);
+        }
+        juce::ignoreUnused(logMin, logMax);
+        return juce::jlimit(-12.0f, 12.0f, response);
+    };
+    auto frequencyToX = [&graph, logMin, logMax](float frequency)
+    {
+        const float position = (std::log(juce::jlimit(20.0f, 20000.0f, frequency)) - logMin)
+                             / (logMax - logMin);
+        return graph.getX() + position * graph.getWidth();
+    };
+    auto responseToY = [&graph](float gainDb)
+    {
+        return graph.getCentreY() - (gainDb / 12.0f) * (graph.getHeight() * 0.44f);
+    };
 
     juce::Path curve;
-    curve.startNewSubPath(graph.getX(), graph.getCentreY() + 12.0f);
-    curve.cubicTo(graph.getX() + graph.getWidth() * 0.10f, graph.getCentreY() + 10.0f,
-                  graph.getX() + graph.getWidth() * 0.12f, graph.getCentreY() - 42.0f,
-                  graph.getX() + graph.getWidth() * 0.22f, graph.getCentreY() - 36.0f);
-    curve.cubicTo(graph.getX() + graph.getWidth() * 0.34f, graph.getCentreY() - 25.0f,
-                  graph.getX() + graph.getWidth() * 0.36f, graph.getCentreY() + 9.0f,
-                  graph.getX() + graph.getWidth() * 0.48f, graph.getCentreY() + 4.0f);
-    curve.cubicTo(graph.getX() + graph.getWidth() * 0.62f, graph.getCentreY() - 1.0f,
-                  graph.getX() + graph.getWidth() * 0.69f, graph.getCentreY() - 38.0f,
-                  graph.getX() + graph.getWidth() * 0.78f, graph.getCentreY() - 28.0f);
-    curve.cubicTo(graph.getX() + graph.getWidth() * 0.88f, graph.getCentreY() - 18.0f,
-                  graph.getX() + graph.getWidth() * 0.91f, graph.getCentreY() + 7.0f,
-                  graph.getRight(), graph.getCentreY() + 3.0f);
+    constexpr int curvePoints = 180;
+    for (int i = 0; i < curvePoints; ++i)
+    {
+        const float t = (float)i / (float)(curvePoints - 1);
+        const float frequency = std::exp(logMin + t * (logMax - logMin));
+        const float x = graph.getX() + t * graph.getWidth();
+        const float y = responseToY(responseAt(frequency));
+        if (i == 0)
+            curve.startNewSubPath(x, y);
+        else
+            curve.lineTo(x, y);
+    }
+
+    juce::Path curveFill = curve;
+    curveFill.lineTo(graph.getRight(), graph.getCentreY());
+    curveFill.lineTo(graph.getX(), graph.getCentreY());
+    curveFill.closeSubPath();
+    g.setColour(cyan.withAlpha(0.10f));
+    g.fillPath(curveFill);
     g.setColour(blue);
-    g.strokePath(curve, juce::PathStrokeType(2.2f));
-    const float markerX[] { 0.22f, 0.36f, 0.52f, 0.78f, 0.91f };
-    const float markerY[] { -36.0f, -18.0f, 2.0f, -28.0f, -12.0f };
+    g.strokePath(curve, juce::PathStrokeType(2.4f,
+        juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
     const juce::Colour markerColours[] { cyan, juce::Colour(255, 166, 55),
         green, juce::Colour(190, 110, 255), cyan };
     for (int i = 0; i < 5; ++i)
     {
-        const float mx = graph.getX() + graph.getWidth() * markerX[i];
-        const float my = graph.getCentreY() + markerY[i];
+        const float mx = frequencyToX(bandFrequencies[i]);
+        const float my = responseToY(responseAt(bandFrequencies[i]));
         g.setColour(markerColours[i].withAlpha(0.22f));
         g.fillEllipse(mx - 11.0f, my - 11.0f, 22.0f, 22.0f);
         g.setColour(markerColours[i]);
-        g.fillEllipse(mx - 6.0f, my - 6.0f, 12.0f, 12.0f);
+        g.fillEllipse(mx - 5.5f, my - 5.5f, 11.0f, 11.0f);
     }
 
     // Tan so scale below the response graph.
