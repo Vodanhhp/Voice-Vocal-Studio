@@ -372,8 +372,10 @@ void MainComponent::paint(juce::Graphics& g)
     g.fillEllipse(20.0f, 15.0f, 82.0f, 82.0f);
     g.setColour(cyan);
     g.drawRoundedRectangle(48.0f, 27.0f, 25.0f, 43.0f, 12.0f, 2.8f);
-    g.drawArc(39.0f, 39.0f, 43.0f, 42.0f, 0.0f, juce::MathConstants<float>::pi,
-              true, 2.8f);
+    juce::Path microphoneArc;
+    microphoneArc.addArc(39.0f, 39.0f, 43.0f, 42.0f, 0.0f,
+                         juce::MathConstants<float>::pi, true);
+    g.strokePath(microphoneArc, juce::PathStrokeType(2.8f));
     g.drawLine(60.5f, 81.0f, 60.5f, 89.0f, 2.5f);
     g.drawLine(48.0f, 90.0f, 73.0f, 90.0f, 2.5f);
 
