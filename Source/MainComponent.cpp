@@ -272,7 +272,7 @@ MainComponent::MainComponent()
     setSize(1280, 800);
     resized();
     setAudioChannels(1, 2);
-    startThời gianrHz(30);
+    startTimerHz(30);
 }
 
 MainComponent::~MainComponent()
