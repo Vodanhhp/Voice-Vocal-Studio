@@ -156,6 +156,7 @@ private:
     void showPitchCorrectionModule();
     void showVocalLevelingModule();
     void showWarmthBodyModule();
+    void showVocalClarityModule();
     void showPlannedVocalModule(const juce::String& moduleName);
     void applyBuiltInPreset(int presetId);
     void savePresetToFile(const juce::File& file);
@@ -264,6 +265,13 @@ private:
     BiquadFilter bodyFilter;
     float lastWarmthGainDb { 999.0f };
     float lastBodyGainDb { 999.0f };
+    std::atomic<bool> vocalClarityEnabled { false };
+    std::atomic<float> clarityAmount { 50.0f };
+    std::atomic<float> clarityAir { 50.0f };
+    BiquadFilter clarityFilter;
+    BiquadFilter clarityAirFilter;
+    float lastClarityGainDb { 999.0f };
+    float lastClarityAirGainDb { 999.0f };
     std::atomic<float> vocalLevelTargetDb { -18.0f };
     std::atomic<float> vocalLevelMaxBoostDb { 6.0f };
     std::atomic<float> vocalLevelMaxCutDb { 4.0f };
