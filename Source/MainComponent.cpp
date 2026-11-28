@@ -1216,8 +1216,7 @@ MainComponent::MainComponent()
     subtitleLabel.setFont(juce::FontOptions(14.0f, juce::Font::italic));
     subtitleLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(subtitleLabel);
-
-    deviceLabel.setText("THI\341\272\276T B\341\273\212 PH\303\201T \303\202M THANH", juce::dontSendNotification);
+    deviceLabel.setText(juce::String::fromUTF8("THIẾT BỊ PHÁT ÂM THANH"), juce::dontSendNotification);
     deviceLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
     deviceLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(deviceLabel);
