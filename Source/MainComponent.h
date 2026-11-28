@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <JuceHeader.h>
 #include <memory>
@@ -54,19 +54,19 @@ private:
 
     std::array<std::vector<std::unique_ptr<ParameterControl>>, 8> groups;
     std::array<juce::ToggleButton, 8> groupToggles {
-        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
-        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
-        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT"),
-        juce::ToggleButton("BẬT"), juce::ToggleButton("BẬT")
+        juce::ToggleButton("BAT"), juce::ToggleButton("BAT"),
+        juce::ToggleButton("BAT"), juce::ToggleButton("BAT"),
+        juce::ToggleButton("BAT"), juce::ToggleButton("BAT"),
+        juce::ToggleButton("BAT"), juce::ToggleButton("BAT")
     };
 
-    juce::ToggleButton monitorToggle { "THEO DÕI ÂM THANH: BẬT" };
-    juce::TextButton processButton { "BẬT XỬ LÝ" };
-    juce::TextButton bypassButton { "BỎ QUA" };
-    juce::TextButton resetButton { "ĐẶT LẠI" };
-    juce::TextButton settingsButton { "CÀI ĐẶT" };
-    juce::TextButton savePresetButton { "LƯU CÀI ĐẶT" };
-    juce::TextButton managePresetButton { "QUẢN LÝ..." };
+    juce::ToggleButton monitorToggle { "THEO DOI AM THANH: BAT" };
+    juce::TextButton processButton { "BAT XU LY" };
+    juce::TextButton bypassButton { "BO QUA" };
+    juce::TextButton resetButton { "DAT LAI" };
+    juce::TextButton settingsButton { "CAI DAT" };
+    juce::TextButton savePresetButton { "LUU CAI DAT" };
+    juce::TextButton managePresetButton { "QUAN LY..." };
     juce::ComboBox presetSelector;
     juce::Slider masterVolumeSlider;
     juce::Label masterVolumeLabel;
