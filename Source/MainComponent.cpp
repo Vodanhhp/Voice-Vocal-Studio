@@ -116,6 +116,20 @@ namespace
             (A + 1.0f) - (A - 1.0f) * cosine + beta,
             2.0f * ((A - 1.0f) - (A + 1.0f) * cosine),
             (A + 1.0f) - (A - 1.0f) * cosine - beta);
+    BiquadCoefficients makeBandPassCoefficients(float sampleRate, float frequency, float q)
+    {
+        const float safeRate = juce::jmax(8000.0f, sampleRate);
+        const float f = juce::jlimit(500.0f, safeRate * 0.45f, frequency);
+        const float safeQ = juce::jmax(0.1f, q);
+        const float w0 = juce::MathConstants<float>::twoPi * f / safeRate;
+        const float alpha = std::sin(w0) / (2.0f * safeQ);
+        const float cosine = std::cos(w0);
+
+        return normaliseBiquad(alpha, 0.0f, -alpha,
+                               1.0f + alpha, -2.0f * cosine,
+                               1.0f - alpha);
+    }
+
     }
 
 }
@@ -430,6 +444,13 @@ MainComponent::ParameterControl* MainComponent::addParameter(
                 compressorAttackMs.store(value);
             else if (parameterIndex == 3)
                 compressorReleaseMs.store(value);
+        }
+        else if (group == 3)
+        {
+            if (parameterIndex == 0)
+                deEsserThresholdDb.store(value);
+            else if (parameterIndex == 1)
+                deEsserFrequencyHz.store(value);
         }
     };
 
@@ -818,6 +839,10 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     lastAppliedEqGainDb.fill(999.0f);
     compressorEnvelope = 0.0f;
     compressorGainReductionDb.store(0.0f);
+    deEsserEnvelope = 0.0f;
+    lastDeEsserFrequencyHz = 0.0f;
+    deEsserDetectorFilter.reset();
+    deEsserBandFilter.reset();
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
@@ -850,6 +875,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool useGainStage = processingEnabled.load() && !bypassEnabled.load();
     const bool eqActive = useGainStage && groupEnabled[1].load();
     const bool compressorActive = useGainStage && groupEnabled[2].load();
+    const bool deEsserActive = useGainStage && groupEnabled[3].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
@@ -898,6 +924,28 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     if (!compressorActive)
         compressorEnvelope = 0.0f;
 
+    const float deEsserThreshold = deEsserThresholdDb.load();
+    const float deEsserFrequency = deEsserFrequencyHz.load();
+    const float deEsserAttackCoefficient = std::exp(-1.0f / (sampleRate * 0.001f));
+    const float deEsserReleaseCoefficient = std::exp(-1.0f / (sampleRate * 0.060f));
+    if (deEsserActive && std::abs(deEsserFrequency - lastDeEsserFrequencyHz) > 1.0f)
+    {
+        const auto coefficients = makeBandPassCoefficients(sampleRate, deEsserFrequency, 2.5f);
+        deEsserDetectorFilter.setCoefficients(coefficients[0], coefficients[1],
+            coefficients[2], coefficients[3], coefficients[4]);
+        deEsserBandFilter.setCoefficients(coefficients[0], coefficients[1],
+            coefficients[2], coefficients[3], coefficients[4]);
+        deEsserDetectorFilter.reset();
+        deEsserBandFilter.reset();
+        lastDeEsserFrequencyHz = deEsserFrequency;
+    }
+    if (!deEsserActive)
+    {
+        deEsserEnvelope = 0.0f;
+        deEsserDetectorFilter.reset();
+        deEsserBandFilter.reset();
+    }
+
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
     {
@@ -927,6 +975,28 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
 
             blockGainReductionDb = juce::jmax(blockGainReductionDb, gainReductionDb);
             sample *= juce::Decibels::decibelsToGain(-gainReductionDb);
+        }
+
+        if (deEsserActive)
+        {
+            const float sibilanceBand = deEsserBandFilter.process(sample);
+            const float detectorSample = deEsserDetectorFilter.process(sample);
+            const float detectorLevel = std::abs(detectorSample);
+            const float coefficient = detectorLevel > deEsserEnvelope
+                ? deEsserAttackCoefficient : deEsserReleaseCoefficient;
+            deEsserEnvelope = coefficient * deEsserEnvelope
+                            + (1.0f - coefficient) * detectorLevel;
+
+            const float sibilanceDb = juce::Decibels::gainToDecibels(
+                deEsserEnvelope, -100.0f);
+            if (sibilanceDb > deEsserThreshold)
+            {
+                const float excessDb = sibilanceDb - deEsserThreshold;
+                const float reductionDb = juce::jlimit(0.0f, 12.0f, excessDb * 0.75f);
+                const float attenuation = 1.0f
+                    - juce::Decibels::decibelsToGain(-reductionDb);
+                sample -= sibilanceBand * attenuation;
+            }
         }
 
         left[i] = sample * masterGain;
