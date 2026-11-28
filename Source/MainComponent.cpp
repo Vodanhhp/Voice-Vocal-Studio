@@ -162,9 +162,6 @@ public:
             addAndMakeVisible(*label);
         }
 
-        for (int i = 0; i < 12; ++i)
-            keySelector.addItem(juce::String::charToString((juce::juce_wchar)('C' + i)), i + 1);
-        keySelector.clear();
         const char* keys[] { "C", "C#", "D", "D#", "E", "F",
                              "F#", "G", "G#", "A", "A#", "B" };
         for (int i = 0; i < 12; ++i)
@@ -220,11 +217,14 @@ public:
 
         const int half = (area.getWidth() - 24) / 2;
         auto rowOne = area.removeFromTop(76);
-        keyLabel.setBounds(rowOne.removeFromLeft(half).removeFromTop(22));
-        keySelector.setBounds(rowOne.getX(), rowOne.getY() + 27, half - 12, 34);
-        rowOne.removeFromLeft(12);
-        scaleLabel.setBounds(rowOne.getX(), rowOne.getY(), half, 22);
-        scaleSelector.setBounds(rowOne.getX(), rowOne.getY() + 27, half, 34);
+        auto leftColumn = rowOne.removeFromLeft(half);
+        keyLabel.setBounds(leftColumn.removeFromTop(22));
+        keySelector.setBounds(leftColumn.getX(), leftColumn.getY() + 5,
+                              leftColumn.getWidth(), 34);
+        rowOne.removeFromLeft(24);
+        scaleLabel.setBounds(rowOne.getX(), rowOne.getY(), rowOne.getWidth(), 22);
+        scaleSelector.setBounds(rowOne.getX(), rowOne.getY() + 27,
+                                rowOne.getWidth(), 34);
 
         area.removeFromTop(12);
         auto rowTwo = area.removeFromTop(76);
