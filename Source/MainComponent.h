@@ -110,6 +110,13 @@ private:
     std::atomic<float> compressorGainReductionDb { 0.0f };
     float compressorEnvelope { 0.0f };
 
+    std::atomic<float> deEsserThresholdDb { -30.0f };
+    std::atomic<float> deEsserFrequencyHz { 6000.0f };
+    float deEsserEnvelope { 0.0f };
+    float lastDeEsserFrequencyHz { 0.0f };
+    BiquadFilter deEsserDetectorFilter;
+    BiquadFilter deEsserBandFilter;
+
     double currentSampleRate { 44100.0 };
 
     std::atomic<float> inputGainLinear { 1.0f };
