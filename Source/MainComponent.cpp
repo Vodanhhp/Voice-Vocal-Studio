@@ -1,4 +1,5 @@
-﻿#include "MainComponent.h"
+﻿#pragma execution_character_set("utf-8")
+#include "MainComponent.h"
 #include <cmath>
 
 namespace
