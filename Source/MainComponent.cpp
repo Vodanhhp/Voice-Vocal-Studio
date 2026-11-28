@@ -398,6 +398,46 @@ void MainComponent::paint(juce::Graphics& g)
     drawPanel(g, panels[6], "Tone Control");
     drawPanel(g, panels[7], "Reverb", juce::Colour(90, 190, 255));
 
+    // Input/output LED meters styled like the reference studio interface.
+    auto drawLedMeter = [&g](juce::Rectangle<float> area, float level, bool gainReduction)
+    {
+        g.setColour(juce::Colour(3, 7, 11));
+        g.fillRoundedRectangle(area, 4.0f);
+        g.setColour(edge);
+        g.drawRoundedRectangle(area, 4.0f, 1.0f);
+        const int segments = 20;
+        const float gap = 2.0f;
+        const float segmentH = (area.getHeight() - gap * (segments + 1)) / (float)segments;
+        const int lit = juce::jlimit(0, segments,
+            (int)std::round(level * (float)segments));
+        for (int i = 0; i < segments; ++i)
+        {
+            const float y = area.getBottom() - gap - (float)(i + 1) * (segmentH + gap);
+            juce::Colour c = i >= 17 ? juce::Colour(245, 65, 55)
+                : i >= 13 ? juce::Colour(255, 177, 45)
+                : juce::Colour(53, 220, 112);
+            if (gainReduction)
+                c = i >= 15 ? juce::Colour(255, 177, 45) : juce::Colour(48, 205, 111);
+            g.setColour(i < lit ? c : c.withAlpha(0.13f));
+            g.fillRoundedRectangle(area.getX() + 4.0f, y, area.getWidth() - 8.0f,
+                                   segmentH, 1.5f);
+        }
+    };
+
+    // Static visual meter guides; live signal levels will drive these in the meter stage.
+    auto inputPanel = panels[0];
+    drawLedMeter({ (float)inputPanel.getRight() - 48.0f,
+                   (float)inputPanel.getY() + 72.0f, 28.0f,
+                   (float)inputPanel.getHeight() * 0.34f }, 0.72f, false);
+    drawLedMeter({ (float)inputPanel.getRight() - 48.0f,
+                   (float)inputPanel.getY() + inputPanel.getHeight() * 0.53f,
+                   28.0f, (float)inputPanel.getHeight() * 0.34f }, 0.55f, false);
+
+    // Compressor gain-reduction meter.
+    drawLedMeter({ (float)panels[2].getRight() - 34.0f,
+                   (float)panels[2].getY() + 72.0f, 22.0f,
+                   (float)panels[2].getHeight() - 96.0f }, 0.46f, true);
+
     // EQ response graph, with five editable-band markers as a visual guide.
     auto eq = panels[1].reduced(14);
     auto graph = juce::Rectangle<float>((float)eq.getX() + 8.0f,
@@ -419,6 +459,25 @@ void MainComponent::paint(juce::Graphics& g)
     }
     g.setColour(juce::Colour(90, 125, 160));
     g.drawHorizontalLine((int)graph.getCentreY(), graph.getX(), graph.getRight());
+
+    // Blue spectrum silhouette behind the EQ response curve.
+    juce::Path spectrum;
+    spectrum.startNewSubPath(graph.getX(), graph.getBottom() - 2.0f);
+    const int spectrumBars = 115;
+    for (int i = 0; i < spectrumBars; ++i)
+    {
+        const float t = (float)i / (float)(spectrumBars - 1);
+        const float envelope = 0.22f + 0.78f * std::exp(-2.7f * t);
+        const float modulation = 0.22f + 0.78f * std::abs(
+            std::sin((float)i * 1.73f) * std::cos((float)i * 0.37f));
+        const float barHeight = graph.getHeight() * 0.48f * envelope * modulation;
+        const float x = graph.getX() + t * graph.getWidth();
+        spectrum.lineTo(x, graph.getBottom() - barHeight);
+    }
+    spectrum.lineTo(graph.getRight(), graph.getBottom() - 2.0f);
+    spectrum.closeSubPath();
+    g.setColour(juce::Colour(16, 111, 211).withAlpha(0.23f));
+    g.fillPath(spectrum);
 
     juce::Path curve;
     curve.startNewSubPath(graph.getX(), graph.getCentreY() + 12.0f);
@@ -489,9 +548,9 @@ void MainComponent::resized()
     // Input and output controls are large, stacked rotary controls.
     {
         auto a = panels[0].reduced(10);
-        const int knobW = juce::jmin(170, a.getWidth() - 30);
-        const int knobH = juce::jmin(190, (a.getHeight() - 105) / 2);
-        const int x = a.getCentreX() - knobW / 2;
+        const int knobW = juce::jmin(145, a.getWidth() - 82);
+        const int knobH = juce::jmin(174, (a.getHeight() - 105) / 2);
+        const int x = a.getX() + 5;
         const int inputControlCount = juce::jmin(2, (int)groups[0].size());
         for (int i = 0; i < inputControlCount; ++i)
         {
@@ -530,6 +589,8 @@ void MainComponent::resized()
         const int rows = (count + columns - 1) / columns;
         if (rows <= 0)
             return;
+        const int reservedRight = group == 2 ? 36 : 0;
+        a.setRight(a.getRight() - reservedRight);
         const int slotW = a.getWidth() / columns;
         const int slotH = (a.getHeight() - 45) / rows;
         const int knobW = juce::jmin(116, slotW - 4);
@@ -552,18 +613,18 @@ void MainComponent::resized()
         layoutSmallGroup(group, panels[(size_t)group], 3);
 
     const int fy = getHeight() - 88;
-    // Compact footer controls; Vietnamese labels are intentionally unaccented.
-    presetSelector.setBounds(135, fy + 16, 165, 34);
-    savePresetButton.setBounds(310, fy + 16, 90, 34);
-    managePresetButton.setBounds(408, fy + 16, 100, 34);
-    processButton.setBounds(516, fy + 16, 96, 34);
-    bypassButton.setBounds(620, fy + 16, 76, 34);
-    resetButton.setBounds(704, fy + 16, 72, 34);
-    settingsButton.setBounds(784, fy + 16, 82, 34);
-    masterVolumeLabel.setBounds(900, fy + 5, 180, 24);
-    masterVolumeSlider.setBounds(900, fy + 32, 390, 26);
-    masterValueLabel.setBounds(1300, fy + 30, 125, 30);
-    statusLabel.setBounds(22, fy + 62, 850, 22);
+    // Three footer zones: preset management, transport controls and master output.
+    presetSelector.setBounds(145, fy + 16, 205, 36);
+    savePresetButton.setBounds(360, fy + 16, 125, 36);
+    managePresetButton.setBounds(495, fy + 16, 125, 36);
+    processButton.setBounds(735, fy + 16, 112, 36);
+    bypassButton.setBounds(857, fy + 16, 105, 36);
+    resetButton.setBounds(972, fy + 16, 95, 36);
+    settingsButton.setBounds(1077, fy + 16, 105, 36);
+    masterVolumeLabel.setBounds(1198, fy + 5, 180, 24);
+    masterVolumeSlider.setBounds(1198, fy + 32, 245, 26);
+    masterValueLabel.setBounds(1442, fy + 30, 78, 30);
+    statusLabel.setBounds(22, fy + 62, 1120, 22);
 }
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
