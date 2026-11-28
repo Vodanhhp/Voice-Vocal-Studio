@@ -242,3 +242,13 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - The module runs only when global processing is enabled, Bypass is off, and Breath Control is ON.
 - This is an initial breath-noise reduction stage, not a source-separation system. It may also affect quiet consonants, soft singing and vocal air; Sensitivity and Reduction need listening tests with the user's microphone.
 - Build and listening tests on the user's computer are pending. Start with Sensitivity around 40-50% and Breath Reduction around 20-30%, then compare ON/OFF on breaths between phrases and quiet sung words.
+
+
+### Implementation update 28/11/2026 - Vocal Exciter module (DSP stage 4)
+- Replaced the Vocal Exciter placeholder with a dedicated window containing independent ON/OFF, Exciter Amount and Effect Mix controls.
+- Added a fixed band-pass stage centered near 4.8 kHz to isolate upper vocal harmonics before nonlinear saturation.
+- Added a bounded tanh waveshaping stage to generate controlled upper harmonics; Amount controls drive and Mix controls the added harmonic level.
+- The wet contribution is smoothed over approximately 25 ms to reduce abrupt switching artifacts. The filter is configured in prepareToPlay and uses preallocated state; no new allocations or blocking locks were added to the audio callback.
+- The module is active only when global processing is enabled, Bypass is off, and Vocal Exciter is ON.
+- This is a subtle harmonic-excitation prototype, not a spectral enhancer or automatic de-esser. Excessive settings can emphasize hiss, S sounds and microphone noise; evaluate with the actual microphone and compare ON/OFF.
+- Build and listening tests on the user's computer are pending. Start around Amount 20-30% and Effect Mix 15-25%, then raise gradually only if the vocal needs more brightness.
