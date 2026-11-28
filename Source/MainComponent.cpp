@@ -420,6 +420,17 @@ MainComponent::ParameterControl* MainComponent::addParameter(
         else if (group == 1 && parameterIndex >= 0
                  && parameterIndex < (int)eqGainDb.size())
             eqGainDb[(size_t)parameterIndex].store(value);
+        else if (group == 2)
+        {
+            if (parameterIndex == 0)
+                compressorThresholdDb.store(value);
+            else if (parameterIndex == 1)
+                compressorRatio.store(value);
+            else if (parameterIndex == 2)
+                compressorAttackMs.store(value);
+            else if (parameterIndex == 3)
+                compressorReleaseMs.store(value);
+        }
     };
 
     groups[(size_t)group].push_back(std::move(control));
@@ -543,10 +554,13 @@ void MainComponent::paint(juce::Graphics& g)
                    (float)inputPanel.getY() + inputPanel.getHeight() * 0.53f,
                    28.0f, (float)inputPanel.getHeight() * 0.34f }, livePeak * 0.82f, false);
 
-    // Compressor gain-reduction meter.
+    // Live compressor gain-reduction meter (0 to 18 dB displayed).
+    const float gainReductionLevel = juce::jlimit(0.0f, 1.0f,
+        compressorGainReductionDb.load() / 18.0f);
     drawLedMeter({ (float)panels[2].getRight() - 34.0f,
                    (float)panels[2].getY() + 72.0f, 22.0f,
-                   (float)panels[2].getHeight() - 96.0f }, 0.46f, true);
+                   (float)panels[2].getHeight() - 96.0f },
+                 gainReductionLevel, true);
 
     // EQ response graph, with five editable-band markers as a visual guide.
     auto eq = panels[1].reduced(14);
@@ -829,19 +843,19 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         peak = juce::jmax(peak, std::abs(input[i]));
     inputPeak.store(peak);
 
-    // Process currently enables the input/output gain stage. Actual DSP modules
-    // (EQ, compressor, etc.) will be inserted here in later steps.
-    // Bypass skips that stage, while Master Volume remains active.
+    // Processing and bypass control the complete DSP chain. Master Volume
+    // remains available even while the processing chain is bypassed.
     const bool useGainStage = processingEnabled.load() && !bypassEnabled.load();
     const bool eqActive = useGainStage && groupEnabled[1].load();
+    const bool compressorActive = useGainStage && groupEnabled[2].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
     const float masterGain = masterVolumeLinear.load();
+    const float sampleRate = (float)currentSampleRate;
 
     if (eqActive)
     {
-        const float sampleRate = (float)currentSampleRate;
         for (size_t band = 0; band < eqFilters.size(); ++band)
         {
             const float gainDb = eqGainDb[band].load();
@@ -871,6 +885,17 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
             filter.reset();
     }
 
+    const float thresholdDb = compressorThresholdDb.load();
+    const float ratio = juce::jmax(1.0f, compressorRatio.load());
+    const float attackMs = juce::jmax(0.1f, compressorAttackMs.load());
+    const float releaseMs = juce::jmax(1.0f, compressorReleaseMs.load());
+    const float attackCoefficient = std::exp(-1.0f / (sampleRate * attackMs * 0.001f));
+    const float releaseCoefficient = std::exp(-1.0f / (sampleRate * releaseMs * 0.001f));
+    float blockGainReductionDb = 0.0f;
+
+    if (!compressorActive)
+        compressorEnvelope = 0.0f;
+
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
     {
@@ -878,8 +903,34 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         if (eqActive)
             for (auto& filter : eqFilters)
                 sample = filter.process(sample);
+
+        if (compressorActive)
+        {
+            const float detectorLevel = std::abs(sample);
+            const float coefficient = detectorLevel > compressorEnvelope
+                ? attackCoefficient : releaseCoefficient;
+            compressorEnvelope = coefficient * compressorEnvelope
+                               + (1.0f - coefficient) * detectorLevel;
+
+            const float envelopeDb = juce::Decibels::gainToDecibels(
+                compressorEnvelope, -100.0f);
+            float gainReductionDb = 0.0f;
+            if (envelopeDb > thresholdDb)
+            {
+                const float compressedDb = thresholdDb
+                    + (envelopeDb - thresholdDb) / ratio;
+                gainReductionDb = juce::jlimit(0.0f, 24.0f,
+                                                envelopeDb - compressedDb);
+            }
+
+            blockGainReductionDb = juce::jmax(blockGainReductionDb, gainReductionDb);
+            sample *= juce::Decibels::decibelsToGain(-gainReductionDb);
+        }
+
         left[i] = sample * masterGain;
     }
+
+    compressorGainReductionDb.store(compressorActive ? blockGainReductionDb : 0.0f);
 
     // Duplicate the mono microphone signal to every enabled output channel.
     for (int ch = 1; ch < channels; ++ch)
