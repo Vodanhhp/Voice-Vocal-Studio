@@ -184,7 +184,7 @@ MainComponent::MainComponent()
     masterVolumeSlider.onValueChange = [this]
     {
         const auto db = (float)masterVolumeSlider.getValue();
-        outputGainLinear.store(juce::Decibels::decibelsToGain(db));
+        masterVolumeLinear.store(juce::Decibels::decibelsToGain(db));
         masterValueLabel.setText(juce::String(db, 1) + " dB", juce::dontSendNotification);
     };
     addAndMakeVisible(masterVolumeSlider);
@@ -222,6 +222,14 @@ MainComponent::MainComponent()
     statusLabel.setFont(juce::FontOptions(10.5f));
     statusLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(statusLabel);
+
+    monitorToggle.onClick = [this]
+    {
+        const bool enabled = monitorToggle.getToggleState();
+        monitorEnabled.store(enabled);
+        statusLabel.setText(enabled ? "Monitor truc tiep da bat" : "Monitor da tat - khong gui am thanh ra loa",
+                            juce::dontSendNotification);
+    };
 
     processButton.onClick = [this]
     {
@@ -672,7 +680,9 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     if (channels <= 0)
         return;
 
-    if (!processingEnabled.load() && !bypassEnabled.load())
+    // Monitor is the master route switch. When disabled, do not send microphone
+    // audio to the outputs. This is independent from the processing/bypass state.
+    if (!monitorEnabled.load())
     {
         buffer.clear(info.startSample, info.numSamples);
         inputPeak.store(0.0f);
@@ -685,14 +695,21 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         peak = juce::jmax(peak, std::abs(input[i]));
     inputPeak.store(peak);
 
-    const float gain = bypassEnabled.load()
-        ? 1.0f
-        : inputGainLinear.load() * outputGainLinear.load();
+    // Process currently enables the input/output gain stage. Actual DSP modules
+    // (EQ, compressor, etc.) will be inserted here in later steps.
+    // Bypass skips that stage, while Master Volume remains active.
+    const bool useGainStage = processingEnabled.load() && !bypassEnabled.load();
+    const float channelGain = useGainStage
+        ? inputGainLinear.load() * outputGainLinear.load()
+        : 1.0f;
+    const float masterGain = masterVolumeLinear.load();
+    const float gain = channelGain * masterGain;
 
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
         left[i] = input[i] * gain;
 
+    // Duplicate the mono microphone signal to every enabled output channel.
     for (int ch = 1; ch < channels; ++ch)
         buffer.copyFrom(ch, info.startSample, buffer, 0, info.startSample, info.numSamples);
 }
