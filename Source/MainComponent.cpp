@@ -340,7 +340,7 @@ MainComponent::PanelBounds MainComponent::calculatePanelBounds() const
 
     p[0] = { margin, headerBottom, leftWidth, topHeight };
     p[1] = { margin + leftWidth + gap, headerBottom, centreWidth, topHeight };
-    const int rightTopHeight = (topHeight - gap) * 3 / 5;
+    const int rightTopHeight = (topHeight - gap) * 58 / 100;
     p[2] = { rightX, headerBottom, rightWidth, rightTopHeight };
     p[3] = { rightX, headerBottom + rightTopHeight + gap, rightWidth,
              topHeight - rightTopHeight - gap };
@@ -632,7 +632,7 @@ void MainComponent::resized()
         }
     };
 
-    layoutSmallGroup(2, panels[2], 2);
+    layoutSmallGroup(2, panels[2], 4);
     layoutSmallGroup(3, panels[3], 2);
     for (int group = 4; group < 8; ++group)
         layoutSmallGroup(group, panels[(size_t)group], 3);
@@ -644,7 +644,7 @@ void MainComponent::resized()
     savePresetButton.setBounds(leftX + 158, footerY, 92, 34);
     managePresetButton.setBounds(leftX + 258, footerY, 102, 34);
 
-    const int centreX = (int)(w * 0.37f);
+    const int centreX = (int)(w * 0.36f);
     processButton.setBounds(centreX, footerY, 100, 34);
     bypassButton.setBounds(centreX + 108, footerY, 82, 34);
     resetButton.setBounds(centreX + 198, footerY, 74, 34);
