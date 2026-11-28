@@ -470,6 +470,15 @@ MainComponent::ParameterControl* MainComponent::addParameter(
             else if (parameterIndex == 2)
                 noiseGateReleaseMs.store(value);
         }
+        else if (group == 6)
+        {
+            if (parameterIndex == 0)
+                toneBassDb.store(value);
+            else if (parameterIndex == 1)
+                toneMidDb.store(value);
+            else if (parameterIndex == 2)
+                toneTrebleDb.store(value);
+        }
     };
 
     groups[(size_t)group].push_back(std::move(control));
@@ -867,6 +876,9 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     noiseGateEnvelope = 0.0f;
     noiseGateGain = 1.0f;
     noiseGateHoldCounter = 0;
+    for (auto& filter : toneFilters)
+        filter.reset();
+    lastToneGainDb.fill(999.0f);
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
@@ -902,6 +914,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     const bool deEsserActive = useGainStage && groupEnabled[3].load();
     const bool voiceEnhanceActive = useGainStage && groupEnabled[4].load();
     const bool noiseGateActive = useGainStage && groupEnabled[5].load();
+    const bool toneActive = useGainStage && groupEnabled[6].load();
     const float channelGain = useGainStage
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
@@ -1017,6 +1030,33 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         noiseGateHoldCounter = 0;
     }
 
+    if (toneActive)
+    {
+        const float gains[] { toneBassDb.load(), toneMidDb.load(), toneTrebleDb.load() };
+        for (int i = 0; i < 3; ++i)
+        {
+            if (std::abs(gains[i] - lastToneGainDb[(size_t)i]) > 0.001f)
+            {
+                BiquadCoefficients coefficients;
+                if (i == 0)
+                    coefficients = makeLowShelfCoefficients(sampleRate, 120.0f, gains[i]);
+                else if (i == 1)
+                    coefficients = makePeakingCoefficients(sampleRate, 1000.0f, gains[i], 0.7f);
+                else
+                    coefficients = makeHighShelfCoefficients(sampleRate, 8000.0f, gains[i]);
+
+                toneFilters[(size_t)i].setCoefficients(coefficients[0], coefficients[1],
+                    coefficients[2], coefficients[3], coefficients[4]);
+                lastToneGainDb[(size_t)i] = gains[i];
+            }
+        }
+    }
+    else
+    {
+        for (auto& filter : toneFilters)
+            filter.reset();
+    }
+
     auto* left = buffer.getWritePointer(0, info.startSample);
     for (int i = 0; i < info.numSamples; ++i)
     {
@@ -1098,6 +1138,10 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
 
         if (voiceEnhanceActive)
             for (auto& filter : voiceEnhanceFilters)
+                sample = filter.process(sample);
+
+        if (toneActive)
+            for (auto& filter : toneFilters)
                 sample = filter.process(sample);
 
         left[i] = sample * masterGain;
