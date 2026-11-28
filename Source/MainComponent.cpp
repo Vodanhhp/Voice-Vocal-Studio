@@ -2100,6 +2100,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     // Processing and bypass control the complete DSP chain. Master Volume
     // remains available even while the processing chain is bypassed.
     const bool useGainStage = processingEnabled.load() && !bypassEnabled.load();
+    const float sampleRate = (float)currentSampleRate;
     const bool eqActive = useGainStage && groupEnabled[1].load();
     const bool compressorActive = useGainStage && groupEnabled[2].load();
     const bool deEsserActive = useGainStage && groupEnabled[3].load();
@@ -2121,7 +2122,6 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         ? inputGainLinear.load() * outputGainLinear.load()
         : 1.0f;
     const float masterGain = masterVolumeLinear.load();
-    const float sampleRate = (float)currentSampleRate;
     const bool pitchCorrectionActive = useGainStage && pitchCorrectionEnabled.load();
     const int currentPitchTarget = pitchTargetMidi.load();
     const float correctionAmount = juce::jlimit(0.0f, 100.0f,
