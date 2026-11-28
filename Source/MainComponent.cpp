@@ -1344,25 +1344,26 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     if (pitchAnalysisSamplesSinceUpdate >= 1024)
     {
         pitchAnalysisSamplesSinceUpdate = 0;
+        const float analysisSampleRate = (float)currentSampleRate;
         float mean = 0.0f;
         for (int i = 0; i < 1024; ++i)
         {
-            const int index = (pitchAnalysisWritePosition + i) % 2048;
+            const int index = (pitchAnalysisWritePosition + 1024 + i) % 2048;
             mean += pitchAnalysisBuffer[(size_t)index];
         }
         mean *= (1.0f / 1024.0f);
 
         float bestCorrelation = 0.0f;
         int bestLag = 0;
-        const int minLag = juce::jmax(24, (int)(sampleRate / 1000.0f));
-        const int maxLag = juce::jmin(700, (int)(sampleRate / 65.0f));
+        const int minLag = juce::jmax(24, (int)(analysisSampleRate / 1000.0f));
+        const int maxLag = juce::jmin(700, (int)(analysisSampleRate / 65.0f));
         for (int lag = minLag; lag <= maxLag; ++lag)
         {
             float cross = 0.0f, energyA = 0.0f, energyB = 0.0f;
             for (int n = 0; n < 1024 - lag; n += 2)
             {
-                const float a = pitchAnalysisBuffer[(size_t)((pitchAnalysisWritePosition + n) % 2048)] - mean;
-                const float b = pitchAnalysisBuffer[(size_t)((pitchAnalysisWritePosition + n + lag) % 2048)] - mean;
+                const float a = pitchAnalysisBuffer[(size_t)((pitchAnalysisWritePosition + 1024 + n) % 2048)] - mean;
+                const float b = pitchAnalysisBuffer[(size_t)((pitchAnalysisWritePosition + 1024 + n + lag) % 2048)] - mean;
                 cross += a * b;
                 energyA += a * a;
                 energyB += b * b;
@@ -1378,7 +1379,7 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
 
         if (bestLag > 0 && bestCorrelation > 0.72f)
         {
-            const float frequency = sampleRate / (float)bestLag;
+            const float frequency = analysisSampleRate / (float)bestLag;
             const int midi = juce::roundToInt(69.0f + 12.0f * std::log2(frequency / 440.0f));
             const int root = pitchSongKey.load();
             const int scale = pitchScale.load();
