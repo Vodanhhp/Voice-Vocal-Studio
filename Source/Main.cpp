@@ -67,8 +67,8 @@ public:
             // Use a compact JUCE title bar: no Windows frame and no maximise button.
             setUsingNativeTitleBar (false);
             setTitleBarHeight (28);
-            setResizable (true, true);
-            setResizeLimits (1000, 640, 2200, 1400);
+            // Khoa kich thuoc cua so chinh: khong cho keo gian giao dien.
+            setResizable (false, false);
             setContentOwned (new MainComponent(), true);
 
             // Start at a comfortable size that fits the current display work area.
