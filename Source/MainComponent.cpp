@@ -1216,10 +1216,7 @@ MainComponent::MainComponent()
     subtitleLabel.setFont(juce::FontOptions(14.0f, juce::Font::italic));
     subtitleLabel.setColour(juce::Label::textColourId, muted);
     addAndMakeVisible(subtitleLabel);
-<<<<<<< HEAD
-=======
 
->>>>>>> 04b206659c481a305ceb2d60103ac8e76f88152f
     deviceLabel.setText(juce::String::fromUTF8("THIẾT BỊ PHÁT ÂM THANH"), juce::dontSendNotification);
     deviceLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
     deviceLabel.setColour(juce::Label::textColourId, muted);
