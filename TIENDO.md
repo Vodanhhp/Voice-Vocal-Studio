@@ -292,3 +292,12 @@ Micro → Vang số (nếu có) → Mixer/Sound Card → Voice Vocal Studio → 
 - Filters and state are initialized in prepareToPlay. Processing uses preallocated filter state and adds no dynamic allocation or blocking lock in the audio callback.
 - Active only when global processing is enabled, Bypass is off and Vocal Smooth is ON. This is a single-band dynamic resonance-control prototype, not AI de-harshing or multi-band spectral processing. It may soften presence if overused and must be compared ON/OFF with the actual microphone.
 - Build and listening tests on the user's computer are pending. Start at Sensitivity 40-50% and Intensity 25-35%; raise only if harshness is audible, and check that consonants and vocal clarity remain natural.
+
+
+### Implementation update 28/11/2026 - Additional vocal presets
+- Expanded the built-in preset list from 9 to 14 while preserving the original 9 presets.
+- Added 5 starting profiles: MC nam tram, MC nu trung am, Nu cao sang, Nu thanh thoat and Nu tru tinh.
+- Each new profile configures the existing 8 core processing groups: input/output gain, 5-band EQ, compressor, de-esser, voice enhance, noise gate, tone control and reverb.
+- The new values are conservative starting points, not studio-certified settings. Actual results depend on microphone, distance, voice range, room acoustics and external mixer processing. The user must audition and fine-tune each profile.
+- The preset system currently applies the 8 core groups. Dedicated modules such as Vocal Leveling, Warmth & Body, Vocal Clarity, Breath Control, Vocal Exciter, Vocal Smooth and Vocal Limiter are not yet stored/applied as part of built-in preset profiles.
+- Build and listening tests for all 14 presets are pending.
