@@ -701,16 +701,37 @@ void MainComponent::releaseResources()
 {
 }
 
+namespace
+{
+    class AudioSettingsContent final : public juce::Component
+    {
+    public:
+        explicit AudioSettingsContent(juce::AudioDeviceManager& manager)
+            : selector(manager, 1, 2, 1, 2, false, false, true, true)
+        {
+            addAndMakeVisible(selector);
+            setSize(760, 560);
+        }
+
+        void resized() override
+        {
+            selector.setBounds(getLocalBounds().reduced(14));
+        }
+
+    private:
+        juce::AudioDeviceSelectorComponent selector;
+    };
+}
+
 void MainComponent::showAudioSettings()
 {
     juce::DialogWindow::LaunchOptions options;
-    options.content.setOwned(new juce::AudioDeviceSelectorComponent(
-        deviceManager, 1, 2, 1, 2, false, false, true, true));
+    options.content.setOwned(new AudioSettingsContent(deviceManager));
     options.dialogTitle = "Cai dat thiet bi am thanh";
     options.dialogBackgroundColour = juce::Colour(18, 25, 35);
     options.escapeKeyTriggersCloseButton = true;
     options.useNativeTitleBar = true;
-    options.resizable = false;
+    options.resizable = true;
     options.launchAsync();
 }
 
