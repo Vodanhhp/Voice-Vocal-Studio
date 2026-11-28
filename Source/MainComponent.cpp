@@ -142,11 +142,12 @@ public:
                                  std::atomic<float>& speed,
                                  std::atomic<int>& detectedMidi,
                                  std::atomic<int>& targetMidi,
-                                 std::atomic<float>& deviationCents)
+                                 std::atomic<float>& deviationCents,
+                                 std::atomic<bool>& enabled)
         : songKeyParameter(songKey), scaleParameter(scale),
           amountParameter(amount), speedParameter(speed),
           detectedMidiParameter(detectedMidi), targetMidiParameter(targetMidi),
-          deviationCentsParameter(deviationCents)
+          deviationCentsParameter(deviationCents), enabledParameter(enabled)
     {
         title.setText("PITCH CORRECTION", juce::dontSendNotification);
         title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
@@ -210,6 +211,24 @@ public:
         };
         addAndMakeVisible(speedSlider);
 
+        enableToggle.setClickingTogglesState(true);
+        enableToggle.setToggleState(enabledParameter.load(), juce::dontSendNotification);
+        enableToggle.setButtonText(enabledParameter.load()
+            ? "PITCH CORRECTION: ON" : "PITCH CORRECTION: OFF");
+        enableToggle.setColour(juce::ToggleButton::textColourId, juce::Colour(235, 243, 252));
+        enableToggle.onClick = [this]
+        {
+            const bool enabledNow = enableToggle.getToggleState();
+            enabledParameter.store(enabledNow);
+            enableToggle.setButtonText(enabledNow
+                ? "PITCH CORRECTION: ON" : "PITCH CORRECTION: OFF");
+            status.setText(enabledNow
+                ? "Experimental pitch shifting enabled. Use a dry, single vocal input."
+                : "Pitch correction is off. Pitch tracking remains active.",
+                juce::dontSendNotification);
+        };
+        addAndMakeVisible(enableToggle);
+
         detectedLabel.setFont(juce::FontOptions(17.0f, juce::Font::bold));
         detectedLabel.setColour(juce::Label::textColourId, juce::Colour(50, 213, 255));
         detectedLabel.setText("Detected note: --", juce::dontSendNotification);
@@ -220,14 +239,14 @@ public:
         targetLabel.setText("Scale target: --", juce::dontSendNotification);
         addAndMakeVisible(targetLabel);
 
-        status.setText("Pitch tracking is active. Audible pitch shifting is the next DSP stage.",
+        status.setText("Experimental pitch shifting. Best with a dry, single vocal input.",
                        juce::dontSendNotification);
         status.setFont(juce::FontOptions(12.0f));
         status.setColour(juce::Label::textColourId, juce::Colour(255, 190, 90));
         status.setJustificationType(juce::Justification::centredLeft);
         addAndMakeVisible(status);
 
-        setSize(660, 500);
+        setSize(660, 530);
         startTimerHz(12);
     }
 
@@ -266,6 +285,7 @@ public:
         area.removeFromTop(10);
         detectedLabel.setBounds(area.removeFromTop(28));
         targetLabel.setBounds(area.removeFromTop(26));
+        enableToggle.setBounds(area.removeFromTop(34));
         status.setBounds(area.removeFromTop(48));
     }
 
@@ -303,10 +323,12 @@ private:
     std::atomic<int>& detectedMidiParameter;
     std::atomic<int>& targetMidiParameter;
     std::atomic<float>& deviationCentsParameter;
+    std::atomic<bool>& enabledParameter;
     juce::Label title, description, keyLabel, scaleLabel;
     juce::Label strengthLabel, speedLabel, detectedLabel, targetLabel, status;
     juce::ComboBox keySelector, scaleSelector;
     juce::Slider strengthSlider, speedSlider;
+    juce::ToggleButton enableToggle { "PITCH CORRECTION: OFF" };
 };
 }
 
@@ -1288,6 +1310,7 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     pitchDetectedMidi.store(-1);
     pitchTargetMidi.store(-1);
     pitchDeviationCents.store(0.0f);
+    pitchShifter.reset();
     for (auto& filter : eqFilters)
         filter.reset();
     lastAppliedEqGainDb.fill(999.0f);
@@ -1437,6 +1460,17 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         : 1.0f;
     const float masterGain = masterVolumeLinear.load();
     const float sampleRate = (float)currentSampleRate;
+    const bool pitchCorrectionActive = useGainStage && pitchCorrectionEnabled.load();
+    const int currentPitchTarget = pitchTargetMidi.load();
+    const float correctionAmount = juce::jlimit(0.0f, 100.0f,
+                                                 pitchCorrectionAmount.load());
+    const float detectedOffsetCents = pitchDeviationCents.load();
+    const float appliedCorrectionCents = pitchCorrectionActive && currentPitchTarget >= 0
+        ? juce::jlimit(-100.0f, 100.0f, detectedOffsetCents) * correctionAmount / 100.0f
+        : 0.0f;
+    const float pitchTargetRatio = std::pow(2.0f, -appliedCorrectionCents / 1200.0f);
+    const float pitchSmoothingMs = 125.0f
+        - juce::jlimit(5.0f, 100.0f, pitchCorrectionSpeed.load()) * 1.10f;
 
     if (eqActive)
     {
@@ -1609,6 +1643,8 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
     for (int i = 0; i < info.numSamples; ++i)
     {
         float sample = input[i] * channelGain;
+        sample = pitchShifter.process(sample, pitchTargetRatio, sampleRate,
+                                      pitchSmoothingMs, pitchCorrectionActive);
 
         if (noiseGateActive)
         {
@@ -1748,7 +1784,8 @@ void MainComponent::showPitchCorrectionModule()
     juce::DialogWindow::LaunchOptions options;
     options.content.setOwned(new PitchCorrectionModuleContent(
         pitchSongKey, pitchScale, pitchCorrectionAmount, pitchCorrectionSpeed,
-        pitchDetectedMidi, pitchTargetMidi, pitchDeviationCents));
+        pitchDetectedMidi, pitchTargetMidi, pitchDeviationCents,
+        pitchCorrectionEnabled));
     options.dialogTitle = "Pitch Correction Module";
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
