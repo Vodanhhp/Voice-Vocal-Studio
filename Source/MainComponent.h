@@ -52,6 +52,92 @@ private:
         void reset() noexcept { z1 = z2 = 0.0f; }
     };
 
+    struct PitchShifter
+    {
+        static constexpr int bufferSize = 8192;
+        std::array<float, bufferSize> delayLine {};
+        int writePosition { 0 };
+        float phase { 0.0f };
+        float currentRatio { 1.0f };
+        float wetMix { 0.0f };
+
+        void reset() noexcept
+        {
+            delayLine.fill(0.0f);
+            writePosition = 0;
+            phase = 0.0f;
+            currentRatio = 1.0f;
+            wetMix = 0.0f;
+        }
+
+        float readDelay(float delaySamples) const noexcept
+        {
+            float position = (float)writePosition - delaySamples;
+            while (position < 0.0f)
+                position += (float)bufferSize;
+            while (position >= (float)bufferSize)
+                position -= (float)bufferSize;
+
+            const int indexA = (int)position;
+            const int indexB = (indexA + 1) % bufferSize;
+            const float fraction = position - (float)indexA;
+            const float a = delayLine[(size_t)indexA];
+            const float b = delayLine[(size_t)indexB];
+            return a + (b - a) * fraction;
+        }
+
+        float process(float input, float targetRatio, float sampleRate,
+                      float smoothingMs, bool enabled) noexcept
+        {
+            delayLine[(size_t)writePosition] = input;
+
+            const float safeRate = juce::jmax(8000.0f, sampleRate);
+            targetRatio = juce::jlimit(0.943874f, 1.059463f, targetRatio);
+            const float smoothingSeconds = juce::jlimit(0.010f, 0.150f,
+                                                        smoothingMs * 0.001f);
+            const float ratioCoefficient = std::exp(-1.0f / (safeRate * smoothingSeconds));
+            currentRatio = ratioCoefficient * currentRatio
+                         + (1.0f - ratioCoefficient) * targetRatio;
+
+            const float minimumDelay = safeRate * 0.003f;
+            const float maximumDelay = safeRate * 0.018f;
+            const float delayRange = maximumDelay - minimumDelay;
+            const bool shiftingUp = currentRatio >= 1.0f;
+            const float phaseIncrement = std::abs(1.0f - currentRatio) / delayRange;
+
+            float phaseA = phase;
+            float phaseB = phase + 0.5f;
+            if (phaseB >= 1.0f)
+                phaseB -= 1.0f;
+
+            const float delayA = shiftingUp
+                ? maximumDelay - phaseA * delayRange
+                : minimumDelay + phaseA * delayRange;
+            const float delayB = shiftingUp
+                ? maximumDelay - phaseB * delayRange
+                : minimumDelay + phaseB * delayRange;
+
+            const float windowA = std::sin(juce::MathConstants<float>::pi * phaseA);
+            const float windowB = std::sin(juce::MathConstants<float>::pi * phaseB);
+            const float weightA = windowA * windowA;
+            const float weightB = windowB * windowB;
+            const float shifted = readDelay(delayA) * weightA
+                                + readDelay(delayB) * weightB;
+
+            phase += phaseIncrement;
+            if (phase >= 1.0f)
+                phase -= std::floor(phase);
+
+            const float targetMix = enabled ? 1.0f : 0.0f;
+            const float mixCoefficient = std::exp(-1.0f / (safeRate * 0.010f));
+            wetMix = mixCoefficient * wetMix + (1.0f - mixCoefficient) * targetMix;
+            const float output = input * (1.0f - wetMix) + shifted * wetMix;
+
+            writePosition = (writePosition + 1) % bufferSize;
+            return output;
+        }
+    };
+
     struct ParameterControl
     {
         juce::Label label;
@@ -160,6 +246,8 @@ private:
     std::atomic<int> pitchDetectedMidi { -1 };
     std::atomic<int> pitchTargetMidi { -1 };
     std::atomic<float> pitchDeviationCents { 0.0f };
+    std::atomic<bool> pitchCorrectionEnabled { false };
+    PitchShifter pitchShifter;
     std::array<float, 2048> pitchAnalysisBuffer {};
     int pitchAnalysisWritePosition { 0 };
     int pitchAnalysisSamplesSinceUpdate { 0 };
