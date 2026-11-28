@@ -426,12 +426,13 @@ void MainComponent::paint(juce::Graphics& g)
 
     // Static visual meter guides; live signal levels will drive these in the meter stage.
     auto inputPanel = panels[0];
+    const float livePeak = juce::jlimit(0.0f, 1.0f, inputPeak.load());
     drawLedMeter({ (float)inputPanel.getRight() - 48.0f,
                    (float)inputPanel.getY() + 72.0f, 28.0f,
-                   (float)inputPanel.getHeight() * 0.34f }, 0.72f, false);
+                   (float)inputPanel.getHeight() * 0.34f }, livePeak, false);
     drawLedMeter({ (float)inputPanel.getRight() - 48.0f,
                    (float)inputPanel.getY() + inputPanel.getHeight() * 0.53f,
-                   28.0f, (float)inputPanel.getHeight() * 0.34f }, 0.55f, false);
+                   28.0f, (float)inputPanel.getHeight() * 0.34f }, livePeak * 0.82f, false);
 
     // Compressor gain-reduction meter.
     drawLedMeter({ (float)panels[2].getRight() - 34.0f,
@@ -528,6 +529,21 @@ void MainComponent::paint(juce::Graphics& g)
     g.fillRect(footer);
     g.setColour(edge);
     g.drawHorizontalLine((int)footer.getY(), 10.0f, (float)getWidth() - 10.0f);
+
+    // Recessed footer zones mirror the three control groups in the approved mockup.
+    const float fy = footer.getY() + 8.0f;
+    const juce::Rectangle<float> footerZones[] {
+        { 10.0f, fy, 690.0f, 84.0f },
+        { 708.0f, fy, 405.0f, 84.0f },
+        { 1120.0f, fy, 406.0f, 84.0f }
+    };
+    for (const auto& zone : footerZones)
+    {
+        g.setColour(juce::Colour(3, 7, 12).withAlpha(0.78f));
+        g.fillRoundedRectangle(zone, 12.0f);
+        g.setColour(edge.withAlpha(0.8f));
+        g.drawRoundedRectangle(zone, 12.0f, 1.1f);
+    }
 }
 
 void MainComponent::resized()
