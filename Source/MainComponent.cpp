@@ -133,19 +133,28 @@ namespace
     }
 
 
-class PitchCorrectionModuleContent final : public juce::Component
+class PitchCorrectionModuleContent final : public juce::Component, private juce::Timer
 {
 public:
-    PitchCorrectionModuleContent()
+    PitchCorrectionModuleContent(std::atomic<int>& songKey,
+                                 std::atomic<int>& scale,
+                                 std::atomic<float>& amount,
+                                 std::atomic<float>& speed,
+                                 std::atomic<int>& detectedMidi,
+                                 std::atomic<int>& targetMidi,
+                                 std::atomic<float>& deviationCents)
+        : songKeyParameter(songKey), scaleParameter(scale),
+          amountParameter(amount), speedParameter(speed),
+          detectedMidiParameter(detectedMidi), targetMidiParameter(targetMidi),
+          deviationCentsParameter(deviationCents)
     {
         title.setText("PITCH CORRECTION", juce::dontSendNotification);
         title.setFont(juce::FontOptions(25.0f, juce::Font::bold));
         title.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
         addAndMakeVisible(title);
 
-        description.setText(
-            "Correct vocal notes in real time while preserving a natural singing character.",
-            juce::dontSendNotification);
+        description.setText("Live vocal pitch tracking and scale target analysis.",
+                            juce::dontSendNotification);
         description.setFont(juce::FontOptions(14.0f));
         description.setColour(juce::Label::textColourId, juce::Colour(153, 169, 187));
         addAndMakeVisible(description);
@@ -154,7 +163,6 @@ public:
         scaleLabel.setText("SCALE", juce::dontSendNotification);
         strengthLabel.setText("CORRECTION AMOUNT", juce::dontSendNotification);
         speedLabel.setText("CORRECTION SPEED", juce::dontSendNotification);
-
         for (auto* label : { &keyLabel, &scaleLabel, &strengthLabel, &speedLabel })
         {
             label->setFont(juce::FontOptions(12.0f, juce::Font::bold));
@@ -164,39 +172,66 @@ public:
 
         const char* keys[] { "C", "C#", "D", "D#", "E", "F",
                              "F#", "G", "G#", "A", "A#", "B" };
-        for (int i = 0; i < 12; ++i)
-            keySelector.addItem(keys[i], i + 1);
-        keySelector.setSelectedId(1, juce::dontSendNotification);
+        for (int i = 0; i < 12; ++i) keySelector.addItem(keys[i], i + 1);
+        keySelector.setSelectedId(songKeyParameter.load() + 1, juce::dontSendNotification);
+        keySelector.onChange = [this]
+        {
+            songKeyParameter.store(keySelector.getSelectedId() - 1);
+        };
         addAndMakeVisible(keySelector);
 
         scaleSelector.addItem("Major", 1);
         scaleSelector.addItem("Natural Minor", 2);
         scaleSelector.addItem("Chromatic", 3);
-        scaleSelector.setSelectedId(1, juce::dontSendNotification);
+        scaleSelector.setSelectedId(scaleParameter.load(), juce::dontSendNotification);
+        scaleSelector.onChange = [this]
+        {
+            scaleParameter.store(scaleSelector.getSelectedId());
+        };
         addAndMakeVisible(scaleSelector);
 
         strengthSlider.setSliderStyle(juce::Slider::LinearHorizontal);
         strengthSlider.setRange(0.0, 100.0, 1.0);
-        strengthSlider.setValue(50.0, juce::dontSendNotification);
+        strengthSlider.setValue(amountParameter.load(), juce::dontSendNotification);
         strengthSlider.setTextValueSuffix(" %");
+        strengthSlider.onValueChange = [this]
+        {
+            amountParameter.store((float)strengthSlider.getValue());
+        };
         addAndMakeVisible(strengthSlider);
 
         speedSlider.setSliderStyle(juce::Slider::LinearHorizontal);
         speedSlider.setRange(5.0, 100.0, 1.0);
-        speedSlider.setValue(45.0, juce::dontSendNotification);
+        speedSlider.setValue(speedParameter.load(), juce::dontSendNotification);
         speedSlider.setTextValueSuffix(" %");
+        speedSlider.onValueChange = [this]
+        {
+            speedParameter.store((float)speedSlider.getValue());
+        };
         addAndMakeVisible(speedSlider);
 
-        status.setText("DSP is not connected yet. Controls will be enabled after the audio engine is implemented.",
+        detectedLabel.setFont(juce::FontOptions(17.0f, juce::Font::bold));
+        detectedLabel.setColour(juce::Label::textColourId, juce::Colour(50, 213, 255));
+        detectedLabel.setText("Detected note: --", juce::dontSendNotification);
+        addAndMakeVisible(detectedLabel);
+
+        targetLabel.setFont(juce::FontOptions(15.0f, juce::Font::bold));
+        targetLabel.setColour(juce::Label::textColourId, juce::Colour(235, 243, 252));
+        targetLabel.setText("Scale target: --", juce::dontSendNotification);
+        addAndMakeVisible(targetLabel);
+
+        status.setText("Pitch tracking is active. Audible pitch shifting is the next DSP stage.",
                        juce::dontSendNotification);
         status.setFont(juce::FontOptions(12.0f));
         status.setColour(juce::Label::textColourId, juce::Colour(255, 190, 90));
         status.setJustificationType(juce::Justification::centredLeft);
         addAndMakeVisible(status);
 
-        setSize(660, 430);
-        setControlsEnabled(false);
+        setSize(660, 500);
+        startTimerHz(12);
     }
+
+    ~PitchCorrectionModuleContent() override { stopTimer(); }
 
     void paint(juce::Graphics& g) override
     {
@@ -213,47 +248,66 @@ public:
         auto area = getLocalBounds().reduced(28);
         title.setBounds(area.removeFromTop(42));
         description.setBounds(area.removeFromTop(34));
-        area.removeFromTop(20);
-
+        area.removeFromTop(16);
         const int half = (area.getWidth() - 24) / 2;
         auto rowOne = area.removeFromTop(76);
-        auto leftColumn = rowOne.removeFromLeft(half);
-        keyLabel.setBounds(leftColumn.removeFromTop(22));
-        keySelector.setBounds(leftColumn.getX(), leftColumn.getY() + 5,
-                              leftColumn.getWidth(), 34);
+        auto left = rowOne.removeFromLeft(half);
+        keyLabel.setBounds(left.removeFromTop(22));
+        keySelector.setBounds(left.getX(), left.getY() + 5, left.getWidth(), 34);
         rowOne.removeFromLeft(24);
         scaleLabel.setBounds(rowOne.getX(), rowOne.getY(), rowOne.getWidth(), 22);
-        scaleSelector.setBounds(rowOne.getX(), rowOne.getY() + 27,
-                                rowOne.getWidth(), 34);
-
-        area.removeFromTop(12);
-        auto rowTwo = area.removeFromTop(76);
-        strengthLabel.setBounds(rowTwo.removeFromTop(22));
-        strengthSlider.setBounds(rowTwo.removeFromTop(42));
-
-        area.removeFromTop(8);
-        auto rowThree = area.removeFromTop(76);
-        speedLabel.setBounds(rowThree.removeFromTop(22));
-        speedSlider.setBounds(rowThree.removeFromTop(42));
-
-        status.setBounds(area.removeFromTop(54));
+        scaleSelector.setBounds(rowOne.getX(), rowOne.getY() + 27, rowOne.getWidth(), 34);
+        area.removeFromTop(10);
+        strengthLabel.setBounds(area.removeFromTop(22));
+        strengthSlider.setBounds(area.removeFromTop(42));
+        area.removeFromTop(4);
+        speedLabel.setBounds(area.removeFromTop(22));
+        speedSlider.setBounds(area.removeFromTop(42));
+        area.removeFromTop(10);
+        detectedLabel.setBounds(area.removeFromTop(28));
+        targetLabel.setBounds(area.removeFromTop(26));
+        status.setBounds(area.removeFromTop(48));
     }
 
 private:
-    void setControlsEnabled(bool enabled)
+    static juce::String noteName(int midi)
     {
-        keySelector.setEnabled(enabled);
-        scaleSelector.setEnabled(enabled);
-        strengthSlider.setEnabled(enabled);
-        speedSlider.setEnabled(enabled);
+        static const char* names[] { "C", "C#", "D", "D#", "E", "F",
+                                     "F#", "G", "G#", "A", "A#", "B" };
+        if (midi < 0) return "--";
+        return juce::String(names[midi % 12]) + juce::String(midi / 12 - 1);
     }
 
+    void timerCallback() override
+    {
+        const int detected = detectedMidiParameter.load();
+        const int target = targetMidiParameter.load();
+        if (detected < 0)
+        {
+            detectedLabel.setText("Detected note: --", juce::dontSendNotification);
+            targetLabel.setText("Scale target: --", juce::dontSendNotification);
+            return;
+        }
+        detectedLabel.setText("Detected note: " + noteName(detected),
+                              juce::dontSendNotification);
+        const float cents = deviationCentsParameter.load();
+        targetLabel.setText("Nearest scale note: " + noteName(target)
+                            + "  |  Offset: " + juce::String(cents, 1) + " cents",
+                            juce::dontSendNotification);
+    }
+
+    std::atomic<int>& songKeyParameter;
+    std::atomic<int>& scaleParameter;
+    std::atomic<float>& amountParameter;
+    std::atomic<float>& speedParameter;
+    std::atomic<int>& detectedMidiParameter;
+    std::atomic<int>& targetMidiParameter;
+    std::atomic<float>& deviationCentsParameter;
     juce::Label title, description, keyLabel, scaleLabel;
-    juce::Label strengthLabel, speedLabel, status;
+    juce::Label strengthLabel, speedLabel, detectedLabel, targetLabel, status;
     juce::ComboBox keySelector, scaleSelector;
     juce::Slider strengthSlider, speedSlider;
 };
-
 }
 
 void StudioKnobLookAndFeel::drawRotarySlider(
@@ -1278,6 +1332,89 @@ void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
         peak = juce::jmax(peak, std::abs(input[i]));
     inputPeak.store(peak);
 
+    // Lightweight monophonic pitch tracker. Analysis runs periodically on a
+    // fixed-size ring buffer; no allocation or locking occurs in the callback.
+    for (int i = 0; i < info.numSamples; ++i)
+    {
+        pitchAnalysisBuffer[(size_t)pitchAnalysisWritePosition] = input[i];
+        pitchAnalysisWritePosition = (pitchAnalysisWritePosition + 1) % 2048;
+        ++pitchAnalysisSamplesSinceUpdate;
+    }
+
+    if (pitchAnalysisSamplesSinceUpdate >= 1024)
+    {
+        pitchAnalysisSamplesSinceUpdate = 0;
+        float mean = 0.0f;
+        for (int i = 0; i < 1024; ++i)
+        {
+            const int index = (pitchAnalysisWritePosition + i) % 2048;
+            mean += pitchAnalysisBuffer[(size_t)index];
+        }
+        mean *= (1.0f / 1024.0f);
+
+        float bestCorrelation = 0.0f;
+        int bestLag = 0;
+        const int minLag = juce::jmax(24, (int)(sampleRate / 1000.0f));
+        const int maxLag = juce::jmin(700, (int)(sampleRate / 65.0f));
+        for (int lag = minLag; lag <= maxLag; ++lag)
+        {
+            float cross = 0.0f, energyA = 0.0f, energyB = 0.0f;
+            for (int n = 0; n < 1024 - lag; n += 2)
+            {
+                const float a = pitchAnalysisBuffer[(size_t)((pitchAnalysisWritePosition + n) % 2048)] - mean;
+                const float b = pitchAnalysisBuffer[(size_t)((pitchAnalysisWritePosition + n + lag) % 2048)] - mean;
+                cross += a * b;
+                energyA += a * a;
+                energyB += b * b;
+            }
+            const float denominator = std::sqrt(energyA * energyB) + 1.0e-12f;
+            const float correlation = cross / denominator;
+            if (correlation > bestCorrelation)
+            {
+                bestCorrelation = correlation;
+                bestLag = lag;
+            }
+        }
+
+        if (bestLag > 0 && bestCorrelation > 0.72f)
+        {
+            const float frequency = sampleRate / (float)bestLag;
+            const int midi = juce::roundToInt(69.0f + 12.0f * std::log2(frequency / 440.0f));
+            const int root = pitchSongKey.load();
+            const int scale = pitchScale.load();
+            const int major[] { 0, 2, 4, 5, 7, 9, 11 };
+            const int minor[] { 0, 2, 3, 5, 7, 8, 10 };
+            int nearest = midi;
+            int bestDistance = 127;
+            for (int candidate = midi - 6; candidate <= midi + 6; ++candidate)
+            {
+                const int pitchClass = (candidate % 12 + 12) % 12;
+                const int relative = (pitchClass - root + 12) % 12;
+                bool allowed = scale == 3;
+                if (scale == 1)
+                    for (int note : major) allowed = allowed || relative == note;
+                else if (scale == 2)
+                    for (int note : minor) allowed = allowed || relative == note;
+                if (allowed && std::abs(candidate - midi) < bestDistance)
+                {
+                    bestDistance = std::abs(candidate - midi);
+                    nearest = candidate;
+                }
+            }
+            const float targetFrequency = 440.0f * std::pow(2.0f, (nearest - 69) / 12.0f);
+            const float cents = 1200.0f * std::log2(frequency / targetFrequency);
+            pitchDetectedMidi.store(midi);
+            pitchTargetMidi.store(nearest);
+            pitchDeviationCents.store(cents);
+        }
+        else
+        {
+            pitchDetectedMidi.store(-1);
+            pitchTargetMidi.store(-1);
+            pitchDeviationCents.store(0.0f);
+        }
+    }
+
     // Processing and bypass control the complete DSP chain. Master Volume
     // remains available even while the processing chain is bypassed.
     const bool useGainStage = processingEnabled.load() && !bypassEnabled.load();
@@ -1602,7 +1739,9 @@ void MainComponent::showAudioSettings()
 void MainComponent::showPitchCorrectionModule()
 {
     juce::DialogWindow::LaunchOptions options;
-    options.content.setOwned(new PitchCorrectionModuleContent());
+    options.content.setOwned(new PitchCorrectionModuleContent(
+        pitchSongKey, pitchScale, pitchCorrectionAmount, pitchCorrectionSpeed,
+        pitchDetectedMidi, pitchTargetMidi, pitchDeviationCents));
     options.dialogTitle = "Pitch Correction Module";
     options.dialogBackgroundColour = juce::Colour(13, 19, 28);
     options.escapeKeyTriggersCloseButton = true;
