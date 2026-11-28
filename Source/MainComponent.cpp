@@ -255,7 +255,7 @@ MainComponent::MainComponent()
     };
     settingsButton.onClick = [this]
     {
-        statusLabel.setText("Cai dat thiet bi se duoc bo sung sau", juce::dontSendNotification);
+        showAudioSettings();
     };
 
     setSize(1280, 800);
@@ -701,8 +701,39 @@ void MainComponent::releaseResources()
 {
 }
 
+void MainComponent::showAudioSettings()
+{
+    juce::DialogWindow::LaunchOptions options;
+    options.content.setOwned(new juce::AudioDeviceSelectorComponent(
+        deviceManager, 1, 2, 1, 2, false, false, true, true));
+    options.dialogTitle = "Cai dat thiet bi am thanh";
+    options.dialogBackgroundColour = juce::Colour(18, 25, 35);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar = true;
+    options.resizable = false;
+    options.launchAsync();
+}
+
 void MainComponent::timerCallback()
 {
-    // The input meter will be drawn as a live LED bar in a later audio-meter pass.
+    auto* device = deviceManager.getCurrentAudioDevice();
+    const juce::String deviceName = device != nullptr ? device->getName()
+                                                       : "Chua co thiet bi am thanh";
+
+    if (deviceName != lastAudioDeviceName)
+    {
+        lastAudioDeviceName = deviceName;
+        deviceSelector.clear(juce::dontSendNotification);
+        deviceSelector.addItem(deviceName, 1);
+        deviceSelector.setSelectedId(1, juce::dontSendNotification);
+
+        const bool ready = device != nullptr;
+        connectionLabel.setText(ready ? "AUDIO READY   |   DEVICE CONNECTED"
+                                      : "AUDIO NOT READY   |   CHECK SETTINGS",
+                                juce::dontSendNotification);
+        connectionLabel.setColour(juce::Label::textColourId, ready ? green
+                                                                    : juce::Colour(255, 110, 90));
+    }
+
     repaint();
 }
